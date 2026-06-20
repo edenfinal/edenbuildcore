@@ -10,6 +10,7 @@ import { useSiteSettings } from '../../hooks/useData';
 import { supabase } from '../../lib/supabase';
 
 /* ─── Constants ─── */
+// Only fonts that are actually available on Google Fonts API
 const ALL_FONTS = [
   { name: 'Inter', value: 'Inter, sans-serif', category: 'Sans Serif' },
   { name: 'Playfair Display', value: 'Playfair Display, serif', category: 'Serif' },
@@ -20,7 +21,7 @@ const ALL_FONTS = [
   { name: 'Poppins', value: 'Poppins, sans-serif', category: 'Sans Serif' },
   { name: 'Lato', value: 'Lato, sans-serif', category: 'Sans Serif' },
   { name: 'Merriweather', value: 'Merriweather, serif', category: 'Serif' },
-  { name: 'Source Sans Pro', value: 'Source Sans Pro, sans-serif', category: 'Sans Serif' },
+  { name: 'Source Sans 3', value: 'Source Sans 3, sans-serif', category: 'Sans Serif' },
   { name: 'Raleway', value: 'Raleway, sans-serif', category: 'Sans Serif' },
   { name: 'Nunito', value: 'Nunito, sans-serif', category: 'Sans Serif' },
   { name: 'Oswald', value: 'Oswald, sans-serif', category: 'Display' },
@@ -38,10 +39,11 @@ const ALL_FONTS = [
   { name: 'Outfit', value: 'Outfit, sans-serif', category: 'Sans Serif' },
   { name: 'Plus Jakarta Sans', value: 'Plus Jakarta Sans, sans-serif', category: 'Sans Serif' },
   { name: 'Syne', value: 'Syne, sans-serif', category: 'Display' },
-  { name: 'Clash Display', value: 'Clash Display, sans-serif', category: 'Display' },
-  { name: 'Satoshi', value: 'Satoshi, sans-serif', category: 'Sans Serif' },
-  { name: 'Cabinet Grotesk', value: 'Cabinet Grotesk, sans-serif', category: 'Sans Serif' },
-  { name: 'General Sans', value: 'General Sans, sans-serif', category: 'Sans Serif' },
+  { name: 'Schibsted Grotesk', value: 'Schibsted Grotesk, sans-serif', category: 'Sans Serif' },
+  { name: 'Quicksand', value: 'Quicksand, sans-serif', category: 'Sans Serif' },
+  { name: 'Mulish', value: 'Mulish, sans-serif', category: 'Sans Serif' },
+  { name: 'Figtree', value: 'Figtree, sans-serif', category: 'Sans Serif' },
+  { name: 'Geist', value: 'Geist, sans-serif', category: 'Sans Serif' },
 ];
 
 const COLOR_PRESETS = [
@@ -120,39 +122,58 @@ function FileUpload({
 }) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(currentUrl);
+  const [uploadError, setUploadError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setPreview(currentUrl); }, [currentUrl]);
 
   const handleFile = async (file: File) => {
     if (!file) return;
-    setUploading(true);
-
-    const ext = file.name.split('.').pop();
-    const fileName = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
-
-    const { data, error } = await supabase.storage.from(bucket).upload(fileName, file, {
-      cacheControl: '3600',
-      upsert: false,
-    });
-
-    if (error) {
-      console.error('Upload error:', error);
-      setUploading(false);
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Only image files allowed');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError('File too large (max 5MB)');
       return;
     }
 
-    const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(data.path);
-    const publicUrl = urlData.publicUrl;
-    setPreview(publicUrl);
-    onUpload(publicUrl);
-    setUploading(false);
+    setUploading(true);
+    setUploadError('');
+
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
+      const fileName = `logos/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+      const { data, error } = await supabase.storage.from(bucket).upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type,
+      });
+
+      if (error) {
+        console.error('Upload error:', error.message, error);
+        setUploadError(`Upload failed: ${error.message}`);
+        setUploading(false);
+        return;
+      }
+
+      const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(data.path);
+      const publicUrl = urlData.publicUrl;
+      setPreview(publicUrl);
+      onUpload(publicUrl);
+    } catch (err: any) {
+      console.error('Upload exception:', err);
+      setUploadError(`Upload error: ${err?.message || 'Unknown error'}`);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) handleFile(file);
+    if (file) handleFile(file);
   };
 
   return (
@@ -165,11 +186,11 @@ function FileUpload({
       >
         {preview ? (
           <div className="relative">
-            <img src={preview} alt="Preview" className="h-16 w-auto object-contain mx-auto" />
+            <img src={preview} alt="Preview" className="h-16 w-auto object-contain mx-auto" onError={() => setPreview('')} />
             <button
               type="button"
-              onClick={() => { setPreview(''); onUpload(''); }}
-              className="absolute -top-2 -right-2 w-6 h-6 bg-red-500/80 rounded-full flex items-center justify-center text-white hover:bg-red-500 transition-colors"
+              onClick={() => { setPreview(''); onUpload(''); setUploadError(''); }}
+              className="absolute -top-2 -right-2 w-6 h-6 bg-red-500/80 rounded-full flex items-center justify-center text-white hover:bg-red-500 transition-colors z-10"
             >
               <X className="w-3 h-3" />
             </button>
@@ -178,6 +199,7 @@ function FileUpload({
           <div className="text-center py-4">
             <Upload className="w-8 h-8 text-[#c49028]/40 mx-auto mb-2" />
             <p className="text-xs text-gray-500">Drag & drop or click to upload</p>
+            <p className="text-[10px] text-gray-600 mt-1">Max 5MB, Images only</p>
           </div>
         )}
         <input
@@ -188,11 +210,16 @@ function FileUpload({
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
         />
         {uploading && (
-          <div className="absolute inset-0 bg-[#030810]/80 rounded-xl flex items-center justify-center">
+          <div className="absolute inset-0 bg-[#030810]/80 rounded-xl flex items-center justify-center z-20">
             <div className="w-6 h-6 border-2 border-[#c49028] border-t-transparent rounded-full animate-spin" />
           </div>
         )}
       </div>
+      {uploadError && (
+        <p className="text-red-400 text-xs flex items-center gap-1">
+          <AlertCircle className="w-3 h-3" /> {uploadError}
+        </p>
+      )}
     </div>
   );
 }

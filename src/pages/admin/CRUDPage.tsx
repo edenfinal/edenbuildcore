@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import {
   Plus, Pencil, Trash2, X, Save, AlertCircle, Search, Check, Filter,
@@ -665,6 +665,11 @@ export default function CRUDPage({ title, tableName, columns, defaultValues = {}
                         className="w-full px-4 py-3 bg-[#030810]/60 border border-[#c49028]/15 rounded-xl text-white text-sm focus:border-[#c49028]/40 focus:outline-none transition-all"
                         placeholder={`Enter ${col.label.toLowerCase()}`}
                       />
+                    ) : col.type === 'image' ? (
+                      <ImageUploadField
+                        value={formData[col.key] || ''}
+                        onChange={(url: string) => handleChange(col.key, url)}
+                      />
                     ) : col.type === 'textarea' ? (
                       <textarea
                         value={formData[col.key] || ''}
@@ -750,6 +755,84 @@ export default function CRUDPage({ title, tableName, columns, defaultValues = {}
           </div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+/* ─── Image Upload Field ─── */
+function ImageUploadField({ value, onChange }: { value: string; onChange: (url: string) => void }) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setError('Only image files allowed');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Max 5MB');
+      return;
+    }
+    setUploading(true);
+    setError('');
+
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
+      const fileName = `crud/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { data, error: upErr } = await supabase.storage.from('site-assets').upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type,
+      });
+      if (upErr) {
+        setError(upErr.message);
+        setUploading(false);
+        return;
+      }
+      const { data: urlData } = supabase.storage.from('site-assets').getPublicUrl(data.path);
+      onChange(urlData.publicUrl);
+    } catch (e: any) {
+      setError(e?.message || 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="relative border-2 border-dashed border-[#c49028]/20 rounded-xl p-3 hover:border-[#c49028]/40 transition-colors bg-[#030810]/40">
+        {value ? (
+          <div className="relative">
+            <img src={value} alt="Preview" className="h-20 w-auto object-contain mx-auto rounded-lg" onError={() => onChange('')} />
+            <button
+              type="button"
+              onClick={() => onChange('')}
+              className="absolute -top-1 -right-1 w-5 h-5 bg-red-500/80 rounded-full flex items-center justify-center text-white hover:bg-red-500 z-10"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        ) : (
+          <div className="text-center py-3">
+            <Upload className="w-6 h-6 text-[#c49028]/40 mx-auto mb-1" />
+            <p className="text-[10px] text-gray-500">Click or drag image</p>
+          </div>
+        )}
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+        />
+        {uploading && (
+          <div className="absolute inset-0 bg-[#030810]/80 rounded-xl flex items-center justify-center z-20">
+            <div className="w-5 h-5 border-2 border-[#c49028] border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+      </div>
+      {error && <p className="text-red-400 text-[10px]">{error}</p>}
     </div>
   );
 }

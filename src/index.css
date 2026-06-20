@@ -2,18 +2,50 @@
 @tailwind components;
 @tailwind utilities;
 
+/* CSS Variables for dynamic theming */
+:root {
+  --primary-color: #c49028;
+  --secondary-color: #a67820;
+  --accent-color: #e8b84a;
+  --bg-color: #030810;
+  --text-color: #ffffff;
+  --border-color: #c49028;
+  --button-hover-color: #e8b84a;
+  --card-bg-color: #0c1a2e;
+  --card-border-color: #c49028;
+  --nav-bg-color: #030810;
+  --footer-bg-color: #030810;
+  --link-hover-color: #e8b84a;
+  --muted-text-color: #909090;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  --heading-font: 'Playfair Display', serif;
+  --body-font: 'Inter', sans-serif;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: #071027; }
-::-webkit-scrollbar-thumb { background: #c49028; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #ddb040; }
+::-webkit-scrollbar-track { background: var(--bg-color); }
+::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-color); }
 
 /* Selection */
 ::selection { background: rgba(196,144,40,0.3); color: #fff; }
 
 /* Base Styles */
 html { scroll-behavior: smooth; }
-body { background-color: #071027; color: #fff; font-family: 'Inter', system-ui, sans-serif; }
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: var(--body-font), system-ui, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Heading font class */
+.font-heading {
+  font-family: var(--heading-font), serif;
+}
 
 /* Line Clamp */
 .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
