@@ -1,4 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -183,6 +184,26 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    // Fetch admin email from site_settings as fallback
+    let adminEmail = TO_EMAIL || SMTP_USER;
+    try {
+      const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+      const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+      if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        const { data: settings } = await supabase
+          .from("site_settings")
+          .select("email")
+          .limit(1)
+          .maybeSingle();
+        if (settings?.email) {
+          adminEmail = settings.email;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to fetch admin email:", e);
+    }
+
     const emailSubject = subject || `New ${inquiry_type || "general"} inquiry from ${name}`;
 
     const textBody = [
@@ -252,7 +273,7 @@ Deno.serve(async (req: Request) => {
     `;
 
     const success = await sendEmail({
-      to: TO_EMAIL || SMTP_USER,
+      to: adminEmail,
       from: SMTP_USER,
       subject: emailSubject,
       text: textBody,

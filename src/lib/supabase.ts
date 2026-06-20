@@ -39,6 +39,7 @@ export interface SiteSettings {
   site_tagline: string | null;
   site_description: string | null;
   logo_url: string | null;
+  secondary_logo_url: string | null;
   favicon_url: string | null;
   footer_text: string | null;
   copyright_text: string | null;
@@ -54,6 +55,15 @@ export interface SiteSettings {
   meta_keywords: string | null;
   seo_enabled: boolean;
   google_analytics_id: string | null;
+  primary_color: string | null;
+  secondary_color: string | null;
+  accent_color: string | null;
+  heading_font: string | null;
+  body_font: string | null;
+  bg_color: string | null;
+  text_color: string | null;
+  border_color: string | null;
+  button_hover_color: string | null;
 }
 
 export interface HeroSlide {

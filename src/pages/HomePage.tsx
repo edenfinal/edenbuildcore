@@ -72,30 +72,14 @@ function SectionTitle({ subtitle, title, description, light = false }: { subtitl
   );
 }
 
-// Hero Section
+// Hero Section - Only shows admin-managed slides, no hardcoded defaults
 function HeroSection({ c }: { c: (section: string, key: string, fallback: string) => string }) {
   const { data: slides, loading } = useHeroSlides();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [imagesLoaded, setImagesLoaded] = useState<Set<number>>(new Set([0]));
 
-  const defaultSlides: HeroSlide[] = [
-    {
-      id: '1',
-      title: c('hero', 'default_title', 'Building Tomorrow\'s Landmarks Today'),
-      subtitle: c('hero', 'subtitle', 'Excellence in Construction & Engineering'),
-      description: c('hero', 'default_description', 'Delivering world-class construction solutions with innovation, integrity, and an unwavering commitment to quality.'),
-      background_image_url: 'https://images.pexels.com/photos/2219024/pexels-photo-2219024.jpeg?auto=compress&cs=tinysrgb&w=1920',
-      button_text: c('hero', 'button_text', 'Explore Our Projects'),
-      button_link: '/projects',
-      overlay_opacity: 0.6,
-      text_alignment: 'center',
-      order_index: 0,
-      is_active: true,
-      created_at: '',
-      updated_at: ''
-    }
-  ];
-
-  const heroSlides = slides.length > 0 ? slides : defaultSlides;
+  // Only use slides from database - no hardcoded defaults
+  const heroSlides = slides.filter((s) => s.is_active);
 
   useEffect(() => {
     if (heroSlides.length > 1) {
@@ -106,48 +90,84 @@ function HeroSection({ c }: { c: (section: string, key: string, fallback: string
     }
   }, [heroSlides.length]);
 
-  const slide = heroSlides[currentSlide] || heroSlides[0];
+  // Preload next image
+  useEffect(() => {
+    if (heroSlides.length > 1) {
+      const nextIndex = (currentSlide + 1) % heroSlides.length;
+      const img = new Image();
+      img.src = heroSlides[nextIndex]?.background_image_url || '';
+      img.onload = () => {
+        setImagesLoaded((prev) => new Set(prev).add(nextIndex));
+      };
+    }
+  }, [currentSlide, heroSlides]);
+
+  const slide = heroSlides[currentSlide];
+
+  // Loading state while slides fetch
+  if (loading) {
+    return (
+      <section className="relative h-screen min-h-[600px] sm:min-h-[700px] overflow-hidden bg-navy-950 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" />
+      </section>
+    );
+  }
+
+  // Empty state - no slides configured in admin
+  if (!slide) {
+    return (
+      <section className="relative h-[60vh] min-h-[400px] overflow-hidden bg-navy-950 flex items-center justify-center">
+        <div className="text-center px-4">
+          <h1 className="text-3xl sm:text-5xl font-heading font-bold text-white mb-4">
+            {c('hero', 'default_title', "Building Tomorrow's Landmarks Today")}
+          </h1>
+          <p className="text-gray-400 max-w-xl mx-auto">
+            {c('hero', 'default_description', 'Add hero slides from the admin panel to customize this section.')}
+          </p>
+          <div className="mt-6 flex justify-center gap-4">
+            <Link
+              to="/projects"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-gold-600 to-gold-500 text-navy-950 font-bold rounded-xl"
+            >
+              {c('hero', 'button_text', 'Explore Our Projects')}
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link
+              to="/contact"
+              className="inline-flex items-center gap-2 px-6 py-3 border-2 border-gold-500 text-gold-400 font-bold rounded-xl"
+            >
+              {c('hero', 'secondary_button_text', 'Get a Quote')}
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="relative h-screen min-h-[600px] sm:min-h-[700px] overflow-hidden">
-      {/* Background */}
+      {/* Background with lazy loading optimization */}
       <div className="absolute inset-0">
+        {heroSlides.map((s, index) => (
+          <div
+            key={s.id}
+            className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${
+              index === currentSlide ? 'opacity-100' : 'opacity-0'
+            }`}
+            style={{
+              backgroundImage: `url(${s.background_image_url})`,
+              willChange: 'opacity',
+            }}
+          />
+        ))}
         <div
-          className="absolute inset-0 bg-cover bg-center transition-all duration-1000"
-          style={{
-            backgroundImage: `url(${slide.background_image_url || 'https://images.pexels.com/photos/2219024/pexels-photo-2219024.jpeg?auto=compress&cs=tinysrgb&w=1920'})`
-          }}
-        />
-        <div
-          className="absolute inset-0 bg-gradient-to-r from-navy-950 via-navy-900/90 to-navy-950/80"
+          className="absolute inset-0 bg-gradient-to-r from-navy-950 via-navy-900/90 to-navy-950/80 z-10"
           style={{ opacity: slide.overlay_opacity || 0.6 }}
         />
-        {/* Animated particles */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {[...Array(12)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-1 h-1 bg-gold-400/30 rounded-full"
-              initial={{
-                x: Math.random() * 100 + '%',
-                y: Math.random() * 100 + '%',
-              }}
-              animate={{
-                y: [null, '-100%'],
-                opacity: [0, 1, 0],
-              }}
-              transition={{
-                duration: 10 + Math.random() * 10,
-                repeat: Infinity,
-                delay: Math.random() * 5,
-              }}
-            />
-          ))}
-        </div>
       </div>
 
       {/* Content */}
-      <div className="relative h-full flex items-center justify-center text-center px-4 sm:px-6">
+      <div className="relative h-full flex items-center justify-center text-center px-4 sm:px-6 z-20">
         <div className="max-w-5xl mx-auto w-full">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -156,8 +176,11 @@ function HeroSection({ c }: { c: (section: string, key: string, fallback: string
             key={currentSlide}
             className="px-2 sm:px-0"
           >
-            <span className="inline-block px-3 sm:px-4 py-1.5 sm:py-2 bg-gold-500/20 text-gold-400 rounded-full text-xs sm:text-sm font-medium tracking-wider uppercase mb-4 sm:mb-6 border border-gold-500/30">
-              {slide.subtitle || c('hero', 'subtitle', 'Construction Excellence')}            </span>
+            {slide.subtitle && (
+              <span className="inline-block px-3 sm:px-4 py-1.5 sm:py-2 bg-gold-500/20 text-gold-400 rounded-full text-xs sm:text-sm font-medium tracking-wider uppercase mb-4 sm:mb-6 border border-gold-500/30">
+                {slide.subtitle}
+              </span>
+            )}
             <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-heading font-bold text-white leading-tight mb-4 sm:mb-6">
               <span className="bg-gradient-to-r from-gold-400 via-gold-500 to-gold-400 bg-clip-text text-transparent">
                 {slide.title.split(' ').slice(0, 2).join(' ')}
@@ -165,17 +188,21 @@ function HeroSection({ c }: { c: (section: string, key: string, fallback: string
               <br className="hidden sm:block" />
               <span className="text-white">{slide.title.split(' ').slice(2).join(' ')}</span>
             </h1>
-            <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-6 sm:mb-10 leading-relaxed px-2">
-              {slide.description || c('hero', 'default_description', 'Delivering world-class construction solutions with innovation, integrity, and an unwavering commitment to quality.')}
-            </p>
+            {slide.description && (
+              <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-6 sm:mb-10 leading-relaxed px-2">
+                {slide.description}
+              </p>
+            )}
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4 sm:px-0">
-              <Link
-                to={slide.button_link || '/projects'}
-                className="group inline-flex items-center justify-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-gold-600 to-gold-500 text-navy-950 font-bold text-sm sm:text-base rounded-xl hover:from-gold-500 hover:to-gold-400 transition-all shadow-gold hover:shadow-gold-lg transform hover:-translate-y-1"
-              >
-                {slide.button_text || c('hero', 'button_text', 'Explore Our Projects')}
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
+              {slide.button_link && (
+                <Link
+                  to={slide.button_link}
+                  className="group inline-flex items-center justify-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-gold-600 to-gold-500 text-navy-950 font-bold text-sm sm:text-base rounded-xl hover:from-gold-500 hover:to-gold-400 transition-all shadow-gold hover:shadow-gold-lg transform hover:-translate-y-1"
+                >
+                  {slide.button_text || 'Explore'}
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              )}
               <Link
                 to="/contact"
                 className="inline-flex items-center justify-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-transparent border-2 border-gold-500 text-gold-400 font-bold text-sm sm:text-base rounded-xl hover:bg-gold-500/10 transition-all"
@@ -189,7 +216,7 @@ function HeroSection({ c }: { c: (section: string, key: string, fallback: string
 
       {/* Slide Indicators */}
       {heroSlides.length > 1 && (
-        <div className="absolute bottom-6 sm:bottom-10 left-1/2 -translate-x-1/2 flex gap-2 sm:gap-3">
+        <div className="absolute bottom-6 sm:bottom-10 left-1/2 -translate-x-1/2 flex gap-2 sm:gap-3 z-20">
           {heroSlides.map((_, index) => (
             <button
               key={index}
@@ -201,7 +228,7 @@ function HeroSection({ c }: { c: (section: string, key: string, fallback: string
       )}
 
       {/* Scroll Indicator */}
-      <div className="absolute bottom-6 sm:bottom-10 right-4 sm:right-10 hidden md:block">
+      <div className="absolute bottom-6 sm:bottom-10 right-4 sm:right-10 hidden md:block z-20">
         <motion.div
           animate={{ y: [0, 10, 0] }}
           transition={{ duration: 1.5, repeat: Infinity }}
@@ -215,16 +242,39 @@ function HeroSection({ c }: { c: (section: string, key: string, fallback: string
   );
 }
 
-// Stats Section
+// Stats Section - Uses page_content for editable values, falls back to DB statistics table
 function StatsSection({ stats, c }: { stats: Statistic[]; c: (section: string, key: string, fallback: string) => string }) {
-  const defaultStats = [
-    { stat_key: 'years', stat_value: '25', stat_prefix: '', stat_suffix: '+', description: c('stats', 'stat_1_description', 'Years of Excellence') },
-    { stat_key: 'projects', stat_value: '500', stat_prefix: '', stat_suffix: '+', description: c('stats', 'stat_2_description', 'Projects Completed') },
-    { stat_key: 'clients', stat_value: '350', stat_prefix: '', stat_suffix: '+', description: c('stats', 'stat_3_description', 'Happy Clients') },
-    { stat_key: 'team', stat_value: '150', stat_prefix: '', stat_suffix: '+', description: c('stats', 'stat_4_description', 'Team Members') },
+  // Build stats from page_content keys for full editability
+  const statItems = [
+    {
+      key: 'stat_1',
+      value: c('stats', 'stat_1_value', stats[0]?.stat_value || '25'),
+      prefix: c('stats', 'stat_1_prefix', stats[0]?.stat_prefix || ''),
+      suffix: c('stats', 'stat_1_suffix', stats[0]?.stat_suffix || '+'),
+      desc: c('stats', 'stat_1_description', stats[0]?.description || 'Years of Excellence'),
+    },
+    {
+      key: 'stat_2',
+      value: c('stats', 'stat_2_value', stats[1]?.stat_value || '500'),
+      prefix: c('stats', 'stat_2_prefix', stats[1]?.stat_prefix || ''),
+      suffix: c('stats', 'stat_2_suffix', stats[1]?.stat_suffix || '+'),
+      desc: c('stats', 'stat_2_description', stats[1]?.description || 'Projects Completed'),
+    },
+    {
+      key: 'stat_3',
+      value: c('stats', 'stat_3_value', stats[2]?.stat_value || '350'),
+      prefix: c('stats', 'stat_3_prefix', stats[2]?.stat_prefix || ''),
+      suffix: c('stats', 'stat_3_suffix', stats[2]?.stat_suffix || '+'),
+      desc: c('stats', 'stat_3_description', stats[2]?.description || 'Happy Clients'),
+    },
+    {
+      key: 'stat_4',
+      value: c('stats', 'stat_4_value', stats[3]?.stat_value || '150'),
+      prefix: c('stats', 'stat_4_prefix', stats[3]?.stat_prefix || ''),
+      suffix: c('stats', 'stat_4_suffix', stats[3]?.stat_suffix || '+'),
+      desc: c('stats', 'stat_4_description', stats[3]?.description || 'Team Members'),
+    },
   ];
-
-  const displayStats = stats.length > 0 ? stats : defaultStats;
 
   const icons = [TrendingUp, Building2, Users, HardHat];
 
@@ -233,11 +283,11 @@ function StatsSection({ stats, c }: { stats: Statistic[]; c: (section: string, k
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="bg-gradient-to-r from-navy-900 via-navy-800 to-navy-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 lg:p-12 shadow-2xl border border-gold-500/20">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8 md:divide-x divide-gold-500/20">
-            {displayStats.map((stat, index) => {
+            {statItems.map((stat, index) => {
               const Icon = icons[index % icons.length];
               return (
                 <motion.div
-                  key={stat.stat_key || index}
+                  key={stat.key}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -249,12 +299,12 @@ function StatsSection({ stats, c }: { stats: Statistic[]; c: (section: string, k
                   </div>
                   <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-white mb-1 sm:mb-2">
                     <AnimatedCounter
-                      value={parseInt(stat.stat_value || '0')}
-                      prefix={stat.stat_prefix || ''}
-                      suffix={stat.stat_suffix || ''}
+                      value={parseInt(stat.value || '0')}
+                      prefix={stat.prefix}
+                      suffix={stat.suffix}
                     />
                   </div>
-                  <p className="text-gray-400 text-xs sm:text-sm md:text-base">{stat.description}</p>
+                  <p className="text-gray-400 text-xs sm:text-sm md:text-base">{stat.desc}</p>
                 </motion.div>
               );
             })}

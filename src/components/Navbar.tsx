@@ -115,18 +115,29 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-[60px] sm:h-[70px] md:h-[80px]">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 sm:gap-3 group flex-shrink-0">
-            <div className="relative h-12 w-12 sm:h-14 md:h-16">
+            <div className="relative flex items-center gap-2">
+              {/* Primary Logo */}
               <img
                 src={settings?.logo_url || "/EDEN_BUILDCORE.png"}
                 alt={siteName}
                 className="h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 object-contain drop-shadow-sm"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
-                  const next = e.currentTarget.nextElementSibling as HTMLElement;
+                  const next = e.currentTarget.parentElement?.querySelector('.logo-fallback') as HTMLElement;
                   if (next) next.style.display = 'flex';
                 }}
               />
-              <div className="hidden flex-col justify-center" style={{ display: 'none' }}>
+              {/* Secondary Logo (wordmark) */}
+              {settings?.secondary_logo_url && (
+                <img
+                  src={settings.secondary_logo_url}
+                  alt={`${siteName} Wordmark`}
+                  className="h-8 sm:h-10 md:h-12 w-auto object-contain hidden sm:block"
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                />
+              )}
+              {/* Fallback text when no logo images load */}
+              <div className="logo-fallback hidden flex-col justify-center">
                 <span className="text-lg sm:text-xl md:text-2xl font-heading font-bold text-white tracking-widest leading-none">{siteNameParts[0] || 'EDEN'}</span>
                 <span className="text-[8px] sm:text-[10px] font-medium text-[#c49028] tracking-[0.2em] sm:tracking-[0.3em] uppercase">{siteNameParts[1] || 'BUILDCORE'}</span>
               </div>

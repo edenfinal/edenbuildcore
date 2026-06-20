@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Save, AlertCircle, CheckCircle, Globe, Mail, Phone, MapPin, Clock, Palette, Type, Image } from 'lucide-react';
+import { Save, AlertCircle, CheckCircle, Globe, Mail, Phone, MapPin, Clock, Palette, Type, Image, Layout, MousePointer, Monitor } from 'lucide-react';
 import { useSiteSettings } from '../../hooks/useData';
 
 const predefinedColors = [
@@ -21,6 +21,21 @@ const fontOptions = [
   { name: 'Roboto', value: 'Roboto, sans-serif' },
   { name: 'Open Sans', value: 'Open Sans, sans-serif' },
   { name: 'Montserrat', value: 'Montserrat, sans-serif' },
+  { name: 'Poppins', value: 'Poppins, sans-serif' },
+  { name: 'Lato', value: 'Lato, sans-serif' },
+  { name: 'Merriweather', value: 'Merriweather, serif' },
+  { name: 'Source Sans Pro', value: 'Source Sans Pro, sans-serif' },
+  { name: 'Raleway', value: 'Raleway, sans-serif' },
+  { name: 'Nunito', value: 'Nunito, sans-serif' },
+];
+
+const bgColorOptions = [
+  { name: 'Dark Navy', value: '#030810' },
+  { name: 'Navy', value: '#071027' },
+  { name: 'Midnight', value: '#0f172a' },
+  { name: 'Black', value: '#000000' },
+  { name: 'Charcoal', value: '#1a1a2e' },
+  { name: 'Slate', value: '#1e293b' },
 ];
 
 export default function SettingsPage() {
@@ -31,6 +46,7 @@ export default function SettingsPage() {
     site_tagline: '',
     site_description: '',
     logo_url: '',
+    secondary_logo_url: '',
     favicon_url: '',
     address: '',
     phone: '',
@@ -49,6 +65,10 @@ export default function SettingsPage() {
     accent_color: '#e8b84a',
     heading_font: 'Playfair Display, serif',
     body_font: 'Inter, sans-serif',
+    bg_color: '#030810',
+    text_color: '#ffffff',
+    border_color: '#c49028',
+    button_hover_color: '#e8b84a',
   });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -61,6 +81,7 @@ export default function SettingsPage() {
         site_tagline: settings.site_tagline || '',
         site_description: settings.site_description || '',
         logo_url: settings.logo_url || '',
+        secondary_logo_url: settings.secondary_logo_url || '',
         favicon_url: (settings as any).favicon_url || '',
         address: settings.address || '',
         phone: settings.phone || '',
@@ -79,6 +100,10 @@ export default function SettingsPage() {
         accent_color: (settings as any).accent_color || '#e8b84a',
         heading_font: (settings as any).heading_font || 'Playfair Display, serif',
         body_font: (settings as any).body_font || 'Inter, sans-serif',
+        bg_color: (settings as any).bg_color || '#030810',
+        text_color: (settings as any).text_color || '#ffffff',
+        border_color: (settings as any).border_color || '#c49028',
+        button_hover_color: (settings as any).button_hover_color || '#e8b84a',
       });
     }
   }, [settings]);
@@ -192,13 +217,23 @@ export default function SettingsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Logo URL</label>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Primary Logo URL</label>
                 <input
                   type="url"
                   value={formData.logo_url}
                   onChange={e => handleChange('logo_url', e.target.value)}
                   className="w-full px-4 py-3 bg-[#030810]/60 border border-[#c49028]/20 rounded-xl text-white focus:border-[#c49028]/50 focus:outline-none text-sm"
                   placeholder="https://..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Secondary Logo / Wordmark URL</label>
+                <input
+                  type="url"
+                  value={formData.secondary_logo_url}
+                  onChange={e => handleChange('secondary_logo_url', e.target.value)}
+                  className="w-full px-4 py-3 bg-[#030810]/60 border border-[#c49028]/20 rounded-xl text-white focus:border-[#c49028]/50 focus:outline-none text-sm"
+                  placeholder="https://... (text logo shown next to primary)"
                 />
               </div>
               <div>
@@ -222,9 +257,9 @@ export default function SettingsPage() {
                 />
               </div>
               {/* Logo Preview */}
-              {(formData.logo_url || formData.site_name) && (
+              {(formData.logo_url || formData.secondary_logo_url || formData.site_name) && (
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Preview</label>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Logo Preview</label>
                   <div className="flex items-center gap-4 p-4 bg-[#030810]/40 rounded-xl border border-[#c49028]/10">
                     {formData.logo_url ? (
                       <img src={formData.logo_url} alt="Logo preview" className="h-12 w-auto object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
@@ -234,7 +269,10 @@ export default function SettingsPage() {
                         <span className="text-xs text-[#c49028] tracking-widest uppercase">{formData.site_name.split(' ')[1] || 'BUILDCORE'}</span>
                       </div>
                     )}
-                    <span className="text-gray-400 text-sm">{formData.site_name || 'Site Name'}</span>
+                    {formData.secondary_logo_url && (
+                      <img src={formData.secondary_logo_url} alt="Wordmark" className="h-8 w-auto object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                    )}
+                    <span className="text-gray-400 text-sm ml-auto">{formData.site_name || 'Site Name'}</span>
                   </div>
                 </div>
               )}
@@ -457,29 +495,118 @@ export default function SettingsPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Background Color */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-3">Background Color</label>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={formData.bg_color}
+                        onChange={e => handleChange('bg_color', e.target.value)}
+                        className="w-12 h-12 rounded-lg cursor-pointer border-2 border-[#c49028]/20"
+                      />
+                      <input
+                        type="text"
+                        value={formData.bg_color}
+                        onChange={e => handleChange('bg_color', e.target.value)}
+                        className="flex-1 px-3 py-2 bg-[#030810]/60 border border-[#c49028]/20 rounded-lg text-white text-sm"
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {bgColorOptions.map((color) => (
+                        <button
+                          key={color.value}
+                          type="button"
+                          onClick={() => handleChange('bg_color', color.value)}
+                          className={`w-8 h-8 rounded-lg border-2 transition-all ${
+                            formData.bg_color === color.value ? 'border-white scale-110' : 'border-transparent hover:scale-105'
+                          }`}
+                          style={{ backgroundColor: color.value }}
+                          title={color.name}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Text Color */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-3">Text Color</label>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={formData.text_color}
+                        onChange={e => handleChange('text_color', e.target.value)}
+                        className="w-12 h-12 rounded-lg cursor-pointer border-2 border-[#c49028]/20"
+                      />
+                      <input
+                        type="text"
+                        value={formData.text_color}
+                        onChange={e => handleChange('text_color', e.target.value)}
+                        className="flex-1 px-3 py-2 bg-[#030810]/60 border border-[#c49028]/20 rounded-lg text-white text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Button Hover Color */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-3">Button Hover Color</label>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={formData.button_hover_color}
+                        onChange={e => handleChange('button_hover_color', e.target.value)}
+                        className="w-12 h-12 rounded-lg cursor-pointer border-2 border-[#c49028]/20"
+                      />
+                      <input
+                        type="text"
+                        value={formData.button_hover_color}
+                        onChange={e => handleChange('button_hover_color', e.target.value)}
+                        className="flex-1 px-3 py-2 bg-[#030810]/60 border border-[#c49028]/20 rounded-lg text-white text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Color Preview */}
               <div className="mt-6 p-4 bg-[#030810]/40 rounded-xl border border-[#c49028]/10">
-                <p className="text-sm text-gray-400 mb-3">Preview</p>
-                <div className="flex items-center gap-4">
+                <p className="text-sm text-gray-400 mb-3">Live Preview</p>
+                <div className="flex flex-wrap items-center gap-4">
                   <button
                     type="button"
-                    className="px-6 py-2.5 text-white font-medium rounded-lg text-sm"
+                    className="px-6 py-2.5 text-white font-medium rounded-lg text-sm transition-all"
                     style={{ backgroundColor: formData.primary_color }}
                   >
                     Primary Button
                   </button>
                   <button
                     type="button"
-                    className="px-6 py-2.5 rounded-lg text-sm border-2"
+                    className="px-6 py-2.5 rounded-lg text-sm border-2 font-medium transition-all"
                     style={{ borderColor: formData.primary_color, color: formData.primary_color }}
                   >
                     Outlined Button
                   </button>
-                  <span className="text-sm" style={{ color: formData.accent_color }}>
+                  <button
+                    type="button"
+                    className="px-6 py-2.5 rounded-lg text-sm font-medium transition-all"
+                    style={{ backgroundColor: formData.primary_color }}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = formData.button_hover_color; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = formData.primary_color; }}
+                  >
+                    Hover Me
+                  </button>
+                  <span className="text-sm font-medium" style={{ color: formData.accent_color }}>
                     Accent Text
                   </span>
+                  <div className="px-4 py-2 rounded-lg text-sm border" style={{ borderColor: formData.border_color, color: formData.text_color, backgroundColor: formData.bg_color }}>
+                    Card Style
+                  </div>
                 </div>
               </div>
             </div>
@@ -521,10 +648,10 @@ export default function SettingsPage() {
               {/* Font Preview */}
               <div className="mt-6 p-4 bg-[#030810]/40 rounded-xl border border-[#c49028]/10">
                 <p className="text-sm text-gray-400 mb-3">Preview</p>
-                <h3 style={{ fontFamily: formData.heading_font }} className="text-2xl text-white mb-2">
+                <h3 style={{ fontFamily: formData.heading_font, color: formData.text_color }} className="text-2xl mb-2">
                   Heading Style
                 </h3>
-                <p style={{ fontFamily: formData.body_font }} className="text-gray-300 text-sm">
+                <p style={{ fontFamily: formData.body_font, color: formData.text_color }} className="text-sm opacity-80">
                   This is how your body text will appear across the website. The right font combination creates a professional and cohesive look.
                 </p>
               </div>
