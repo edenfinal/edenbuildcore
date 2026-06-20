@@ -64,6 +64,21 @@ export interface SiteSettings {
   text_color: string | null;
   border_color: string | null;
   button_hover_color: string | null;
+  card_bg_color: string | null;
+  card_border_color: string | null;
+  nav_bg_color: string | null;
+  footer_bg_color: string | null;
+  hero_overlay_color: string | null;
+  hero_overlay_opacity: number | null;
+  shadow_color: string | null;
+  shadow_intensity: string | null;
+  border_radius: string | null;
+  spacing_scale: string | null;
+  link_hover_color: string | null;
+  muted_text_color: string | null;
+  success_color: string | null;
+  warning_color: string | null;
+  error_color: string | null;
 }
 
 export interface HeroSlide {
