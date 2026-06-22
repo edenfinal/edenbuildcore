@@ -3,12 +3,96 @@ import { Award, Shield, FileText, Building2, CheckCircle, Download, ExternalLink
 import { useCertifications, usePageContent } from '../hooks/useData';
 import type { Certification } from '../lib/supabase';
 
+const defaultCertifications: Certification[] = [
+  {
+    id: '1',
+    title: 'ISO 9001:2015',
+    issuing_authority: 'International Organization for Standardization',
+    certificate_number: 'ISO-EDB-2024-001',
+    issue_date: '2024-01-01',
+    description: 'Quality Management System certification demonstrating our commitment to quality excellence.',
+    category: 'Quality',
+    is_featured: true,
+    order_index: 0,
+    is_active: true,
+    created_at: '',
+    updated_at: ''
+  },
+  {
+    id: '2',
+    title: 'ISO 14001:2015',
+    issuing_authority: 'International Organization for Standardization',
+    certificate_number: 'ISO-EDB-2024-002',
+    issue_date: '2024-01-01',
+    description: 'Environmental Management System certification showcasing our dedication to environmental sustainability.',
+    category: 'Environmental',
+    is_featured: true,
+    order_index: 1,
+    is_active: true,
+    created_at: '',
+    updated_at: ''
+  },
+  {
+    id: '3',
+    title: 'ISO 45001:2018',
+    issuing_authority: 'International Organization for Standardization',
+    certificate_number: 'ISO-EDB-2024-003',
+    issue_date: '2024-01-01',
+    description: 'Occupational Health and Safety Management System certification ensuring workplace safety.',
+    category: 'Safety',
+    is_featured: true,
+    order_index: 2,
+    is_active: true,
+    created_at: '',
+    updated_at: ''
+  },
+  {
+    id: '4',
+    title: 'PEC Registration',
+    issuing_authority: 'Pakistan Engineering Council',
+    certificate_number: 'PEC/C/1234',
+    description: 'Registered with Pakistan Engineering Council as a category C contractor.',
+    category: 'Registration',
+    is_featured: false,
+    order_index: 3,
+    is_active: true,
+    created_at: '',
+    updated_at: ''
+  },
+  {
+    id: '5',
+    title: 'SECP Registration',
+    issuing_authority: 'Securities and Exchange Commission of Pakistan',
+    certificate_number: 'SECP-123456',
+    description: 'Incorporated and registered with SECP as a private limited company.',
+    category: 'Registration',
+    is_featured: false,
+    order_index: 4,
+    is_active: true,
+    created_at: '',
+    updated_at: ''
+  },
+  {
+    id: '6',
+    title: 'FBR / NTN Registration',
+    issuing_authority: 'Federal Board of Revenue',
+    certificate_number: 'NTN-1234567-8',
+    description: 'Registered taxpayer with Federal Board of Revenue, Pakistan.',
+    category: 'Registration',
+    is_featured: false,
+    order_index: 5,
+    is_active: true,
+    created_at: '',
+    updated_at: ''
+  },
+];
+
 export default function CertificationsPage() {
   const { data: certifications } = useCertifications();
   const pageContent = usePageContent('certifications');
   const c = (section: string, key: string, fallback: string) => pageContent.get(section, key, fallback);
 
-  const displayCerts = certifications;
+  const displayCerts = certifications.length > 0 ? certifications : defaultCertifications;
 
   const isoCerts = displayCerts.filter(cert => cert.category === 'Quality' || cert.category === 'Environmental' || cert.category === 'Safety');
   const registrations = displayCerts.filter(cert => cert.category === 'Registration');
