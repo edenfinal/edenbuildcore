@@ -2,9 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Save, AlertCircle, CheckCircle, Image, Type, Palette, Eye, EyeOff,
-  ChevronDown, ChevronRight, Layout, Monitor, ArrowRight, Upload, X,
-  RefreshCw, SlidersHorizontal, AlignLeft, AlignCenter, AlignRight,
-  Maximize2, Minimize2, Check, Trash2
+  Layout, Monitor, ArrowRight, Upload, X, RefreshCw, SlidersHorizontal,
+  AlignLeft, AlignCenter, AlignRight, Check, Clock, Gauge, Plus, Minus
 } from 'lucide-react';
 import { useAllPageHeroes } from '../../hooks/useData';
 import { supabase } from '../../lib/supabase';
@@ -42,16 +41,21 @@ function FileUpload({
   label,
   currentUrl,
   onUpload,
+  recommendedWidth,
+  recommendedHeight,
   bucket = 'site-assets',
 }: {
   label: string;
   currentUrl: string;
   onUpload: (url: string) => void;
+  recommendedWidth?: number;
+  recommendedHeight?: number;
   bucket?: string;
 }) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(currentUrl);
   const [uploadError, setUploadError] = useState('');
+  const [dimensions, setDimensions] = useState<{ w: number; h: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setPreview(currentUrl); }, [currentUrl]);
@@ -67,33 +71,40 @@ function FileUpload({
       return;
     }
 
-    setUploading(true);
-    setUploadError('');
+    // Check image dimensions
+    const img = new Image();
+    img.onload = async () => {
+      setDimensions({ w: img.naturalWidth, h: img.naturalHeight });
+      setUploadError('');
 
-    try {
-      const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
-      const fileName = `heroes/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      setUploading(true);
+      try {
+        const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
+        const fileName = `heroes/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
-      const { data, error } = await supabase.storage.from(bucket).upload(fileName, file, {
-        cacheControl: '3600',
-        upsert: false,
-        contentType: file.type,
-      });
+        const { data, error } = await supabase.storage.from(bucket).upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: file.type,
+        });
 
-      if (error) {
-        setUploadError(`Upload failed: ${error.message}`);
+        if (error) {
+          setUploadError(`Upload failed: ${error.message}`);
+          setUploading(false);
+          return;
+        }
+
+        const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(data.path);
+        setPreview(urlData.publicUrl);
+        onUpload(urlData.publicUrl);
+      } catch (err: any) {
+        setUploadError(`Upload error: ${err?.message || 'Unknown error'}`);
+      } finally {
         setUploading(false);
-        return;
       }
-
-      const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(data.path);
-      setPreview(urlData.publicUrl);
-      onUpload(urlData.publicUrl);
-    } catch (err: any) {
-      setUploadError(`Upload error: ${err?.message || 'Unknown error'}`);
-    } finally {
-      setUploading(false);
-    }
+    };
+    img.onerror = () => setUploadError('Could not read image dimensions');
+    img.src = URL.createObjectURL(file);
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -102,9 +113,17 @@ function FileUpload({
     if (file) handleFile(file);
   };
 
+  const dimWarning = dimensions && recommendedWidth && recommendedHeight &&
+    (dimensions.w < recommendedWidth || dimensions.h < recommendedHeight);
+
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-400">{label}</label>
+      <div className="flex items-center justify-between">
+        <label className="block text-sm font-medium text-gray-400">{label}</label>
+        {(recommendedWidth && recommendedHeight) && (
+          <span className="text-[10px] text-gray-500">Recommended: {recommendedWidth}x{recommendedHeight}px</span>
+        )}
+      </div>
       <div
         onDrop={handleDrop}
         onDragOver={(e) => e.preventDefault()}
@@ -112,23 +131,30 @@ function FileUpload({
       >
         {preview ? (
           <div className="relative">
-            <img src={preview} alt="Preview" className="w-full h-40 object-cover" onError={() => setPreview('')} />
+            <img src={preview} alt="Preview" className="w-full h-48 object-cover" onError={() => setPreview('')} />
             <button
               type="button"
-              onClick={() => { setPreview(''); onUpload(''); setUploadError(''); }}
+              onClick={() => { setPreview(''); onUpload(''); setUploadError(''); setDimensions(null); }}
               className="absolute top-2 right-2 w-7 h-7 bg-red-500/80 rounded-full flex items-center justify-center text-white hover:bg-red-500 transition-colors z-10"
             >
               <X className="w-3.5 h-3.5" />
             </button>
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#030810] to-transparent p-3">
-              <p className="text-xs text-gray-400 truncate">{preview}</p>
-            </div>
+            {dimensions && (
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#030810] to-transparent p-3">
+                <p className={`text-xs ${dimWarning ? 'text-amber-400' : 'text-gray-400'}`}>
+                  {dimensions.w}x{dimensions.h}px {dimWarning && '(below recommended)'}
+                </p>
+              </div>
+            )}
           </div>
         ) : (
-          <div className="text-center py-8">
+          <div className="text-center py-10">
             <Upload className="w-8 h-8 text-[#c49028]/40 mx-auto mb-2" />
             <p className="text-xs text-gray-500">Drag & drop or click to upload</p>
             <p className="text-[10px] text-gray-600 mt-1">Max 5MB, Images only</p>
+            {(recommendedWidth && recommendedHeight) && (
+              <p className="text-[10px] text-gray-600 mt-0.5">Recommended {recommendedWidth}x{recommendedHeight}px</p>
+            )}
           </div>
         )}
         <input
@@ -249,6 +275,11 @@ export default function HeroManagerPage() {
       text_color: editForm.text_color,
       overlay_color: editForm.overlay_color,
       is_active: editForm.is_active,
+      is_carousel: editForm.is_carousel,
+      slide_interval: editForm.slide_interval,
+      image_width: editForm.image_width,
+      image_height: editForm.image_height,
+      animation_speed: editForm.animation_speed,
     };
 
     const success = await updateHero(selectedHero.id, updates);
@@ -329,6 +360,9 @@ export default function HeroManagerPage() {
               )}
             </div>
             <p className="text-xs text-gray-500 truncate">{hero.title || 'No title'}</p>
+            {hero.is_carousel && (
+              <span className="inline-block mt-1.5 px-1.5 py-0.5 bg-[#c49028]/20 text-[#c49028] text-[10px] rounded">Carousel</span>
+            )}
             {selectedPage === hero.page_id && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#c49028] rounded-b-xl" />
             )}
@@ -403,7 +437,31 @@ export default function HeroManagerPage() {
                   label="Hero Background"
                   currentUrl={editForm.background_image_url || ''}
                   onUpload={(url) => handleChange('background_image_url', url)}
+                  recommendedWidth={editForm.image_width || 1920}
+                  recommendedHeight={editForm.image_height || 1080}
                 />
+
+                {/* Image Dimensions */}
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Recommended Width (px)</label>
+                    <input
+                      type="number"
+                      value={editForm.image_width || 1920}
+                      onChange={(e) => handleChange('image_width', parseInt(e.target.value) || 1920)}
+                      className="w-full px-4 py-3 bg-[#030810]/60 border border-[#c49028]/20 rounded-xl text-white focus:border-[#c49028]/50 focus:outline-none text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Recommended Height (px)</label>
+                    <input
+                      type="number"
+                      value={editForm.image_height || 1080}
+                      onChange={(e) => handleChange('image_height', parseInt(e.target.value) || 1080)}
+                      className="w-full px-4 py-3 bg-[#030810]/60 border border-[#c49028]/20 rounded-xl text-white focus:border-[#c49028]/50 focus:outline-none text-sm"
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Appearance */}
@@ -514,6 +572,67 @@ export default function HeroManagerPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Carousel Settings (Home page only) */}
+              {selectedHero.page_id === 'home' && (
+                <div className="bg-[#0c1a2e] border border-[#c49028]/10 rounded-xl p-5">
+                  <div className="flex items-center justify-between mb-5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-[#c49028]/10 flex items-center justify-center">
+                        <SlidersHorizontal className="w-4 h-4 text-[#c49028]" />
+                      </div>
+                      <div>
+                        <h2 className="text-lg font-semibold text-white">Carousel Settings</h2>
+                        <p className="text-xs text-gray-500">For home page rotating slides</p>
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={editForm.is_carousel ?? false}
+                        onChange={(e) => handleChange('is_carousel', e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#c49028]" />
+                    </label>
+                  </div>
+
+                  {editForm.is_carousel && (
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">Slide Interval (ms)</label>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="range"
+                            min="2000"
+                            max="15000"
+                            step="500"
+                            value={editForm.slide_interval || 6000}
+                            onChange={(e) => handleChange('slide_interval', parseInt(e.target.value))}
+                            className="flex-1 accent-[#c49028]"
+                          />
+                          <span className="text-sm text-gray-400 w-16 text-right">{(editForm.slide_interval || 6000) / 1000}s</span>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">Animation Speed (ms)</label>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="range"
+                            min="200"
+                            max="3000"
+                            step="100"
+                            value={editForm.animation_speed || 1000}
+                            onChange={(e) => handleChange('animation_speed', parseInt(e.target.value))}
+                            className="flex-1 accent-[#c49028]"
+                          />
+                          <span className="text-sm text-gray-400 w-16 text-right">{editForm.animation_speed || 1000}ms</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* CTA Button */}
               <div className="bg-[#0c1a2e] border border-[#c49028]/10 rounded-xl p-5">
@@ -627,7 +746,7 @@ export default function HeroManagerPage() {
                   <ul className="space-y-2 text-xs text-gray-400">
                     <li className="flex items-start gap-2">
                       <Check className="w-3 h-3 text-[#c49028] mt-0.5 flex-shrink-0" />
-                      Use high-quality images (1920px wide minimum)
+                      Use high-quality images ({editForm.image_width || 1920}x{editForm.image_height || 1080}px)
                     </li>
                     <li className="flex items-start gap-2">
                       <Check className="w-3 h-3 text-[#c49028] mt-0.5 flex-shrink-0" />
@@ -641,6 +760,12 @@ export default function HeroManagerPage() {
                       <Check className="w-3 h-3 text-[#c49028] mt-0.5 flex-shrink-0" />
                       Button links can be /page or #section-id
                     </li>
+                    {editForm.is_carousel && (
+                      <li className="flex items-start gap-2">
+                        <Check className="w-3 h-3 text-[#c49028] mt-0.5 flex-shrink-0" />
+                        Carousel interval: {(editForm.slide_interval || 6000) / 1000}s
+                      </li>
+                    )}
                   </ul>
                 </div>
               </div>

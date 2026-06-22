@@ -416,6 +416,11 @@ export interface PageHero {
   text_color: string;
   overlay_color: string;
   is_active: boolean;
+  is_carousel: boolean;
+  slide_interval: number;
+  image_width: number | null;
+  image_height: number | null;
+  animation_speed: number;
   created_at: string;
   updated_at: string;
 }
