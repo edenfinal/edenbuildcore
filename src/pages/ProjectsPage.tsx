@@ -17,11 +17,17 @@ function ProjectCard({ project }: { project: Project }) {
     >
       <Link to={`/projects/${project.slug || project.id}`}>
         <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-6">
-          <img
-            src={project.thumbnail_url || 'https://images.pexels.com/photos/256417/pexels-photo-256417.jpeg?auto=compress&cs=tinysrgb&w=800'}
-            alt={project.title}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-          />
+          {project.thumbnail_url ? (
+            <img
+              src={project.thumbnail_url}
+              alt={project.title}
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-[var(--card-bg-color)]">
+              <Building2 className="w-20 h-20 text-[var(--primary-color)]/20" />
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/30 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
 
           {/* Category Badge */}
@@ -106,12 +112,18 @@ function ProjectDetail() {
   return (
     <div className="min-h-screen bg-navy-950 pt-24">
       {/* Hero */}
-      <section className="relative h-[60vh] min-h-[400px] overflow-hidden">
-        <img
-          src={project.thumbnail_url || 'https://images.pexels.com/photos/256417/pexels-photo-256417.jpeg'}
-          alt={project.title}
-          className="w-full h-full object-cover"
-        />
+      <section className="relative h-[60vh] min-h-[400px] overflow-hidden" style={{ backgroundColor: 'var(--card-bg-color)' }}>
+        {project.thumbnail_url ? (
+          <img
+            src={project.thumbnail_url}
+            alt={project.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <Building2 className="w-32 h-32 text-[var(--primary-color)]/20" />
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/50 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-8">
           <div className="max-w-7xl mx-auto">

@@ -5,62 +5,7 @@ import { Calendar, User, Tag, ArrowRight, Clock, Search, FileText } from 'lucide
 import { useBlogPosts, useBlogCategories, usePageContent } from '../hooks/useData';
 import type { BlogPost, BlogCategory } from '../lib/supabase';
 
-const defaultPosts: BlogPost[] = [
-  {
-    id: '1',
-    title: 'The Future of Sustainable Construction',
-    slug: 'future-sustainable-construction',
-    excerpt: 'Exploring green building practices and sustainable construction methods for a better tomorrow.',
-    content: 'Full article content here...',
-    category: 'Sustainability',
-    featured_image_url: 'https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg',
-    author_id: null,
-    is_featured: true,
-    is_published: true,
-    published_at: '2024-01-15',
-    reading_time: 5,
-    tags: ['sustainability', 'green building', 'environment'],
-    view_count: 245,
-    created_at: '2024-01-15',
-    updated_at: '2024-01-15'
-  },
-  {
-    id: '2',
-    title: 'Modern Construction Technologies',
-    slug: 'modern-construction-technologies',
-    excerpt: 'How technology is transforming the construction industry with AI, drones, and smart materials.',
-    content: 'Full article content here...',
-    category: 'Technology',
-    featured_image_url: 'https://images.pexels.com/photos/256417/pexels-photo-256417.jpeg',
-    author_id: null,
-    is_featured: false,
-    is_published: true,
-    published_at: '2024-01-10',
-    reading_time: 7,
-    tags: ['technology', 'innovation', 'AI'],
-    view_count: 189,
-    created_at: '2024-01-10',
-    updated_at: '2024-01-10'
-  },
-  {
-    id: '3',
-    title: 'Best Practices in Project Management',
-    slug: 'best-practices-project-management',
-    excerpt: 'Essential project management strategies for successful construction projects.',
-    content: 'Full article content here...',
-    category: 'Management',
-    featured_image_url: 'https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg',
-    author_id: null,
-    is_featured: false,
-    is_published: true,
-    published_at: '2024-01-05',
-    reading_time: 6,
-    tags: ['management', 'projects', 'planning'],
-    view_count: 156,
-    created_at: '2024-01-05',
-    updated_at: '2024-01-05'
-  },
-];
+// No default posts - all content comes from admin panel
 
 function PostCard({ post, featured = false }: { post: BlogPost; featured?: boolean }) {
   const tags = post.tags as string[] || [];
@@ -74,11 +19,17 @@ function PostCard({ post, featured = false }: { post: BlogPost; featured?: boole
     >
       <Link to={`/blog/${post.slug || post.id}`} className={`block ${featured ? 'md:w-1/2' : ''}`}>
         <div className={`relative rounded-2xl overflow-hidden mb-4 ${featured ? 'aspect-[16/9]' : 'aspect-video'}`}>
-          <img
-            src={post.featured_image_url || 'https://images.pexels.com/photos/256417/pexels-photo-256417.jpeg'}
-            alt={post.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
+          {post.featured_image_url ? (
+            <img
+              src={post.featured_image_url}
+              alt={post.title}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-[var(--card-bg-color)]">
+              <FileText className="w-16 h-16 text-[var(--primary-color)]/20" />
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-navy-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <div className="absolute top-4 left-4 px-3 py-1 bg-gold-500 text-navy-950 text-xs font-semibold rounded-full">
             {post.category || 'Article'}
@@ -155,12 +106,18 @@ function PostDetail() {
   return (
     <div className="min-h-screen bg-navy-950 pt-24">
       {/* Hero */}
-      <section className="relative h-[50vh] min-h-[300px]">
-        <img
-          src={post.featured_image_url || 'https://images.pexels.com/photos/256417/pexels-photo-256417.jpeg'}
-          alt={post.title}
-          className="w-full h-full object-cover"
-        />
+      <section className="relative h-[50vh] min-h-[300px]" style={{ backgroundColor: 'var(--card-bg-color)' }}>
+        {post.featured_image_url ? (
+          <img
+            src={post.featured_image_url}
+            alt={post.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <FileText className="w-24 h-24 text-[var(--primary-color)]/20" />
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/50 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-8">
           <div className="max-w-4xl mx-auto">

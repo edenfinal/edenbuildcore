@@ -1,23 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight, Image, Video, Play } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Image, Video, Play, Building2 } from 'lucide-react';
 import { useGallery, usePageContent } from '../hooks/useData';
 import type { GalleryItem } from '../lib/supabase';
-
-const defaultGallery: GalleryItem[] = [
-  { id: '1', title: 'Commercial Tower', image_url: 'https://images.pexels.com/photos/2219024/pexels-photo-2219024.jpeg', category: 'Commercial', type: 'image' },
-  { id: '2', title: 'Residential Complex', image_url: 'https://images.pexels.com/photo-1396122/pexels-photo-1396122.jpeg', category: 'Residential', type: 'image' },
-  { id: '3', title: 'Highway Construction', image_url: 'https://images.pexels.com/photos/256417/pexels-photo-256417.jpeg', category: 'Infrastructure', type: 'image' },
-  { id: '4', title: 'Industrial Facility', image_url: 'https://images.pexels.com/photos/1216589/pexels-photo-1216589.jpeg', category: 'Industrial', type: 'image' },
-  { id: '5', title: 'Hospital Building', image_url: 'https://images.pexels.com/photos/23917/pexels-photo-23917.jpg', category: 'Healthcare', type: 'image' },
-  { id: '6', title: 'Solar Installation', image_url: 'https://images.pexels.com/photos/2800832/pexels-photo-2800832.jpeg', category: 'Energy', type: 'image' },
-  { id: '7', title: 'Office Interior', image_url: 'https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg', category: 'Interior', type: 'image' },
-  { id: '8', title: 'Bridge Project', image_url: 'https://images.pexels.com/photos/5318685/pexels-photo-5318685.jpeg', category: 'Infrastructure', type: 'image' },
-  { id: '9', title: 'Warehouse Complex', image_url: 'https://images.pexels.com/photos/128402/pexels-photo-128402.jpeg', category: 'Industrial', type: 'image' },
-  { id: '10', title: 'Luxury Apartments', image_url: 'https://images.pexels.com/photos/323705/pexels-photo-323705.jpeg', category: 'Residential', type: 'image' },
-  { id: '11', title: 'Shopping Mall', image_url: 'https://images.pexels.com/photos/3768000/pexels-photo-3768000.jpeg', category: 'Commercial', type: 'image' },
-  { id: '12', title: 'Water Treatment Plant', image_url: 'https://images.pexels.com/photos/416405/pexels-photo-416405.jpeg', category: 'Infrastructure', type: 'image' },
-];
 
 export default function GalleryPage() {
   const { data: galleryItems } = useGallery();
@@ -27,7 +12,7 @@ export default function GalleryPage() {
   const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const gallery = galleryItems.length > 0 ? galleryItems : defaultGallery;
+  const gallery = galleryItems;
   const categories = ['all', ...new Set(gallery.map(item => item.category).filter(Boolean))];
 
   const filteredGallery = filter === 'all'
