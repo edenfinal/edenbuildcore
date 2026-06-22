@@ -53,6 +53,7 @@ const menuSections = [
   {
     title: 'Content',
     items: [
+      { name: 'Hero Manager', path: '/admin/heroes', icon: Image },
       { name: 'Content Editor', path: '/admin/content', icon: FileText },
     ]
   },

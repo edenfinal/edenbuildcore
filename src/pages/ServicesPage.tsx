@@ -5,6 +5,7 @@ import {
   Factory, Droplets, FileText, Shield, ArrowRight, CheckCircle
 } from 'lucide-react';
 import { useServices, usePageContent } from '../hooks/useData';
+import PageHero from '../components/PageHero';
 import type { Service } from '../lib/supabase';
 
 const defaultServices: Service[] = [
@@ -164,35 +165,13 @@ export default function ServicesPage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden">
-        <div className="absolute inset-0">
-          <img
-            src="https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg?auto=compress&cs=tinysrgb&w=1920"
-            alt="Services"
-            className="w-full h-full object-cover opacity-20"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-navy-950 via-navy-950/95 to-navy-950" />
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="max-w-3xl mx-auto text-center"
-          >
-            <span className="inline-block px-4 py-1.5 bg-gold-500/20 text-gold-400 rounded-full text-sm font-medium tracking-wider uppercase mb-6 border border-gold-500/30">
-              {c('hero', 'badge', 'What We Offer')}
-            </span>
-            <h1 className="text-5xl md:text-6xl font-heading font-bold text-white mb-6 leading-tight">
-              {c('hero', 'title_line1', 'Premium Construction')}
-              <span className="block text-gold-500">{c('hero', 'title_line2', '& Engineering Services')}</span>
-            </h1>
-            <p className="text-xl text-gray-300 leading-relaxed">
-              {c('hero', 'description', 'Comprehensive construction solutions tailored to meet your unique requirements, delivered with excellence and precision.')}
-            </p>
-          </motion.div>
-        </div>
-      </section>
+      <PageHero
+        pageId="services"
+        fallbackTitle="Premium Construction & Engineering Services"
+        fallbackSubtitle="What We Offer"
+        fallbackDescription="Comprehensive construction solutions tailored to meet your unique requirements, delivered with excellence and precision."
+        fallbackImage="https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg?auto=compress&cs=tinysrgb&w=1920"
+      />
 
       {/* Services Grid */}
       <section className="py-24 bg-navy-950">

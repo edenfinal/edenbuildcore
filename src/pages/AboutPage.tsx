@@ -4,6 +4,7 @@ import {
   CheckCircle, History, TrendingUp, Heart, Lightbulb, Leaf
 } from 'lucide-react';
 import { useTeamMembers, usePageContent } from '../hooks/useData';
+import PageHero from '../components/PageHero';
 import type { TeamMember } from '../lib/supabase';
 
 const timeline = [
@@ -89,35 +90,13 @@ export default function AboutPage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden">
-        <div className="absolute inset-0">
-          <img
-            src="https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg?auto=compress&cs=tinysrgb&w=1920"
-            alt="Construction"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-navy-950/95 via-navy-950/90 to-navy-950" />
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="max-w-3xl"
-          >
-            <span className="inline-block px-4 py-1.5 bg-gold-500/20 text-gold-400 rounded-full text-sm font-medium tracking-wider uppercase mb-6 border border-gold-500/30">
-              {c('hero', 'badge', 'About Us')}
-            </span>
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-heading font-bold text-white mb-6 leading-tight">
-              {c('hero', 'title_line1', 'Building Excellence')}
-              <span className="block text-gold-500">{c('hero', 'title_line2', 'Since 1999')}</span>
-            </h1>
-            <p className="text-xl text-gray-300 leading-relaxed">
-              {c('hero', 'description', 'For over two decades, Eden Buildcore has been at the forefront of construction innovation, delivering landmark projects that shape skylines and transform communities.')}
-            </p>
-          </motion.div>
-        </div>
-      </section>
+      <PageHero
+        pageId="about"
+        fallbackTitle="About Eden Buildcore"
+        fallbackSubtitle="Our Story"
+        fallbackDescription="Two decades of excellence in construction, engineering, and infrastructure development"
+        fallbackImage="https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg?auto=compress&cs=tinysrgb&w=1920"
+      />
 
       {/* Company Overview */}
       <section className="py-24 bg-navy-950">

@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Calendar, User, Tag, ArrowRight, Clock, Search, FileText } from 'lucide-react';
 import { useBlogPosts, useBlogCategories, usePageContent } from '../hooks/useData';
+import PageHero from '../components/PageHero';
 import type { BlogPost, BlogCategory } from '../lib/supabase';
 
 const defaultPosts: BlogPost[] = [
@@ -254,27 +255,13 @@ export default function BlogPage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative pt-32 pb-16 md:pt-40 md:pb-20">
-        <div className="absolute inset-0 bg-gradient-to-b from-navy-900 to-navy-950" />
-
-        <div className="relative max-w-7xl mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center"
-          >
-            <span className="inline-block px-4 py-1.5 bg-gold-500/20 text-gold-400 rounded-full text-sm font-medium tracking-wider uppercase mb-4 border border-gold-500/30">
-              {c('blog.hero', 'badge', 'Our Blog')}
-            </span>
-            <h1 className="text-5xl md:text-6xl font-heading font-bold text-white mb-6">
-              {c('blog.hero', 'title', 'News & Insights')}
-            </h1>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              {c('blog.hero', 'description', 'Stay updated with the latest trends, insights, and news from the construction industry.')}
-            </p>
-          </motion.div>
-        </div>
-      </section>
+      <PageHero
+        pageId="blog"
+        fallbackTitle="News & Insights"
+        fallbackSubtitle="Our Blog"
+        fallbackDescription="Stay updated with the latest trends, insights, and news from the construction industry."
+        fallbackImage="https://images.pexels.com/photos/1454165804606-c3d57bc86b40?auto=compress&cs=tinysrgb&w=1920"
+      />
 
       {/* Search & Filter */}
       <section className="py-8 bg-navy-900 border-y border-gold-500/10">

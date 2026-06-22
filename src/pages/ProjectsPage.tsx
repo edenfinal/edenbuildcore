@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Calendar, ArrowRight, Building2, Filter, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useProjects, useProjectCategories, usePageContent } from '../hooks/useData';
+import PageHero from '../components/PageHero';
 import type { Project } from '../lib/supabase';
 
 function ProjectCard({ project }: { project: Project }) {
@@ -282,72 +283,32 @@ export default function ProjectsPage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative pt-32 pb-16 md:pt-40 md:pb-24">
-        <div className="absolute inset-0 bg-gradient-to-b from-navy-900 via-navy-950 to-navy-950" />
+      <PageHero
+        pageId="projects"
+        fallbackTitle="Featured Projects"
+        fallbackSubtitle="Our Portfolio"
+        fallbackDescription="Explore our portfolio of successfully completed construction and engineering projects across various sectors."
+        fallbackImage="https://images.pexels.com/photos/323705/pexels-photo-323705.jpeg?auto=compress&cs=tinysrgb&w=1920"
+      />
 
-        <div className="relative max-w-7xl mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-12"
-          >
-            <span className="inline-block px-4 py-1.5 bg-gold-500/20 text-gold-400 rounded-full text-sm font-medium tracking-wider uppercase mb-4 border border-gold-500/30">
-              {c('projects.hero', 'badge', 'Our Portfolio')}
-            </span>
-            <h1 className="text-5xl md:text-6xl font-heading font-bold text-white mb-6">
-              {c('projects.hero', 'title', 'Featured Projects')}
-            </h1>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              {c('projects.hero', 'description', 'Explore our portfolio of successfully completed construction and engineering projects across various sectors.')}
-            </p>
-          </motion.div>
-
-          {/* Filter Toggle (Mobile) */}
-          <div className="md:hidden mb-6">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-4 py-2 bg-navy-800 rounded-lg text-white"
-            >
-              <Filter className="w-5 h-5" />
-              Filter by Category
-            </button>
-          </div>
-
-          {/* Filters */}
-          <AnimatePresence>
-            {(showFilters || window.innerWidth >= 768) && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="flex flex-wrap justify-center gap-3 mb-12"
+      {/* Filters */}
+      <section className="py-8 bg-navy-950 border-b border-gold-500/10">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-wrap justify-center gap-3">
+            {['all', ...categories].map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setFilter(cat)}
+                className={`px-5 py-2 rounded-full capitalize font-medium transition-all ${
+                  filter === cat
+                    ? 'bg-gold-500 text-navy-950'
+                    : 'bg-navy-800/50 text-gray-400 hover:text-white border border-gold-500/20'
+                }`}
               >
-                <button
-                  onClick={() => setFilter('all')}
-                  className={`px-6 py-2 rounded-full font-medium transition-all ${
-                    filter === 'all'
-                      ? 'bg-gold-500 text-navy-950'
-                      : 'bg-navy-800/50 text-gray-400 hover:text-white border border-gold-500/20'
-                  }`}
-                >
-                  {c('projects.filters', 'all_text', 'All Projects')}
-                </button>
-                {['Commercial', 'Residential', 'Industrial', 'Infrastructure', 'Healthcare', 'Energy'].map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setFilter(cat)}
-                    className={`px-6 py-2 rounded-full font-medium transition-all ${
-                      filter === cat
-                        ? 'bg-gold-500 text-navy-950'
-                        : 'bg-navy-800/50 text-gray-400 hover:text-white border border-gold-500/20'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
+                {cat === 'all' ? 'All Projects' : cat}
+              </button>
+            ))}
+          </div>
         </div>
       </section>
 

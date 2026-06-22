@@ -400,6 +400,26 @@ export interface PageContent {
   updated_at: string;
 }
 
+export interface PageHero {
+  id: string;
+  page_id: string;
+  title: string | null;
+  subtitle: string | null;
+  description: string | null;
+  background_image_url: string | null;
+  overlay_opacity: number;
+  text_alignment: string;
+  button_text: string | null;
+  button_link: string | null;
+  show_button: boolean;
+  height: string;
+  text_color: string;
+  overlay_color: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface VisitorAnalytics {
   id: string;
   session_id: string | null;

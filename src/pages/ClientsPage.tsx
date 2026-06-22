@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Building2, Award, Users, Globe, Star } from 'lucide-react';
 import { useClients, useTestimonials, usePageContent } from '../hooks/useData';
+import PageHero from '../components/PageHero';
 import type { Client, Testimonial } from '../lib/supabase';
 
 export default function ClientsPage() {
@@ -17,27 +18,13 @@ export default function ClientsPage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative pt-32 pb-16 md:pt-40 md:pb-20">
-        <div className="absolute inset-0 bg-gradient-to-b from-navy-900 to-navy-950" />
-
-        <div className="relative max-w-7xl mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center"
-          >
-            <span className="inline-block px-4 py-1.5 bg-gold-500/20 text-gold-400 rounded-full text-sm font-medium tracking-wider uppercase mb-4 border border-gold-500/30">
-              {c('clients.hero', 'badge', 'Our Partners')}
-            </span>
-            <h1 className="text-5xl md:text-6xl font-heading font-bold text-white mb-6">
-              {c('clients.hero', 'title', 'Our Valued Clients')}
-            </h1>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              {c('clients.hero', 'description', 'Proud to serve government bodies, leading corporations, and private developers across the region.')}
-            </p>
-          </motion.div>
-        </div>
-      </section>
+      <PageHero
+        pageId="clients"
+        fallbackTitle="Our Valued Clients"
+        fallbackSubtitle="Our Partners"
+        fallbackDescription="Proud to serve government bodies, leading corporations, and private developers across the region."
+        fallbackImage="https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=1920"
+      />
 
       {/* Stats */}
       <section className="py-12 bg-navy-900 border-y border-gold-500/10">

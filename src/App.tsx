@@ -25,6 +25,7 @@ import Dashboard from './pages/admin/Dashboard';
 import CRUDPage from './pages/admin/CRUDPage';
 import SettingsPage from './pages/admin/SettingsPage';
 import ContentEditorPage from './pages/admin/ContentEditorPage';
+import HeroManagerPage from './pages/admin/HeroManagerPage';
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -358,6 +359,7 @@ function AppRoutes() {
         <Route index element={<Dashboard />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="content" element={<ContentEditorPage />} />
+                  <Route path="heroes" element={<HeroManagerPage />} />
         <Route
           path="inquiries"
           element={

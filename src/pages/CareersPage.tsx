@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Briefcase, MapPin, Clock, DollarSign, Users, ChevronDown, Send, CheckCircle, AlertCircle, FileText } from 'lucide-react';
 import { useJobs, submitJobApplication, usePageContent } from '../hooks/useData';
+import PageHero from '../components/PageHero';
 import type { Job } from '../lib/supabase';
 
 const defaultJobs: Job[] = [
@@ -341,27 +342,13 @@ export default function CareersPage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative pt-32 pb-16 md:pt-40 md:pb-20">
-        <div className="absolute inset-0 bg-gradient-to-b from-navy-900 to-navy-950" />
-
-        <div className="relative max-w-7xl mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center"
-          >
-            <span className="inline-block px-4 py-1.5 bg-gold-500/20 text-gold-400 rounded-full text-sm font-medium tracking-wider uppercase mb-4 border border-gold-500/30">
-              {c('careers.hero', 'badge', 'Join Our Team')}
-            </span>
-            <h1 className="text-5xl md:text-6xl font-heading font-bold text-white mb-6">
-              {c('careers.hero', 'title', 'Career Opportunities')}
-            </h1>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              {c('careers.hero', 'description', 'Build your career with Eden Buildcore. Join a team of passionate professionals shaping the future of construction.')}
-            </p>
-          </motion.div>
-        </div>
-      </section>
+      <PageHero
+        pageId="careers"
+        fallbackTitle="Career Opportunities"
+        fallbackSubtitle="Join Our Team"
+        fallbackDescription="Build your career with Eden Buildcore. Join a team of passionate professionals shaping the future of construction."
+        fallbackImage="https://images.pexels.com/photos/323705/pexels-photo-323705.jpeg?auto=compress&cs=tinysrgb&w=1920"
+      />
 
       {/* Filter */}
       <section className="py-6 bg-navy-950 border-b border-gold-500/10">

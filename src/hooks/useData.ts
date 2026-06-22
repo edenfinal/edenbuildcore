@@ -16,7 +16,8 @@ import type {
   Job,
   ContactInquiry,
   Statistic,
-  PageContent
+  PageContent,
+  PageHero
 } from '../lib/supabase';
 
 // Generic data fetcher hook
@@ -324,6 +325,120 @@ export function useStatistics() {
 
 export function useContactInquiries() {
   return createDataHook<ContactInquiry>('contact_inquiries', 'created_at')();
+}
+
+// Page Hero hook
+export function usePageHero(pageId: string) {
+  const [hero, setHero] = useState<PageHero | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchHero = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('page_heroes')
+        .select('*')
+        .eq('page_id', pageId)
+        .maybeSingle();
+
+      if (error) throw error;
+      setHero(data as PageHero | null);
+    } catch (e) {
+      setError(e instanceof Error ? e : new Error('An error occurred'));
+    } finally {
+      setLoading(false);
+    }
+  }, [pageId]);
+
+  useEffect(() => {
+    fetchHero();
+  }, [fetchHero]);
+
+  const updateHero = useCallback(async (updates: Partial<PageHero>) => {
+    try {
+      const { data, error } = await supabase
+        .from('page_heroes')
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq('page_id', pageId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      setHero(data as PageHero);
+      return true;
+    } catch (e) {
+      console.error('Update hero error:', e);
+      return false;
+    }
+  }, [pageId]);
+
+  return { hero, loading, error, refetch: fetchHero, updateHero };
+}
+
+// All page heroes hook for admin
+export function useAllPageHeroes() {
+  const [heroes, setHeroes] = useState<PageHero[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchHeroes = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('page_heroes')
+        .select('*')
+        .order('page_id');
+
+      if (error) throw error;
+      setHeroes(data as PageHero[]);
+    } catch (e) {
+      setError(e instanceof Error ? e : new Error('An error occurred'));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchHeroes();
+  }, [fetchHeroes]);
+
+  const updateHero = useCallback(async (id: string, updates: Partial<PageHero>) => {
+    try {
+      const { data, error } = await supabase
+        .from('page_heroes')
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      setHeroes((prev) => prev.map((h) => (h.id === id ? (data as PageHero) : h)));
+      return true;
+    } catch (e) {
+      console.error('Update hero error:', e);
+      return false;
+    }
+  }, []);
+
+  const createHero = useCallback(async (heroData: Partial<PageHero>) => {
+    try {
+      const { data, error } = await supabase
+        .from('page_heroes')
+        .insert(heroData)
+        .select()
+        .single();
+
+      if (error) throw error;
+      setHeroes((prev) => [...prev, data as PageHero]);
+      return data as PageHero;
+    } catch (e) {
+      console.error('Create hero error:', e);
+      return null;
+    }
+  }, []);
+
+  return { heroes, loading, error, refetch: fetchHeroes, updateHero, createHero };
 }
 
 // CRUD Operations
