@@ -6,7 +6,8 @@ import {
   ArrowRight, Star, Quote, Shield, Target, Eye, Globe, MapPin,
   Phone, Mail, Clock, CheckCircle, TrendingUp
 } from 'lucide-react';
-import { useSiteSettings, useServices, useProjects, useClients, useTestimonials, useCertifications, useStatistics, usePageContent, useAutoCounters } from '../hooks/useData';
+import { useServices, useProjects, useClients, useTestimonials, useCertifications, useStatistics, usePageContent, useAutoCounters } from '../hooks/useData';
+import { useSettings } from '../contexts/SettingsContext';
 import PageHero from '../components/PageHero';
 import type { Project, Client, Testimonial, Service, Certification, Statistic } from '../lib/supabase';
 
@@ -152,7 +153,7 @@ function StatsSection({ stats, c }: { stats: Statistic[]; c: (section: string, k
 
 // About Preview Section
 function AboutPreview({ c }: { c: (section: string, key: string, fallback: string) => string }) {
-  const { settings } = useSiteSettings();
+  const { settings } = useSettings();
 
   return (
     <section className="relative py-16 sm:py-20 md:py-24 bg-navy-950 overflow-hidden">
@@ -604,7 +605,7 @@ function VisionMissionSection({ c }: { c: (section: string, key: string, fallbac
 
 // CTA Section
 function CTASection({ c }: { c: (section: string, key: string, fallback: string) => string }) {
-  const { settings } = useSiteSettings();
+  const { settings } = useSettings();
 
   return (
     <section className="relative py-24 overflow-hidden">

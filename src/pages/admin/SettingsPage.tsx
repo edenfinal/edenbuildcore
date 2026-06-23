@@ -6,7 +6,7 @@ import {
   MousePointer, ArrowRight, Hash, Check, ChevronDown, Sparkles,
   Layers, Box, Ruler, CornerDownRight, Zap, Shield, Info
 } from 'lucide-react';
-import { useSiteSettings } from '../../hooks/useData';
+import { useSettings } from '../../contexts/SettingsContext';
 import { supabase } from '../../lib/supabase';
 
 /* ─── Constants ─── */
@@ -443,7 +443,7 @@ function LivePreview({ formData }: { formData: any }) {
 
 /* ─── Main Component ─── */
 export default function SettingsPage() {
-  const { settings, loading, updateSettings } = useSiteSettings();
+  const { settings, loading, updateSettings } = useSettings();
   const [activeTab, setActiveTab] = useState('general');
   const [formData, setFormData] = useState<any>({});
   const [saving, setSaving] = useState(false);

@@ -4,11 +4,11 @@ import Navbar from './Navbar';
 import Footer from './Footer';
 import ThemeProvider from './ThemeProvider';
 import { initializeDefaultAdmin } from '../hooks/useAuth';
-import { useSiteSettings } from '../hooks/useData';
+import { useSettings } from '../contexts/SettingsContext';
 
 export default function Layout() {
   const location = useLocation();
-  const { settings } = useSiteSettings();
+  const { settings } = useSettings();
 
   useEffect(() => {
     initializeDefaultAdmin();

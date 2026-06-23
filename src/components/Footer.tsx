@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, Clock, Facebook, Linkedin, Twitter, Instagram, Youtube, ArrowUp, ArrowRight } from 'lucide-react';
-import { useSiteSettings, useServices } from '../hooks/useData';
+import { useServices } from '../hooks/useData';
 import { useSettings } from '../contexts/SettingsContext';
 
 const quickLinks = [
@@ -14,7 +14,7 @@ const quickLinks = [
 ];
 
 export default function Footer() {
-  const { settings } = useSiteSettings();
+  const { settings } = useSettings();
   const { data: services } = useServices();
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
