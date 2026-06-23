@@ -6,7 +6,7 @@ import {
   ArrowRight, Star, Quote, Shield, Target, Eye, Globe, MapPin,
   Phone, Mail, Clock, CheckCircle, TrendingUp
 } from 'lucide-react';
-import { useSiteSettings, useServices, useProjects, useClients, useTestimonials, useCertifications, useStatistics, usePageContent } from '../hooks/useData';
+import { useSiteSettings, useServices, useProjects, useClients, useTestimonials, useCertifications, useStatistics, usePageContent, useAutoCounters } from '../hooks/useData';
 import PageHero from '../components/PageHero';
 import type { Project, Client, Testimonial, Service, Certification, Statistic } from '../lib/supabase';
 
@@ -76,32 +76,35 @@ function SectionTitle({ subtitle, title, description, light = false }: { subtitl
 // Hero Section - Only shows admin-managed slides, no hardcoded defaults
 // Stats Section - Uses page_content for editable values, falls back to DB statistics table
 function StatsSection({ stats, c }: { stats: Statistic[]; c: (section: string, key: string, fallback: string) => string }) {
+  const { counters, loading: countersLoading } = useAutoCounters();
+
   // Build stats from page_content keys for full editability
+  // Use auto-counters from database, fallback to page_content, then to static stats
   const statItems = [
     {
       key: 'stat_1',
-      value: c('stats', 'stat_1_value', stats[0]?.stat_value || '25'),
+      value: c('stats', 'stat_1_value', stats[0]?.stat_value || String(counters.experience || 25)),
       prefix: c('stats', 'stat_1_prefix', stats[0]?.stat_prefix || ''),
       suffix: c('stats', 'stat_1_suffix', stats[0]?.stat_suffix || '+'),
       desc: c('stats', 'stat_1_description', stats[0]?.description || 'Years of Excellence'),
     },
     {
       key: 'stat_2',
-      value: c('stats', 'stat_2_value', stats[1]?.stat_value || '500'),
+      value: c('stats', 'stat_2_value', stats[1]?.stat_value || String(counters.projects || 500)),
       prefix: c('stats', 'stat_2_prefix', stats[1]?.stat_prefix || ''),
       suffix: c('stats', 'stat_2_suffix', stats[1]?.stat_suffix || '+'),
       desc: c('stats', 'stat_2_description', stats[1]?.description || 'Projects Completed'),
     },
     {
       key: 'stat_3',
-      value: c('stats', 'stat_3_value', stats[2]?.stat_value || '350'),
+      value: c('stats', 'stat_3_value', stats[2]?.stat_value || String(counters.clients || 350)),
       prefix: c('stats', 'stat_3_prefix', stats[2]?.stat_prefix || ''),
       suffix: c('stats', 'stat_3_suffix', stats[2]?.stat_suffix || '+'),
       desc: c('stats', 'stat_3_description', stats[2]?.description || 'Happy Clients'),
     },
     {
       key: 'stat_4',
-      value: c('stats', 'stat_4_value', stats[3]?.stat_value || '150'),
+      value: c('stats', 'stat_4_value', stats[3]?.stat_value || String(counters.team || 150)),
       prefix: c('stats', 'stat_4_prefix', stats[3]?.stat_prefix || ''),
       suffix: c('stats', 'stat_4_suffix', stats[3]?.stat_suffix || '+'),
       desc: c('stats', 'stat_4_description', stats[3]?.description || 'Team Members'),
@@ -178,7 +181,7 @@ function AboutPreview({ c }: { c: (section: string, key: string, fallback: strin
             </div>
             {/* Overlay Card */}
             <div className="absolute -bottom-4 sm:-bottom-6 right-2 sm:right-4 md:right-8 bg-gradient-to-r from-gold-600 to-gold-500 text-navy-950 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-gold-lg">
-              <div className="text-2xl sm:text-3xl md:text-4xl font-heading font-bold">25+</div>
+              <div className="text-2xl sm:text-3xl md:text-4xl font-heading font-bold">{counters.experience || 25}+</div>
               <div className="text-xs sm:text-sm font-medium">{c('about_preview', 'badge_text', 'Years of Excellence')}</div>
             </div>
           </motion.div>

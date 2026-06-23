@@ -327,6 +327,88 @@ export function useContactInquiries() {
   return createDataHook<ContactInquiry>('contact_inquiries', 'created_at')();
 }
 
+// Auto-linking counters - Phase 5
+export function useAutoCounters() {
+  const [counters, setCounters] = useState({
+    projects: 0,
+    clients: 0,
+    team: 0,
+    experience: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchCounters() {
+      try {
+        const [projectsRes, clientsRes, teamRes, settingsRes] = await Promise.all([
+          supabase.from('projects').select('id', { count: 'exact', head: true }),
+          supabase.from('clients').select('id', { count: 'exact', head: true }),
+          supabase.from('team_members').select('id', { count: 'exact', head: true }),
+          supabase.from('site_settings').select('company_start_year').limit(1).maybeSingle(),
+        ]);
+
+        const startYear = settingsRes.data?.company_start_year || 2008;
+        const currentYear = new Date().getFullYear();
+
+        setCounters({
+          projects: projectsRes.count || 0,
+          clients: clientsRes.count || 0,
+          team: teamRes.count || 0,
+          experience: currentYear - parseInt(startYear),
+        });
+      } catch (e) {
+        console.error('Counter fetch error:', e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchCounters();
+  }, []);
+
+  return { counters, loading };
+}
+
+// Notifications hook - Phase 9
+export function useNotifications() {
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      setNotifications(data || []);
+      setUnreadCount((data || []).filter((n: any) => !n.is_read).length);
+    } catch (e) {
+      console.error('Notifications error:', e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  const markAsRead = async (id: string) => {
+    await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+    fetchNotifications();
+  };
+
+  const markAllAsRead = async () => {
+    await supabase.from('notifications').update({ is_read: true }).eq('is_read', false);
+    fetchNotifications();
+  };
+
+  return { notifications, unreadCount, loading, markAsRead, markAllAsRead, refetch: fetchNotifications };
+}
+
 // Page Hero hook
 export function usePageHero(pageId: string) {
   const [hero, setHero] = useState<PageHero | null>(null);

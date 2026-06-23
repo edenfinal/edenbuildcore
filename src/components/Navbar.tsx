@@ -104,7 +104,6 @@ export default function Navbar() {
                 );
               })}
               <div className="w-px h-4 bg-[#c49028]/20" />
-              <Link to="/admin" className="text-[#a0a0a0] hover:text-[#c49028] text-xs transition-colors tracking-wider">ADMIN</Link>
             </div>
           </div>
         </div>

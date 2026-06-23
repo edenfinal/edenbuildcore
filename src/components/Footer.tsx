@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, Clock, Facebook, Linkedin, Twitter, Instagram, Youtube, ArrowUp, ArrowRight } from 'lucide-react';
 import { useSiteSettings, useServices } from '../hooks/useData';
+import { useSettings } from '../contexts/SettingsContext';
 
 const quickLinks = [
   { name: 'About Us', path: '/about' },
@@ -220,7 +221,7 @@ export default function Footer() {
             <div className="flex items-center gap-4 sm:gap-6 text-[#606060] text-xs sm:text-sm">
               <Link to="/privacy" className="hover:text-[#c49028] transition-colors">Privacy Policy</Link>
               <Link to="/terms" className="hover:text-[#c49028] transition-colors">Terms of Service</Link>
-              <Link to="/admin" className="hover:text-[#c49028] transition-colors">Admin</Link>
+
             </div>
           </div>
         </div>
