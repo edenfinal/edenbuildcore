@@ -79,8 +79,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       const { data, error } = await supabase
         .from('site_settings')
         .select('*')
-        .limit(1)
-        .maybeSingle();
+        .single();
 
       if (error) {
         console.warn('Settings fetch error:', error);
@@ -115,20 +114,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   const updateSetting = async (key: string, value: any) => {
     try {
-      const { data: existing } = await supabase
+      const { error } = await supabase
         .from('site_settings')
-        .select('id')
-        .limit(1)
-        .maybeSingle();
+        .update({ [key]: value, updated_at: new Date().toISOString() })
+        .single();
 
-      if (existing) {
-        const { error } = await supabase
-          .from('site_settings')
-          .update({ [key]: value, updated_at: new Date().toISOString() })
-          .eq('id', existing.id);
-
-        if (error) throw error;
-      }
+      if (error) throw error;
 
       setSettings((prev) => prev ? { ...prev, [key]: value } : null);
     } catch (e) {
@@ -138,20 +129,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   const updateSettings = async (updates: Partial<SiteSettings>) => {
     try {
-      const { data: existing } = await supabase
+      const { error } = await supabase
         .from('site_settings')
-        .select('id')
-        .limit(1)
-        .maybeSingle();
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .single();
 
-      if (existing) {
-        const { error } = await supabase
-          .from('site_settings')
-          .update({ ...updates, updated_at: new Date().toISOString() })
-          .eq('id', existing.id);
-
-        if (error) throw error;
-      }
+      if (error) throw error;
 
       setSettings((prev) => prev ? { ...prev, ...updates } : null);
       applyThemeColors({ ...settings, ...updates } as SiteSettings);

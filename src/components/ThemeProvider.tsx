@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useSettings } from '../contexts/SettingsContext';
+import { useSiteSettings } from '../hooks/useData';
 
 // Available fonts that are actually loadable from Google Fonts
 // Key: display name, Value: Google Font API name
@@ -44,7 +44,7 @@ function getGoogleFontName(fontValue: string): string | null {
 }
 
 export default function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const { settings } = useSettings();
+  const { settings } = useSiteSettings();
 
   useEffect(() => {
     if (!settings) return;

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, ChevronDown, Phone, Mail, ArrowRight } from 'lucide-react';
-import { useSettings } from '../contexts/SettingsContext';
+import { useSiteSettings } from '../hooks/useData';
 
 const navLinks = [
   { name: 'Home', path: '/' },
@@ -45,7 +45,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const location = useLocation();
-  const { settings } = useSettings();
+  const { settings } = useSiteSettings();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 60);

@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Phone, Mail, Clock, Send, MessageSquare, CheckCircle, AlertCircle } from 'lucide-react';
-import { submitContactForm, usePageContent } from '../hooks/useData';
-import { useSettings } from '../contexts/SettingsContext';
+import { useSiteSettings, submitContactForm, usePageContent } from '../hooks/useData';
 import PageHero from '../components/PageHero';
 
 export default function ContactPage() {
-  const { settings } = useSettings();
+  const { settings } = useSiteSettings();
   const pageContent = usePageContent('contact');
   const c = (section: string, key: string, fallback: string) => pageContent.get(section, key, fallback);
 

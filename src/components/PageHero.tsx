@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { usePageHero } from '../hooks/useData';
-import { useSettings } from '../contexts/SettingsContext';
+import { useSiteSettings } from '../hooks/useData';
 import { supabase } from '../lib/supabase';
 import type { PageHero as PageHeroType } from '../lib/supabase';
 
@@ -288,7 +288,7 @@ export default function PageHero({
   breadcrumbItems = [],
 }: PageHeroProps) {
   const { hero, loading } = usePageHero(pageId);
-  const { settings } = useSettings();
+  const { settings } = useSiteSettings();
   const { slides: carouselSlides } = useCarouselSlides(pageId, hero?.is_carousel ?? false);
 
   const title = hero?.title || fallbackTitle;
