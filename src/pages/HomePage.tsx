@@ -153,6 +153,7 @@ function StatsSection({ stats, c }: { stats: Statistic[]; c: (section: string, k
 // About Preview Section
 function AboutPreview({ c }: { c: (section: string, key: string, fallback: string) => string }) {
   const { settings } = useSiteSettings();
+  const { counters } = useAutoCounters();
 
   return (
     <section className="relative py-16 sm:py-20 md:py-24 bg-navy-950 overflow-hidden">
