@@ -61,6 +61,7 @@ const menuSections = [
     title: 'System',
     items: [
       { name: 'Site Settings', path: '/admin/settings', icon: Settings },
+      { name: 'Admin Users', path: '/admin/admins', icon: Shield },
     ]
   }
 ];
@@ -328,12 +329,12 @@ export default function AdminLayout() {
             <div className="flex items-center gap-3 px-3 py-3 bg-[#030810]/60 border border-[#c49028]/10 rounded-xl">
               <div className="relative">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#c49028]/20 to-[#c49028]/5 flex items-center justify-center text-[#c49028] font-bold text-sm border border-[#c49028]/20">
-                  {admin?.full_name?.charAt(0)?.toUpperCase() || 'A'}
+                  {admin?.name?.charAt(0)?.toUpperCase() || 'A'}
                 </div>
                 <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-[#0c1a2e]" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white font-semibold text-sm truncate">{admin?.full_name || 'Administrator'}</p>
+                <p className="text-white font-semibold text-sm truncate">{admin?.name || 'Administrator'}</p>
                 <p className="text-[#606060] text-xs truncate capitalize">{admin?.role || 'Super Admin'}</p>
               </div>
               <button
@@ -430,10 +431,10 @@ export default function AdminLayout() {
               <div className="p-4 border-t border-[#c49028]/10">
                 <div className="flex items-center gap-3 px-3 py-3 bg-[#030810]/60 border border-[#c49028]/10 rounded-xl">
                   <div className="w-10 h-10 rounded-xl bg-[#c49028]/20 flex items-center justify-center text-[#c49028] font-bold">
-                    {admin?.full_name?.charAt(0) || 'A'}
+                    {admin?.name?.charAt(0) || 'A'}
                   </div>
                   <div className="flex-1">
-                    <p className="text-white font-semibold">{admin?.full_name || 'Administrator'}</p>
+                    <p className="text-white font-semibold">{admin?.name || 'Administrator'}</p>
                     <p className="text-[#606060] text-xs">{admin?.email}</p>
                   </div>
                 </div>
