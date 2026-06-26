@@ -1,15 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Save, Search, ChevronDown, ChevronRight, CheckCircle, AlertCircle,
-  FileText, Type, AlignLeft, Palette, Bold, Italic, Underline,
-  Strikethrough, AlignCenter, AlignRight, List, ListOrdered,
-  Link as LinkIcon, Image, Undo, Redo, Code, Eye, EyeOff,
-  Trash2, Copy, Sparkles, Layout, Heading, Hash, Quote,
-  Minus, Table, Columns, Maximize2, Minimize2, RefreshCw,
-  Check, X, Pencil, ChevronLeft, ChevronRight as ChevronRightIcon,
-  Type as TypeIcon, Baseline, CaseSensitive, Paintbrush, Wand2
-} from 'lucide-react';
+import { Save, Search, ChevronDown, ChevronRight, CheckCircle, AlertCircle, FileText, Type, AlignLeft, Palette, Bold, Italic, Underline, Strikethrough, AlignCenter, AlignRight, List, ListOrdered, Link as LinkIcon, Image, Undo, Redo, Code, Eye, EyeOff, Trash2, Copy, Sparkles, LayoutGrid as Layout, Heading, Hash, Quote, Minus, Table, Columns2 as Columns, Maximize2, Minimize2, RefreshCw, Check, X, Pencil, ChevronLeft, ChevronRight as ChevronRightIcon, Type as TypeIcon, Baseline, CaseSensitive, Paintbrush, Wand2 } from 'lucide-react';
 import { useAllPageContent } from '../../hooks/useData';
 import type { PageContent } from '../../lib/supabase';
 
@@ -80,6 +71,7 @@ const SECTION_LABELS: Record<string, string> = {
   iso: 'ISO Certifications',
   registrations: 'Company Registrations',
   government: 'Government Clients',
+  timeline: 'Journey Timeline',
   private: 'Private Clients',
 };
 

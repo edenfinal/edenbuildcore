@@ -80,34 +80,40 @@ function StatsSection({ stats, c }: { stats: Statistic[]; c: (section: string, k
 
   // Build stats from page_content keys for full editability
   // Use auto-counters from database, fallback to page_content, then to static stats
+  // Stat 1 = Years Experience (ALWAYS auto-calculated from company_start_year in site_settings)
+  // Stats 2/3/4 = from statistics table (admin-editable via Statistics CRUD page)
+  const projStat = stats.find(s => s.stat_key === 'projects_completed');
+  const clientStat = stats.find(s => s.stat_key === 'happy_clients');
+  const teamStat = stats.find(s => s.stat_key === 'team_members');
+
   const statItems = [
     {
       key: 'stat_1',
-      value: c('stats', 'stat_1_value', stats[0]?.stat_value || String(counters.experience)),
-      prefix: c('stats', 'stat_1_prefix', stats[0]?.stat_prefix || ''),
-      suffix: c('stats', 'stat_1_suffix', stats[0]?.stat_suffix || '+'),
-      desc: c('stats', 'stat_1_description', stats[0]?.description || 'Years of Excellence'),
+      value: String(counters.experience || 0),
+      prefix: '',
+      suffix: '+',
+      desc: c('stats', 'stat_1_description', 'Years of Excellence'),
     },
     {
       key: 'stat_2',
-      value: c('stats', 'stat_2_value', stats[1]?.stat_value || String(counters.projects)),
-      prefix: c('stats', 'stat_2_prefix', stats[1]?.stat_prefix || ''),
-      suffix: c('stats', 'stat_2_suffix', stats[1]?.stat_suffix || '+'),
-      desc: c('stats', 'stat_2_description', stats[1]?.description || 'Projects Completed'),
+      value: projStat?.stat_value || String(counters.projects || 0),
+      prefix: '',
+      suffix: projStat?.stat_suffix || '+',
+      desc: c('stats', 'stat_2_description', projStat?.description || 'Projects Completed'),
     },
     {
       key: 'stat_3',
-      value: c('stats', 'stat_3_value', stats[2]?.stat_value || String(counters.clients)),
-      prefix: c('stats', 'stat_3_prefix', stats[2]?.stat_prefix || ''),
-      suffix: c('stats', 'stat_3_suffix', stats[2]?.stat_suffix || '+'),
-      desc: c('stats', 'stat_3_description', stats[2]?.description || 'Happy Clients'),
+      value: clientStat?.stat_value || String(counters.clients || 0),
+      prefix: '',
+      suffix: clientStat?.stat_suffix || '+',
+      desc: c('stats', 'stat_3_description', clientStat?.description || 'Happy Clients'),
     },
     {
       key: 'stat_4',
-      value: c('stats', 'stat_4_value', stats[3]?.stat_value || String(counters.team)),
-      prefix: c('stats', 'stat_4_prefix', stats[3]?.stat_prefix || ''),
-      suffix: c('stats', 'stat_4_suffix', stats[3]?.stat_suffix || '+'),
-      desc: c('stats', 'stat_4_description', stats[3]?.description || 'Team Members'),
+      value: teamStat?.stat_value || String(counters.team || 0),
+      prefix: '',
+      suffix: teamStat?.stat_suffix || '+',
+      desc: c('stats', 'stat_4_description', teamStat?.description || 'Team Members'),
     },
   ];
 

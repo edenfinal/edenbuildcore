@@ -42,9 +42,11 @@ export default {
         },
       },
       fontFamily: {
-        display: ['Playfair Display', 'serif'],
-        sans:    ['Inter', 'system-ui', 'sans-serif'],
-        heading: ['Cormorant Garamond', 'serif'],
+        // Use CSS vars so the admin Settings page controls the font live
+        display: ['var(--heading-font)', 'serif'],
+        sans:    ['var(--body-font)', 'Inter', 'system-ui', 'sans-serif'],
+        heading: ['var(--heading-font)', 'serif'],
+        body:    ['var(--body-font)', 'Inter', 'sans-serif'],
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

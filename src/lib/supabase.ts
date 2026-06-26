@@ -35,6 +35,7 @@ export async function uploadImage(
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${supabaseAnonKey}`,
+          'apikey': supabaseAnonKey || '',
         },
         body: formData,
       }

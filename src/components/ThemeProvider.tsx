@@ -75,18 +75,19 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
     body.style.color = settings.text_color || '#ffffff';
 
     // Apply fonts
-    const headingFont = settings.heading_font || 'Playfair Display, serif';
-    const bodyFont = settings.body_font || 'Inter, sans-serif';
+    // Only apply fonts that are explicitly set in DB — don't override CSS var with a hardcoded fallback
+    const headingFont = settings.heading_font || null;
+    const bodyFont = settings.body_font || null;
 
-    root.style.setProperty('--heading-font', headingFont);
-    root.style.setProperty('--body-font', bodyFont);
+    if (headingFont) root.style.setProperty('--heading-font', headingFont);
+    if (bodyFont) root.style.setProperty('--body-font', bodyFont);
 
-    body.style.fontFamily = bodyFont;
+    if (bodyFont) body.style.fontFamily = bodyFont;
 
     // Load Google Fonts dynamically
     const fontsToLoad: string[] = [];
-    const headingName = getGoogleFontName(headingFont);
-    const bodyName = getGoogleFontName(bodyFont);
+    const headingName = headingFont ? getGoogleFontName(headingFont) : null;
+    const bodyName = bodyFont ? getGoogleFontName(bodyFont) : null;
 
     if (headingName) fontsToLoad.push(headingName);
     if (bodyName && bodyName !== headingName) fontsToLoad.push(bodyName);
