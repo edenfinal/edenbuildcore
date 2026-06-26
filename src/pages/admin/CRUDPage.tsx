@@ -7,10 +7,18 @@ import {
 } from 'lucide-react';
 import { supabase, uploadImage } from '../../lib/supabase';
 
+interface ColumnDef {
+  key: string;
+  label: string;
+  type: string;
+  required?: boolean;
+  options?: string[];
+}
+
 interface CRUDPageProps {
   title: string;
   tableName: string;
-  columns: { key: string; label: string; type: string; required?: boolean; options?: string[] }[];
+  columns: ColumnDef[];
   defaultValues?: Record<string, any>;
   displayFields: { key: string; label: string }[];
 }
@@ -27,15 +35,22 @@ export default function CRUDPage({ title, tableName, columns, defaultValues = {}
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<{ field: string; value: any } | null>(null);
   const [sortField, setSortField] = useState<string>('created_at');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [reorderMode, setReorderMode] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  // For project-select type fields
+  const [projectOptions, setProjectOptions] = useState<{ id: string; title: string }[]>([]);
 
   useEffect(() => {
     fetchData();
+    // Load project options if any column uses project-select type
+    if (columns.some(c => c.type === 'project-select')) {
+      supabase.from('projects').select('id, title').eq('is_published', true).order('title')
+        .then(({ data }) => setProjectOptions(data || []));
+    }
   }, [tableName, sortField, sortDir]);
 
   const fetchData = async () => {
@@ -690,6 +705,22 @@ export default function CRUDPage({ title, tableName, columns, defaultValues = {}
                           <option key={opt} value={opt}>{opt}</option>
                         ))}
                       </select>
+                    ) : col.type === 'multi-image' ? (
+                      <MultiImageUploadField
+                        value={Array.isArray(formData[col.key]) ? formData[col.key] : (formData[col.key] ? [formData[col.key]] : [])}
+                        onChange={(urls) => handleChange(col.key, urls)}
+                      />
+                    ) : col.type === 'project-select' ? (
+                      <select
+                        value={formData[col.key] || ''}
+                        onChange={e => handleChange(col.key, e.target.value || null)}
+                        className="w-full px-4 py-3 bg-[#030810]/60 border border-[#c49028]/15 rounded-xl text-white text-sm focus:border-[#c49028]/40 focus:outline-none transition-all"
+                      >
+                        <option value="">No project linked</option>
+                        {projectOptions.map(p => (
+                          <option key={p.id} value={p.id}>{p.title}</option>
+                        ))}
+                      </select>
                     ) : col.type === 'boolean' ? (
                       <button
                         type="button"
@@ -810,6 +841,82 @@ function ImageUploadField({ value, onChange }: { value: string; onChange: (url: 
           accept="image/*"
           onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+        />
+        {uploading && (
+          <div className="absolute inset-0 bg-[#030810]/80 rounded-xl flex items-center justify-center z-20">
+            <div className="w-5 h-5 border-2 border-[#c49028] border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+      </div>
+      {error && <p className="text-red-400 text-[10px]">{error}</p>}
+    </div>
+  );
+}
+
+/* ─── Multi Image Upload Field ─── */
+function MultiImageUploadField({ value, onChange }: { value: string[]; onChange: (urls: string[]) => void }) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleFiles = async (files: FileList) => {
+    setUploading(true);
+    setError('');
+    const newUrls: string[] = [];
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const { url, error: uploadErr } = await uploadImage(files[i], 'gallery');
+        if (uploadErr || !url) { setError(uploadErr || 'Upload failed'); break; }
+        newUrls.push(url);
+      }
+      if (newUrls.length > 0) onChange([...value, ...newUrls]);
+    } catch (e: any) {
+      setError(e?.message || 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeImage = (idx: number) => {
+    onChange(value.filter((_, i) => i !== idx));
+  };
+
+  return (
+    <div className="space-y-3">
+      {value.length > 0 && (
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+          {value.map((url, idx) => (
+            <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-[#c49028]/20 group">
+              <img src={url} alt="" className="w-full h-full object-cover" onError={() => removeImage(idx)} />
+              <button
+                type="button"
+                onClick={() => removeImage(idx)}
+                className="absolute top-1 right-1 w-5 h-5 bg-red-500/80 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 z-10"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      <div
+        className="relative border-2 border-dashed border-[#c49028]/20 rounded-xl p-4 hover:border-[#c49028]/40 transition-colors bg-[#030810]/40 cursor-pointer"
+        onClick={() => inputRef.current?.click()}
+        onDrop={(e) => { e.preventDefault(); if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files); }}
+        onDragOver={(e) => e.preventDefault()}
+      >
+        <div className="text-center">
+          <Upload className="w-6 h-6 text-[#c49028]/40 mx-auto mb-1" />
+          <p className="text-[11px] text-gray-400">Click or drag to add images</p>
+          <p className="text-[10px] text-gray-600 mt-0.5">Multiple files supported</p>
+        </div>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={(e) => e.target.files?.length && handleFiles(e.target.files)}
+          className="hidden"
         />
         {uploading && (
           <div className="absolute inset-0 bg-[#030810]/80 rounded-xl flex items-center justify-center z-20">

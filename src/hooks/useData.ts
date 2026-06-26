@@ -181,7 +181,10 @@ export function usePageContent(pageId: string) {
   }, [pageId]);
 
   const get = (section: string, key: string, fallback: string = ''): string => {
-    return content[`${section}.${key}`] || fallback;
+    const val = content[`${section}.${key}`];
+    // Return fallback only if key doesn't exist in DB, not if it's intentionally empty
+    if (val === undefined) return fallback;
+    return val || fallback;
   };
 
   const updateContent = async (section: string, key: string, value: string): Promise<boolean> => {
@@ -333,7 +336,7 @@ export function useContactInquiries() {
   return createDataHook<ContactInquiry>('contact_inquiries', 'created_at')();
 }
 
-// Auto-linking counters - Phase 5
+// Auto-linking counters - reads from statistics table, falls back to DB row counts
 export function useAutoCounters() {
   const [counters, setCounters] = useState({
     projects: 0,
@@ -346,21 +349,24 @@ export function useAutoCounters() {
   useEffect(() => {
     async function fetchCounters() {
       try {
-        const [projectsRes, clientsRes, teamRes, settingsRes] = await Promise.all([
-          supabase.from('projects').select('id', { count: 'exact', head: true }),
-          supabase.from('clients').select('id', { count: 'exact', head: true }),
-          supabase.from('team_members').select('id', { count: 'exact', head: true }),
+        const [statsRes, settingsRes] = await Promise.all([
+          supabase.from('statistics').select('stat_key, stat_value').eq('is_active', true),
           supabase.from('site_settings').select('company_start_year').limit(1).maybeSingle(),
         ]);
 
-        const startYear = settingsRes.data?.company_start_year || 2008;
+        const statsMap: Record<string, number> = {};
+        (statsRes.data || []).forEach((s: any) => {
+          statsMap[s.stat_key] = parseInt(s.stat_value) || 0;
+        });
+
+        const startYear = settingsRes.data?.company_start_year || 1999;
         const currentYear = new Date().getFullYear();
 
         setCounters({
-          projects: projectsRes.count || 0,
-          clients: clientsRes.count || 0,
-          team: teamRes.count || 0,
-          experience: currentYear - parseInt(startYear),
+          projects: statsMap['projects_completed'] || 0,
+          clients: statsMap['happy_clients'] || 0,
+          team: statsMap['team_members'] || 0,
+          experience: statsMap['years_experience'] || (currentYear - parseInt(startYear)),
         });
       } catch (e) {
         console.error('Counter fetch error:', e);

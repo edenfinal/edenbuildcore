@@ -3,7 +3,7 @@ import {
   Target, Eye, Shield, Award, Users, Globe, Building2,
   CheckCircle, History, TrendingUp, Heart, Lightbulb, Leaf, Quote
 } from 'lucide-react';
-import { useTeamMembers, usePageContent, useSiteSettings } from '../hooks/useData';
+import { useTeamMembers, usePageContent, useSiteSettings, useAutoCounters } from '../hooks/useData';
 import PageHero from '../components/PageHero';
 import type { TeamMember } from '../lib/supabase';
 
@@ -176,6 +176,7 @@ function TeamSection() {
 export default function AboutPage() {
   const pageContent = usePageContent('about');
   const c = (section: string, key: string, fallback: string) => pageContent.get(section, key, fallback);
+  const { counters } = useAutoCounters();
 
   return (
     <>
@@ -228,7 +229,7 @@ export default function AboutPage() {
                 />
               </div>
               <div className="absolute -bottom-6 -left-6 bg-gradient-to-r from-gold-600 to-gold-500 text-navy-950 p-6 rounded-2xl shadow-gold-lg">
-                <div className="text-3xl font-heading font-bold">25+</div>
+                <div className="text-3xl font-heading font-bold">{counters.experience || 25}+</div>
                 <div className="text-sm font-medium">Years Experience</div>
               </div>
             </motion.div>
