@@ -6,63 +6,6 @@ import { useBlogPosts, useBlogCategories, usePageContent } from '../hooks/useDat
 import PageHero from '../components/PageHero';
 import type { BlogPost, BlogCategory } from '../lib/supabase';
 
-const defaultPosts: BlogPost[] = [
-  {
-    id: '1',
-    title: 'The Future of Sustainable Construction',
-    slug: 'future-sustainable-construction',
-    excerpt: 'Exploring green building practices and sustainable construction methods for a better tomorrow.',
-    content: 'Full article content here...',
-    category: 'Sustainability',
-    featured_image_url: 'https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg',
-    author_id: null,
-    is_featured: true,
-    is_published: true,
-    published_at: '2024-01-15',
-    reading_time: 5,
-    tags: ['sustainability', 'green building', 'environment'],
-    view_count: 245,
-    created_at: '2024-01-15',
-    updated_at: '2024-01-15'
-  },
-  {
-    id: '2',
-    title: 'Modern Construction Technologies',
-    slug: 'modern-construction-technologies',
-    excerpt: 'How technology is transforming the construction industry with AI, drones, and smart materials.',
-    content: 'Full article content here...',
-    category: 'Technology',
-    featured_image_url: 'https://images.pexels.com/photos/256417/pexels-photo-256417.jpeg',
-    author_id: null,
-    is_featured: false,
-    is_published: true,
-    published_at: '2024-01-10',
-    reading_time: 7,
-    tags: ['technology', 'innovation', 'AI'],
-    view_count: 189,
-    created_at: '2024-01-10',
-    updated_at: '2024-01-10'
-  },
-  {
-    id: '3',
-    title: 'Best Practices in Project Management',
-    slug: 'best-practices-project-management',
-    excerpt: 'Essential project management strategies for successful construction projects.',
-    content: 'Full article content here...',
-    category: 'Management',
-    featured_image_url: 'https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg',
-    author_id: null,
-    is_featured: false,
-    is_published: true,
-    published_at: '2024-01-05',
-    reading_time: 6,
-    tags: ['management', 'projects', 'planning'],
-    view_count: 156,
-    created_at: '2024-01-05',
-    updated_at: '2024-01-05'
-  },
-];
-
 function PostCard({ post, featured = false }: { post: BlogPost; featured?: boolean }) {
   const tags = post.tags as string[] || [];
 
@@ -76,7 +19,7 @@ function PostCard({ post, featured = false }: { post: BlogPost; featured?: boole
       <Link to={`/blog/${post.slug || post.id}`} className={`block ${featured ? 'md:w-1/2' : ''}`}>
         <div className={`relative rounded-2xl overflow-hidden mb-4 ${featured ? 'aspect-[16/9]' : 'aspect-video'}`}>
           <img
-            src={post.featured_image_url || 'https://images.pexels.com/photos/256417/pexels-photo-256417.jpeg'}
+            src={post.featured_image_url || ''}
             alt={post.title}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
@@ -158,7 +101,7 @@ function PostDetail() {
       {/* Hero */}
       <section className="relative h-[50vh] min-h-[300px]">
         <img
-          src={post.featured_image_url || 'https://images.pexels.com/photos/256417/pexels-photo-256417.jpeg'}
+          src={post.featured_image_url || ''}
           alt={post.title}
           className="w-full h-full object-cover"
         />
@@ -257,10 +200,6 @@ export default function BlogPage() {
       {/* Hero Section */}
       <PageHero
         pageId="blog"
-        fallbackTitle="News & Insights"
-        fallbackSubtitle="Our Blog"
-        fallbackDescription="Stay updated with the latest trends, insights, and news from the construction industry."
-        fallbackImage="https://images.pexels.com/photos/1454165804606-c3d57bc86b40?auto=compress&cs=tinysrgb&w=1920"
       />
 
       {/* Search & Filter */}

@@ -1,11 +1,10 @@
 import { motion } from 'framer-motion';
 import {
-  Target, Eye, Shield, Award, Users, Globe, Building2,
-  CheckCircle, History, TrendingUp, Heart, Lightbulb, Leaf, Quote
+  Target, Eye, Shield, Award, Users,
+  Globe, TrendingUp, Heart, Lightbulb, Leaf, Quote
 } from 'lucide-react';
 import { useTeamMembers, usePageContent, useSiteSettings, useAutoCounters } from '../hooks/useData';
 import PageHero from '../components/PageHero';
-import type { TeamMember } from '../lib/supabase';
 
 const timeline = [
   { year: '1999', title: 'Company Founded', description: 'Eden Buildcore was established with a vision to transform the construction industry.' },
@@ -28,7 +27,7 @@ const coreValues = [
 function FounderSection() {
   const { settings } = useSiteSettings();
   const pageContent = usePageContent('about');
-  const c = (section: string, key: string, fallback: string) => pageContent.get(section, key, fallback);
+  const c = (section: string, key: string, fallback = '') => pageContent.get(section, key, fallback);
 
   const founderName = settings?.founder_name || c('founder', 'name', '');
   const founderDesignation = settings?.founder_designation || c('founder', 'designation', '');
@@ -36,7 +35,6 @@ function FounderSection() {
   const founderMessage = settings?.founder_message || c('founder', 'message', '');
   const founderImage = settings?.founder_image_url || '';
 
-  // Don't render if no founder data
   if (!founderName && !founderBio) return null;
 
   return (
@@ -52,7 +50,6 @@ function FounderSection() {
         </div>
 
         <div className="grid lg:grid-cols-5 gap-12 items-center">
-          {/* Founder Image */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -69,22 +66,17 @@ function FounderSection() {
                       <div className="w-24 h-24 rounded-full bg-gold-500/10 flex items-center justify-center mx-auto mb-4">
                         <Users className="w-12 h-12 text-gold-500" />
                       </div>
-                      <p className="text-gray-500">No photo uploaded</p>
                     </div>
                   </div>
                 )}
               </div>
-              {/* Name badge */}
               <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-gold-600 to-gold-500 text-navy-950 px-6 py-3 rounded-xl shadow-gold-lg text-center min-w-[200px]">
-                <p className="font-heading font-bold text-lg">{founderName || 'Founder'}</p>
-                {founderDesignation && (
-                  <p className="text-xs font-medium opacity-90">{founderDesignation}</p>
-                )}
+                <p className="font-heading font-bold text-lg">{founderName}</p>
+                {founderDesignation && <p className="text-xs font-medium opacity-90">{founderDesignation}</p>}
               </div>
             </div>
           </motion.div>
 
-          {/* Founder Content */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -97,11 +89,7 @@ function FounderSection() {
                 "{founderMessage}"
               </p>
             )}
-            {founderBio && (
-              <p className="text-gray-400 leading-relaxed mb-6">
-                {founderBio}
-              </p>
-            )}
+            {founderBio && <p className="text-gray-400 leading-relaxed mb-6">{founderBio}</p>}
             <div className="flex items-center gap-4 pt-6 border-t border-gold-500/10">
               <div>
                 <p className="text-white font-heading font-bold text-lg">{founderName}</p>
@@ -118,14 +106,9 @@ function FounderSection() {
 function TeamSection() {
   const { data: team } = useTeamMembers();
   const pageContent = usePageContent('about');
-  const c = (section: string, key: string, fallback: string) => pageContent.get(section, key, fallback);
+  const c = (section: string, key: string, fallback = '') => pageContent.get(section, key, fallback);
 
-  const displayTeam = team.length > 0 ? team : [
-    { id: '1', full_name: 'Muhammad Hassan', designation: 'CEO & Founder', department: 'Executive', bio: 'Visionary leader with 30+ years in construction industry.' },
-    { id: '2', full_name: 'Sarah Ahmed', designation: 'Chief Operations Officer', department: 'Operations', bio: 'Expert in project management and operational excellence.' },
-    { id: '3', full_name: 'Ali Khan', designation: 'Chief Technical Officer', department: 'Technical', bio: 'Leading innovation in construction technology and methods.' },
-    { id: '4', full_name: 'Fatima Malik', designation: 'HR Director', department: 'Human Resources', bio: 'Building and nurturing our exceptional team.' },
-  ];
+  if (team.length === 0) return null;
 
   return (
     <section id="team" className="py-24 bg-navy-900">
@@ -138,9 +121,8 @@ function TeamSection() {
             {c('team', 'title', 'Meet Our Leadership')}
           </h2>
         </div>
-
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {displayTeam.map((member, index) => (
+          {team.map((member, index) => (
             <motion.div
               key={member.id}
               initial={{ opacity: 0, y: 30 }}
@@ -159,9 +141,7 @@ function TeamSection() {
                     </div>
                   )}
                 </div>
-                <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-gold-400 transition-colors">
-                  {member.full_name}
-                </h3>
+                <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-gold-400 transition-colors">{member.full_name}</h3>
                 <p className="text-gold-500 text-sm mb-3">{member.designation}</p>
                 <p className="text-gray-400 text-sm">{member.bio}</p>
               </div>
@@ -175,135 +155,108 @@ function TeamSection() {
 
 export default function AboutPage() {
   const pageContent = usePageContent('about');
-  const c = (section: string, key: string, fallback: string) => pageContent.get(section, key, fallback);
+  const c = (section: string, key: string, fallback = '') => pageContent.get(section, key, fallback);
   const { counters } = useAutoCounters();
+  const { settings } = useSiteSettings();
+  const overviewImage = settings?.secondary_logo_url || '';
 
   return (
     <>
-      {/* Hero Section */}
-      <PageHero
-        pageId="about"
-        fallbackTitle="About Eden Buildcore"
-        fallbackSubtitle="Our Story"
-        fallbackDescription="Two decades of excellence in construction, engineering, and infrastructure development"
-        fallbackImage="https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg?auto=compress&cs=tinysrgb&w=1920"
-      />
+      <PageHero pageId="about" />
 
       {/* Company Overview */}
       <section className="py-24 bg-navy-950">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-            >
-              <span className="text-gold-500 text-sm font-medium tracking-wider uppercase">{c('overview', 'badge', 'Company Overview')}</span>
-              <h2 className="text-4xl font-heading font-bold text-white mt-2 mb-6">
-                {c('overview', 'title', 'A Legacy of Construction Excellence')}
-              </h2>
+          <div className={`grid gap-16 items-center ${overviewImage ? 'lg:grid-cols-2' : 'lg:grid-cols-1 max-w-3xl mx-auto'}`}>
+            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
+              {c('overview', 'badge', '') && (
+                <span className="text-gold-500 text-sm font-medium tracking-wider uppercase">{c('overview', 'badge', '')}</span>
+              )}
+              {c('overview', 'title', '') && (
+                <h2 className="text-4xl font-heading font-bold text-white mt-2 mb-6">{c('overview', 'title', '')}</h2>
+              )}
               <div className="space-y-4 text-gray-400 leading-relaxed">
-                <p>
-                  {c('overview', 'paragraph_1', 'Eden Buildcore (Pvt.) Ltd. is a premier construction and engineering company that has been shaping Pakistan\'s infrastructure landscape since 1999. With a portfolio spanning commercial, residential, industrial, and infrastructure projects, we have established ourselves as leaders in the industry.')}
-                </p>
-                <p>
-                  {c('overview', 'paragraph_2', 'Our commitment to quality, innovation, and client satisfaction has earned us the trust of government bodies, multinational corporations, and private developers alike. Every project we undertake reflects our dedication to excellence and our passion for building structures that stand the test of time.')}
-                </p>
-                <p>
-                  {c('overview', 'paragraph_3', 'From landmark high-rises to critical infrastructure projects, we bring the same level of expertise, professionalism, and attention to detail. Our team of engineers, architects, and construction professionals work collaboratively to transform visions into reality.')}
-                </p>
+                {c('overview', 'paragraph_1', '') && <p>{c('overview', 'paragraph_1', '')}</p>}
+                {c('overview', 'paragraph_2', '') && <p>{c('overview', 'paragraph_2', '')}</p>}
+                {c('overview', 'paragraph_3', '') && <p>{c('overview', 'paragraph_3', '')}</p>}
               </div>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="relative"
-            >
-              <div className="aspect-video rounded-2xl overflow-hidden">
-                <img
-                  src="https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg?auto=compress&cs=tinysrgb&w=1200"
-                  alt="Construction Team"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="absolute -bottom-6 -left-6 bg-gradient-to-r from-gold-600 to-gold-500 text-navy-950 p-6 rounded-2xl shadow-gold-lg">
-                <div className="text-3xl font-heading font-bold">{counters.experience || 25}+</div>
-                <div className="text-sm font-medium">Years Experience</div>
-              </div>
-            </motion.div>
+            {overviewImage && (
+              <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="relative">
+                <div className="aspect-video rounded-2xl overflow-hidden">
+                  <img src={overviewImage} alt="Company" className="w-full h-full object-cover" />
+                </div>
+                {counters.experience > 0 && (
+                  <div className="absolute -bottom-6 -left-6 bg-gradient-to-r from-gold-600 to-gold-500 text-navy-950 p-6 rounded-2xl shadow-gold-lg">
+                    <div className="text-3xl font-heading font-bold">{counters.experience}+</div>
+                    <div className="text-sm font-medium">Years Experience</div>
+                  </div>
+                )}
+              </motion.div>
+            )}
           </div>
         </div>
       </section>
 
-      {/* Vision & Mission */}
-      <section className="py-24 bg-gradient-to-b from-navy-950 to-navy-900">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-2 gap-12">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="bg-navy-800/50 backdrop-blur-sm border border-gold-500/20 rounded-2xl p-8"
-            >
-              <div className="w-16 h-16 rounded-2xl bg-gold-500/10 flex items-center justify-center mb-6">
-                <Eye className="w-8 h-8 text-gold-500" />
-              </div>
-              <h3 className="text-2xl font-heading font-bold text-white mb-4">{c('vision', 'title', 'Our Vision')}</h3>
-              <p className="text-gray-400 leading-relaxed">
-                {c('vision', 'description', 'To be the leading construction and engineering company in the region, setting new standards of excellence, innovation, and sustainable development. We envision a future where every structure we build becomes a landmark of quality and reliability, contributing to the nation\'s progress and prosperity.')}
-              </p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-              className="bg-navy-800/50 backdrop-blur-sm border border-gold-500/20 rounded-2xl p-8"
-            >
-              <div className="w-16 h-16 rounded-2xl bg-gold-500/10 flex items-center justify-center mb-6">
-                <Target className="w-8 h-8 text-gold-500" />
-              </div>
-              <h3 className="text-2xl font-heading font-bold text-white mb-4">{c('mission', 'title', 'Our Mission')}</h3>
-              <p className="text-gray-400 leading-relaxed">
-                {c('mission', 'description', 'To deliver exceptional construction solutions that exceed client expectations through innovation, quality craftsmanship, and unwavering commitment to safety. We strive to build lasting relationships based on trust, integrity, and mutual respect, while contributing positively to the communities we serve.')}
-              </p>
-            </motion.div>
+      {/* Vision & Mission — only render if content exists */}
+      {(c('vision', 'description', '') || c('mission', 'description', '')) && (
+        <section className="py-24 bg-gradient-to-b from-navy-950 to-navy-900">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="grid md:grid-cols-2 gap-12">
+              {c('vision', 'description', '') && (
+                <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                  className="bg-navy-800/50 backdrop-blur-sm border border-gold-500/20 rounded-2xl p-8">
+                  <div className="w-16 h-16 rounded-2xl bg-gold-500/10 flex items-center justify-center mb-6">
+                    <Eye className="w-8 h-8 text-gold-500" />
+                  </div>
+                  <h3 className="text-2xl font-heading font-bold text-white mb-4">{c('vision', 'title', 'Our Vision')}</h3>
+                  <p className="text-gray-400 leading-relaxed">{c('vision', 'description', '')}</p>
+                </motion.div>
+              )}
+              {c('mission', 'description', '') && (
+                <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}
+                  className="bg-navy-800/50 backdrop-blur-sm border border-gold-500/20 rounded-2xl p-8">
+                  <div className="w-16 h-16 rounded-2xl bg-gold-500/10 flex items-center justify-center mb-6">
+                    <Target className="w-8 h-8 text-gold-500" />
+                  </div>
+                  <h3 className="text-2xl font-heading font-bold text-white mb-4">{c('mission', 'title', 'Our Mission')}</h3>
+                  <p className="text-gray-400 leading-relaxed">{c('mission', 'description', '')}</p>
+                </motion.div>
+              )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Core Values */}
       <section className="py-24 bg-navy-900">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
-            <span className="inline-block px-4 py-1.5 bg-gold-500/20 text-gold-400 rounded-full text-sm font-medium tracking-wider uppercase mb-4">
-              {c('values', 'badge', 'What Drives Us')}
-            </span>
-            <h2 className="text-4xl md:text-5xl font-heading font-bold text-white">
-              {c('values', 'title', 'Our Core Values')}
-            </h2>
+            {c('values', 'badge', '') && (
+              <span className="inline-block px-4 py-1.5 bg-gold-500/20 text-gold-400 rounded-full text-sm font-medium tracking-wider uppercase mb-4">
+                {c('values', 'badge', '')}
+              </span>
+            )}
+            {c('values', 'title', '') && (
+              <h2 className="text-4xl md:text-5xl font-heading font-bold text-white">{c('values', 'title', '')}</h2>
+            )}
           </div>
-
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {coreValues.map((value, index) => (
-              <motion.div
-                key={value.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.05 }}
-                className="group bg-navy-800/50 backdrop-blur-sm border border-gold-500/10 rounded-2xl p-6 hover:border-gold-500/30 transition-all"
-              >
-                <div className="w-14 h-14 rounded-xl bg-gold-500/10 flex items-center justify-center mb-4 group-hover:bg-gold-500/20 transition-colors">
-                  <value.icon className="w-7 h-7 text-gold-500" />
-                </div>
-                <h3 className="text-lg font-semibold text-white mb-2">{c('values', `value_${index + 1}_title`, value.title)}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">{c('values', `value_${index + 1}_description`, value.description)}</p>
-              </motion.div>
-            ))}
+            {coreValues.map((value, index) => {
+              const title = c('values', `value_${index + 1}_title`, value.title);
+              const desc = c('values', `value_${index + 1}_description`, value.description);
+              return (
+                <motion.div key={index} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * 0.05 }}
+                  className="group bg-navy-800/50 backdrop-blur-sm border border-gold-500/10 rounded-2xl p-6 hover:border-gold-500/30 transition-all">
+                  <div className="w-14 h-14 rounded-xl bg-gold-500/10 flex items-center justify-center mb-4 group-hover:bg-gold-500/20 transition-colors">
+                    <value.icon className="w-7 h-7 text-gold-500" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
+                  <p className="text-gray-400 text-sm leading-relaxed">{desc}</p>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -312,31 +265,17 @@ export default function AboutPage() {
       <section className="py-24 bg-navy-950">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
-            <span className="inline-block px-4 py-1.5 bg-gold-500/20 text-gold-400 rounded-full text-sm font-medium tracking-wider uppercase mb-4">
-              Our Story
-            </span>
-            <h2 className="text-4xl md:text-5xl font-heading font-bold text-white">
-              Journey Through Years
-            </h2>
+            <h2 className="text-4xl md:text-5xl font-heading font-bold text-white">Journey Through Years</h2>
           </div>
-
           <div className="relative">
-            {/* Timeline Line */}
             <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gold-500/30 hidden md:block" />
-
             <div className="space-y-12">
               {timeline.map((item, index) => (
-                <motion.div
-                  key={item.year}
-                  initial={{ opacity: 0, x: index % 2 === 0 ? -30 : 30 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  className={`relative md:w-1/2 ${index % 2 === 0 ? 'md:pr-12' : 'md:pl-12 md:ml-auto'}`}
-                >
+                <motion.div key={item.year} initial={{ opacity: 0, x: index % 2 === 0 ? -30 : 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
+                  className={`relative md:w-1/2 ${index % 2 === 0 ? 'md:pr-12' : 'md:pl-12 md:ml-auto'}`}>
                   <div className="bg-navy-800/50 backdrop-blur-sm border border-gold-500/20 rounded-2xl p-6">
                     <div className="absolute top-6 w-4 h-4 bg-gold-500 rounded-full hidden md:block"
-                      style={{ [index % 2 === 0 ? 'right' : 'left']: '-8px' }}
-                    />
+                      style={{ [index % 2 === 0 ? 'right' : 'left']: '-8px' }} />
                     <span className="text-gold-500 font-heading font-bold text-2xl">{item.year}</span>
                     <h3 className="text-lg font-semibold text-white mt-2 mb-2">{item.title}</h3>
                     <p className="text-gray-400 text-sm">{item.description}</p>
@@ -349,47 +288,39 @@ export default function AboutPage() {
       </section>
 
       {/* Why Choose Us */}
-      <section className="py-24 bg-gradient-to-b from-navy-900 to-navy-950">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <span className="inline-block px-4 py-1.5 bg-gold-500/20 text-gold-400 rounded-full text-sm font-medium tracking-wider uppercase mb-4">
-              {c('strengths', 'badge', 'Why Choose Us')}
-            </span>
-            <h2 className="text-4xl md:text-5xl font-heading font-bold text-white">
-              {c('strengths', 'title', 'Our Strengths')}
-            </h2>
+      {c('strengths', 'title', '') && (
+        <section className="py-24 bg-gradient-to-b from-navy-900 to-navy-950">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center mb-16">
+              {c('strengths', 'badge', '') && (
+                <span className="inline-block px-4 py-1.5 bg-gold-500/20 text-gold-400 rounded-full text-sm font-medium tracking-wider uppercase mb-4">
+                  {c('strengths', 'badge', '')}
+                </span>
+              )}
+              <h2 className="text-4xl md:text-5xl font-heading font-bold text-white">{c('strengths', 'title', '')}</h2>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {[
+                { icon: Award, title: 'Quality Assurance', desc: 'Rigorous quality control at every stage' },
+                { icon: Shield, title: 'Safety First', desc: 'Zero compromise on safety standards' },
+                { icon: TrendingUp, title: 'On-Time Delivery', desc: 'Proven track record of timely completion' },
+                { icon: Globe, title: 'Global Standards', desc: 'International quality benchmarks' },
+              ].map((item, index) => (
+                <motion.div key={item.title} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * 0.1 }}
+                  className="text-center">
+                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-gold-500/20 to-gold-600/20 flex items-center justify-center mx-auto mb-4">
+                    <item.icon className="w-10 h-10 text-gold-500" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-white mb-2">{c('strengths', `strength_${index + 1}_title`, item.title)}</h3>
+                  <p className="text-gray-400 text-sm">{c('strengths', `strength_${index + 1}_description`, item.desc)}</p>
+                </motion.div>
+              ))}
+            </div>
           </div>
+        </section>
+      )}
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              { icon: Award, title: 'Quality Assurance', desc: 'Rigorous quality control at every stage' },
-              { icon: Shield, title: 'Safety First', desc: 'Zero compromise on safety standards' },
-              { icon: TrendingUp, title: 'On-Time Delivery', desc: 'Proven track record of timely completion' },
-              { icon: Globe, title: 'Global Standards', desc: 'International quality benchmarks' },
-            ].map((item, index) => (
-              <motion.div
-                key={item.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="text-center"
-              >
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-gold-500/20 to-gold-600/20 flex items-center justify-center mx-auto mb-4">
-                  <item.icon className="w-10 h-10 text-gold-500" />
-                </div>
-                <h3 className="text-lg font-semibold text-white mb-2">{c('strengths', `strength_${index + 1}_title`, item.title)}</h3>
-                <p className="text-gray-400 text-sm">{c('strengths', `strength_${index + 1}_description`, item.desc)}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Founder Section */}
       <FounderSection />
-
-      {/* Team Section */}
       <TeamSection />
     </>
   );

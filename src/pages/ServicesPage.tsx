@@ -167,10 +167,6 @@ export default function ServicesPage() {
       {/* Hero Section */}
       <PageHero
         pageId="services"
-        fallbackTitle="Premium Construction & Engineering Services"
-        fallbackSubtitle="What We Offer"
-        fallbackDescription="Comprehensive construction solutions tailored to meet your unique requirements, delivered with excellence and precision."
-        fallbackImage="https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg?auto=compress&cs=tinysrgb&w=1920"
       />
 
       {/* Services Grid */}

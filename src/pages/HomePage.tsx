@@ -83,28 +83,28 @@ function StatsSection({ stats, c }: { stats: Statistic[]; c: (section: string, k
   const statItems = [
     {
       key: 'stat_1',
-      value: c('stats', 'stat_1_value', stats[0]?.stat_value || String(counters.experience || 25)),
+      value: c('stats', 'stat_1_value', stats[0]?.stat_value || String(counters.experience)),
       prefix: c('stats', 'stat_1_prefix', stats[0]?.stat_prefix || ''),
       suffix: c('stats', 'stat_1_suffix', stats[0]?.stat_suffix || '+'),
       desc: c('stats', 'stat_1_description', stats[0]?.description || 'Years of Excellence'),
     },
     {
       key: 'stat_2',
-      value: c('stats', 'stat_2_value', stats[1]?.stat_value || String(counters.projects || 500)),
+      value: c('stats', 'stat_2_value', stats[1]?.stat_value || String(counters.projects)),
       prefix: c('stats', 'stat_2_prefix', stats[1]?.stat_prefix || ''),
       suffix: c('stats', 'stat_2_suffix', stats[1]?.stat_suffix || '+'),
       desc: c('stats', 'stat_2_description', stats[1]?.description || 'Projects Completed'),
     },
     {
       key: 'stat_3',
-      value: c('stats', 'stat_3_value', stats[2]?.stat_value || String(counters.clients || 350)),
+      value: c('stats', 'stat_3_value', stats[2]?.stat_value || String(counters.clients)),
       prefix: c('stats', 'stat_3_prefix', stats[2]?.stat_prefix || ''),
       suffix: c('stats', 'stat_3_suffix', stats[2]?.stat_suffix || '+'),
       desc: c('stats', 'stat_3_description', stats[2]?.description || 'Happy Clients'),
     },
     {
       key: 'stat_4',
-      value: c('stats', 'stat_4_value', stats[3]?.stat_value || String(counters.team || 150)),
+      value: c('stats', 'stat_4_value', stats[3]?.stat_value || String(counters.team)),
       prefix: c('stats', 'stat_4_prefix', stats[3]?.stat_prefix || ''),
       suffix: c('stats', 'stat_4_suffix', stats[3]?.stat_suffix || '+'),
       desc: c('stats', 'stat_4_description', stats[3]?.description || 'Team Members'),
@@ -172,19 +172,22 @@ function AboutPreview({ c }: { c: (section: string, key: string, fallback: strin
             viewport={{ once: true }}
             className="relative order-1"
           >
-            <div className="relative aspect-[4/3] rounded-xl sm:rounded-2xl overflow-hidden">
-              <img
-                src="https://images.pexels.com/photos/1216589/pexels-photo-1216589.jpeg?auto=compress&cs=tinysrgb&w=1200"
-                alt="Construction Site"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-transparent to-transparent" />
-            </div>
-            {/* Overlay Card */}
-            <div className="absolute -bottom-4 sm:-bottom-6 right-2 sm:right-4 md:right-8 bg-gradient-to-r from-gold-600 to-gold-500 text-navy-950 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-gold-lg">
-              <div className="text-2xl sm:text-3xl md:text-4xl font-heading font-bold">{counters.experience || 25}+</div>
-              <div className="text-xs sm:text-sm font-medium">{c('about_preview', 'badge_text', 'Years of Excellence')}</div>
-            </div>
+            {settings?.secondary_logo_url ? (
+              <div className="relative aspect-[4/3] rounded-xl sm:rounded-2xl overflow-hidden">
+                <img src={settings.secondary_logo_url} alt="Company" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-transparent to-transparent" />
+              </div>
+            ) : (
+              <div className="relative aspect-[4/3] rounded-xl sm:rounded-2xl overflow-hidden bg-navy-800/60 border border-gold-500/10 flex items-center justify-center">
+                <Building2 className="w-24 h-24 text-gold-500/20" />
+              </div>
+            )}
+            {counters.experience > 0 && (
+              <div className="absolute -bottom-4 sm:-bottom-6 right-2 sm:right-4 md:right-8 bg-gradient-to-r from-gold-600 to-gold-500 text-navy-950 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-gold-lg">
+                <div className="text-2xl sm:text-3xl md:text-4xl font-heading font-bold">{counters.experience}+</div>
+                <div className="text-xs sm:text-sm font-medium">{c('about_preview', 'badge_text', 'Years of Excellence')}</div>
+              </div>
+            )}
           </motion.div>
 
           {/* Content Side */}
@@ -239,14 +242,8 @@ function AboutPreview({ c }: { c: (section: string, key: string, fallback: strin
 
 // Services Preview
 function ServicesPreview({ services, c }: { services: Service[]; c: (section: string, key: string, fallback: string) => string }) {
-  const displayServices = services.length > 0 ? services.slice(0, 6) : [
-    { id: '1', title: 'Civil Construction', short_description: 'Complete civil construction services from foundation to finishing.', icon_name: 'Building' },
-    { id: '2', title: 'Infrastructure Development', short_description: 'Building roads, bridges, and essential infrastructure.', icon_name: 'MapPin' },
-    { id: '3', title: 'MEP Works', short_description: 'Mechanical, electrical, and plumbing solutions.', icon_name: 'Settings' },
-    { id: '4', title: 'Solar Projects', short_description: 'Renewable energy solutions for sustainable future.', icon_name: 'Sun' },
-    { id: '5', title: 'Renovation', short_description: 'Transforming spaces with modern renovation.', icon_name: 'RefreshCw' },
-    { id: '6', title: 'Engineering Consultancy', short_description: 'Expert engineering consultation services.', icon_name: 'FileText' },
-  ];
+  const displayServices = services.filter(s => s.is_active).slice(0, 6);
+  if (displayServices.length === 0) return null;
 
   const icons: Record<string, React.ElementType> = {
     Building, MapPin, HardHat, Users, Award, Shield,
@@ -313,8 +310,9 @@ function ServicesPreview({ services, c }: { services: Service[]; c: (section: st
 
 // Featured Projects
 function FeaturedProjects({ projects, c }: { projects: Project[]; c: (section: string, key: string, fallback: string) => string }) {
-  const featured = projects.filter(p => p.featured).slice(0, 3);
-  const displayProjects = featured.length > 0 ? featured : projects.slice(0, 3);
+  const featured = projects.filter(p => p.featured && p.is_published).slice(0, 3);
+  const displayProjects = featured.length > 0 ? featured : projects.filter(p => p.is_published).slice(0, 3);
+  if (displayProjects.length === 0) return null;
 
   return (
     <section className="py-12 sm:py-16 md:py-24 bg-navy-900">
@@ -339,9 +337,9 @@ function FeaturedProjects({ projects, c }: { projects: Project[]; c: (section: s
               <Link to={`/projects/${project.slug || project.id}`}>
                 <div className="relative aspect-[4/3] rounded-xl sm:rounded-2xl overflow-hidden mb-4 sm:mb-6">
                   <img
-                    src={project.thumbnail_url || 'https://images.pexels.com/photos/256417/pexels-photo-256417.jpeg?auto=compress&cs=tinysrgb&w=800'}
+                    src={project.thumbnail_url || ''}
                     alt={project.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${!project.thumbnail_url ? 'hidden' : ''}`}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/50 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
                   <div className="absolute top-3 sm:top-4 left-3 sm:left-4 px-2 sm:px-3 py-0.5 sm:py-1 bg-gold-500 text-navy-950 text-xs sm:text-sm font-medium rounded-full">
@@ -610,14 +608,10 @@ function CTASection({ c }: { c: (section: string, key: string, fallback: string)
   return (
     <section className="relative py-24 overflow-hidden">
       {/* Background */}
-      <div className="absolute inset-0">
-        <img
-          src="https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg?auto=compress&cs=tinysrgb&w=1920"
-          alt="Construction"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-navy-950/90" />
+      <div className="absolute inset-0 bg-gradient-to-br from-navy-900 via-navy-800 to-navy-900">
         <div className="absolute inset-0 bg-gradient-to-r from-navy-950 via-transparent to-navy-950" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full border border-gold-500/10 opacity-20" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] rounded-full border border-gold-500/5 opacity-10" />
       </div>
 
       <div className="relative max-w-4xl mx-auto text-center px-6">

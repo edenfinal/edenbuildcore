@@ -61,7 +61,6 @@ export function useSiteSettings() {
   useEffect(() => {
     async function fetchSettings() {
       try {
-        // Use maybeSingle to handle cases where no row exists yet
         const { data, error } = await supabase
           .from('site_settings')
           .select('*')
@@ -71,7 +70,6 @@ export function useSiteSettings() {
         if (error) throw error;
 
         if (!data) {
-          // Create default settings if none exist
           const { data: newData, error: insertError } = await supabase
             .from('site_settings')
             .insert({})
@@ -95,7 +93,6 @@ export function useSiteSettings() {
 
   const updateSettings = async (updates: Partial<SiteSettings>): Promise<boolean> => {
     try {
-      // If we have settings loaded, update by id
       if (settings?.id) {
         const { error } = await supabase
           .from('site_settings')
@@ -109,7 +106,6 @@ export function useSiteSettings() {
         return true;
       }
 
-      // Settings not loaded yet — find existing row or insert
       const { data: existing } = await supabase
         .from('site_settings')
         .select('id')
@@ -121,24 +117,17 @@ export function useSiteSettings() {
           .from('site_settings')
           .update({ ...updates, updated_at: new Date().toISOString() })
           .eq('id', existing.id);
-        if (error) {
-          console.error('Update settings error:', error);
-          return false;
-        }
+        if (error) return false;
         setSettings({ ...updates } as SiteSettings);
         return true;
       }
 
-      // No row exists — insert
       const { data: newData, error } = await supabase
         .from('site_settings')
         .insert({ ...updates })
         .select()
         .maybeSingle();
-      if (error) {
-        console.error('Insert settings error:', error);
-        return false;
-      }
+      if (error) return false;
       setSettings(newData as SiteSettings);
       return true;
     } catch (e) {
@@ -180,11 +169,13 @@ export function usePageContent(pageId: string) {
     fetchContent();
   }, [pageId]);
 
+  // Returns DB value if it exists and is non-empty, otherwise returns fallback
   const get = (section: string, key: string, fallback: string = ''): string => {
-    const val = content[`${section}.${key}`];
-    // Return fallback only if key doesn't exist in DB, not if it's intentionally empty
-    if (val === undefined) return fallback;
-    return val || fallback;
+    const dbKey = `${section}.${key}`;
+    if (dbKey in content) {
+      return content[dbKey] || fallback;
+    }
+    return fallback;
   };
 
   const updateContent = async (section: string, key: string, value: string): Promise<boolean> => {
@@ -336,7 +327,8 @@ export function useContactInquiries() {
   return createDataHook<ContactInquiry>('contact_inquiries', 'created_at')();
 }
 
-// Auto-linking counters - reads from statistics table, falls back to DB row counts
+// Auto counters — experience is always derived from company_start_year in site_settings.
+// All other counters come from the statistics table.
 export function useAutoCounters() {
   const [counters, setCounters] = useState({
     projects: 0,
@@ -359,14 +351,17 @@ export function useAutoCounters() {
           statsMap[s.stat_key] = parseInt(s.stat_value) || 0;
         });
 
-        const startYear = settingsRes.data?.company_start_year || 1999;
-        const currentYear = new Date().getFullYear();
+        // Experience always calculated from company_start_year
+        const startYear = settingsRes.data?.company_start_year
+          ? parseInt(String(settingsRes.data.company_start_year))
+          : 1999;
+        const experience = new Date().getFullYear() - startYear;
 
         setCounters({
           projects: statsMap['projects_completed'] || 0,
           clients: statsMap['happy_clients'] || 0,
           team: statsMap['team_members'] || 0,
-          experience: statsMap['years_experience'] || (currentYear - parseInt(startYear)),
+          experience,
         });
       } catch (e) {
         console.error('Counter fetch error:', e);
@@ -380,7 +375,7 @@ export function useAutoCounters() {
   return { counters, loading };
 }
 
-// Notifications hook - Phase 9
+// Notifications hook
 export function useNotifications() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -627,12 +622,12 @@ export async function submitContactForm(formData: {
       return false;
     }
 
-    const { data: { session } } = await supabase.auth.getSession();
     const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 
-    if (anonKey) {
+    if (anonKey && supabaseUrl) {
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-contact-email`,
+        `${supabaseUrl}/functions/v1/send-contact-email`,
         {
           method: 'POST',
           headers: {

@@ -104,10 +104,6 @@ export default function CertificationsPage() {
       {/* Hero Section */}
       <PageHero
         pageId="certifications"
-        fallbackTitle="Certifications & Registrations"
-        fallbackSubtitle="Quality Assured"
-        fallbackDescription="Our commitment to quality, safety, and excellence is validated by internationally recognized certifications."
-        fallbackImage="https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=1920"
       />
 
       {/* ISO Certifications */}

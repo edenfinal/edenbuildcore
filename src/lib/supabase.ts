@@ -12,7 +12,7 @@ export const supabase = createClient(
   supabaseAnonKey || ''
 );
 
-// Centralized image upload utility — used by all admin upload components
+// Centralized image upload utility — uses edge function with service role to bypass RLS
 export async function uploadImage(
   file: File,
   folder: string = 'misc'
@@ -24,26 +24,32 @@ export async function uploadImage(
     return { url: null, error: 'File too large (max 5MB)' };
   }
 
-  const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
-  const fileName = `${folder}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder', folder);
 
-  const { data, error } = await supabase.storage
-    .from('site-assets')
-    .upload(fileName, file, {
-      cacheControl: '3600',
-      upsert: false,
-      contentType: file.type,
-    });
+    const response = await fetch(
+      `${supabaseUrl}/functions/v1/upload-image`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+        },
+        body: formData,
+      }
+    );
 
-  if (error) {
-    return { url: null, error: error.message };
+    const result = await response.json();
+
+    if (!response.ok || result.error) {
+      return { url: null, error: result.error || `Upload failed (${response.status})` };
+    }
+
+    return { url: result.url, error: null };
+  } catch (e: any) {
+    return { url: null, error: e?.message || 'Upload failed' };
   }
-
-  const { data: urlData } = supabase.storage
-    .from('site-assets')
-    .getPublicUrl(data.path);
-
-  return { url: urlData.publicUrl, error: null };
 }
 
 export type Json =

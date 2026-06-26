@@ -26,10 +26,6 @@ export default function ClientsPage() {
       {/* Hero Section */}
       <PageHero
         pageId="clients"
-        fallbackTitle="Our Valued Clients"
-        fallbackSubtitle="Trusted Partners"
-        fallbackDescription="Proudly serving government agencies and private sector leaders across Pakistan with excellence and integrity."
-        fallbackImage="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1920"
       />
 
       {/* Stats Bar */}

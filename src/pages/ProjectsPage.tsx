@@ -19,7 +19,7 @@ function ProjectCard({ project }: { project: Project }) {
       <Link to={`/projects/${project.slug || project.id}`}>
         <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-6">
           <img
-            src={project.thumbnail_url || 'https://images.pexels.com/photos/256417/pexels-photo-256417.jpeg?auto=compress&cs=tinysrgb&w=800'}
+            src={project.thumbnail_url || ''}
             alt={project.title}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
@@ -109,7 +109,7 @@ function ProjectDetail() {
       {/* Hero */}
       <section className="relative h-[60vh] min-h-[400px] overflow-hidden">
         <img
-          src={project.thumbnail_url || 'https://images.pexels.com/photos/256417/pexels-photo-256417.jpeg'}
+          src={project.thumbnail_url || ''}
           alt={project.title}
           className="w-full h-full object-cover"
         />
@@ -285,10 +285,6 @@ export default function ProjectsPage() {
       {/* Hero Section */}
       <PageHero
         pageId="projects"
-        fallbackTitle="Featured Projects"
-        fallbackSubtitle="Our Portfolio"
-        fallbackDescription="Explore our portfolio of successfully completed construction and engineering projects across various sectors."
-        fallbackImage="https://images.pexels.com/photos/323705/pexels-photo-323705.jpeg?auto=compress&cs=tinysrgb&w=1920"
       />
 
       {/* Filters */}

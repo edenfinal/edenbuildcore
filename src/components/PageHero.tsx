@@ -9,10 +9,6 @@ import type { PageHero as PageHeroType } from '../lib/supabase';
 
 interface PageHeroProps {
   pageId: string;
-  fallbackTitle?: string;
-  fallbackSubtitle?: string;
-  fallbackDescription?: string;
-  fallbackImage?: string;
   showBreadcrumb?: boolean;
   breadcrumbItems?: { label: string; link?: string }[];
 }
@@ -56,7 +52,6 @@ function SingleHeroView({
   primaryColor: string;
   txtColor: string;
 }) {
-  const [imageLoaded, setImageLoaded] = useState(false);
   const align = hero.text_alignment || 'center';
 
   const alignClass = {
@@ -81,15 +76,17 @@ function SingleHeroView({
         </motion.span>
       )}
 
-      <motion.h1
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, delay: 0.2 }}
-        className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-bold leading-tight mb-6"
-        style={{ color: txtColor }}
-      >
-        {hero.title}
-      </motion.h1>
+      {hero.title && (
+        <motion.h1
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.2 }}
+          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-bold leading-tight mb-6"
+          style={{ color: txtColor }}
+        >
+          {hero.title}
+        </motion.h1>
+      )}
 
       {hero.description && (
         <motion.p
@@ -150,38 +147,24 @@ function CarouselHeroView({
   animSpeed: number;
 }) {
   const [current, setCurrent] = useState(0);
-  const [direction, setDirection] = useState(0);
 
   useEffect(() => {
     if (slides.length <= 1) return;
     const timer = setInterval(() => {
-      setDirection(1);
       setCurrent((prev) => (prev + 1) % slides.length);
     }, interval);
     return () => clearInterval(timer);
   }, [slides.length, interval]);
 
-  const goTo = (idx: number) => {
-    setDirection(idx > current ? 1 : -1);
-    setCurrent(idx);
-  };
-
-  const prev = () => {
-    setDirection(-1);
-    setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
-  };
-
-  const next = () => {
-    setDirection(1);
-    setCurrent((prev) => (prev + 1) % slides.length);
-  };
+  const goTo = (idx: number) => setCurrent(idx);
+  const prev = () => setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
+  const next = () => setCurrent((prev) => (prev + 1) % slides.length);
 
   const slide = slides[current];
   if (!slide) return null;
 
   return (
     <>
-      {/* Background Images */}
       <AnimatePresence initial={false}>
         <motion.div
           key={slide.id}
@@ -190,11 +173,10 @@ function CarouselHeroView({
           exit={{ opacity: 0 }}
           transition={{ duration: animSpeed / 1000 }}
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url(${slide.background_image_url})` }}
+          style={{ backgroundImage: slide.background_image_url ? `url(${slide.background_image_url})` : undefined }}
         />
       </AnimatePresence>
 
-      {/* Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
         <AnimatePresence mode="wait">
           <motion.div
@@ -214,11 +196,13 @@ function CarouselHeroView({
               </span>
             )}
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-bold leading-tight mb-6" style={{ color: txtColor }}>
-              {slide.title?.split(' ').slice(0, 2).join(' ')}
-              <br className="hidden sm:block" />
-              {slide.title?.split(' ').slice(2).join(' ')}
-            </h1>
+            {slide.title && (
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-bold leading-tight mb-6" style={{ color: txtColor }}>
+                {slide.title?.split(' ').slice(0, 2).join(' ')}
+                <br className="hidden sm:block" />
+                {slide.title?.split(' ').slice(2).join(' ')}
+              </h1>
+            )}
 
             {slide.description && (
               <p className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed mb-8" style={{ color: `${txtColor}cc` }}>
@@ -239,7 +223,6 @@ function CarouselHeroView({
           </motion.div>
         </AnimatePresence>
 
-        {/* Navigation Arrows */}
         {slides.length > 1 && (
           <>
             <button
@@ -257,16 +240,13 @@ function CarouselHeroView({
           </>
         )}
 
-        {/* Dots */}
         {slides.length > 1 && (
           <div className="flex justify-center gap-2 mt-8">
             {slides.map((_, i) => (
               <button
                 key={i}
                 onClick={() => goTo(i)}
-                className={`w-2.5 h-2.5 rounded-full transition-all ${
-                  i === current ? 'bg-[#c49028] w-8' : 'bg-white/30 hover:bg-white/50'
-                }`}
+                className={`h-2.5 rounded-full transition-all ${i === current ? 'bg-[#c49028] w-8' : 'w-2.5 bg-white/30 hover:bg-white/50'}`}
               />
             ))}
           </div>
@@ -279,10 +259,6 @@ function CarouselHeroView({
 /* ─── Main Component ─── */
 export default function PageHero({
   pageId,
-  fallbackTitle = '',
-  fallbackSubtitle = '',
-  fallbackDescription = '',
-  fallbackImage = '',
   showBreadcrumb = false,
   breadcrumbItems = [],
 }: PageHeroProps) {
@@ -290,20 +266,27 @@ export default function PageHero({
   const { settings } = useSiteSettings();
   const { slides: carouselSlides } = useCarouselSlides(pageId, hero?.is_carousel ?? false);
 
-  const title = hero?.title || fallbackTitle;
-  const subtitle = hero?.subtitle || fallbackSubtitle;
-  const description = hero?.description || fallbackDescription;
-  const bgImage = hero?.background_image_url || fallbackImage;
-  const opacity = hero?.overlay_opacity ?? 0.75;
-  const height = hero?.height || 'large';
-  const txtColor = hero?.text_color || '#ffffff';
-  const overlayColor = hero?.overlay_color || '#030810';
-  const isActive = hero?.is_active ?? true;
-  const isCarousel = hero?.is_carousel ?? false;
-  const slideInterval = hero?.slide_interval ?? 6000;
-  const animSpeed = hero?.animation_speed ?? 1000;
-
   const primaryColor = settings?.primary_color || '#c49028';
+
+  // Show spinner while loading
+  if (loading) {
+    return (
+      <section className="relative min-h-[50vh] md:min-h-[65vh] flex items-center justify-center overflow-hidden bg-[#030810]">
+        <div className="w-8 h-8 border-2 border-[#c49028] border-t-transparent rounded-full animate-spin" />
+      </section>
+    );
+  }
+
+  // No hero configured in DB — show nothing
+  if (!hero || !hero.is_active) return null;
+
+  const opacity = hero.overlay_opacity ?? 0.75;
+  const height = hero.height || 'large';
+  const txtColor = hero.text_color || '#ffffff';
+  const overlayColor = hero.overlay_color || '#030810';
+  const isCarousel = hero.is_carousel ?? false;
+  const slideInterval = hero.slide_interval ?? 6000;
+  const animSpeed = hero.animation_speed ?? 1000;
 
   const heightClass = {
     small: 'min-h-[30vh] md:min-h-[35vh]',
@@ -312,28 +295,16 @@ export default function PageHero({
     full: 'min-h-[80vh] md:min-h-[90vh]',
   }[height] || 'min-h-[50vh] md:min-h-[65vh]';
 
-  if (!isActive) return null;
-  if (loading) {
-    return (
-      <section className={`relative ${heightClass} flex items-center justify-center overflow-hidden bg-[#030810]`}>
-        <div className="w-8 h-8 border-2 border-[#c49028] border-t-transparent rounded-full animate-spin" />
-      </section>
-    );
-  }
+  const overlayStyle = {
+    background: `linear-gradient(135deg, ${overlayColor}${Math.round(opacity * 255).toString(16).padStart(2, '0')} 0%, ${overlayColor}${Math.round((opacity * 0.5) * 255).toString(16).padStart(2, '0')} 100%)`,
+  };
 
-  // Carousel mode (Home page)
+  // Carousel mode
   if (isCarousel && carouselSlides.length > 0) {
     return (
       <section className={`relative ${heightClass} flex flex-col justify-center overflow-hidden`}>
-        {/* Gradient Overlay */}
-        <div
-          className="absolute inset-0 z-[1]"
-          style={{
-            background: `linear-gradient(135deg, ${overlayColor}${Math.round(opacity * 255).toString(16).padStart(2, '0')} 0%, ${overlayColor}${Math.round((opacity * 0.5) * 255).toString(16).padStart(2, '0')} 100%)`,
-          }}
-        />
+        <div className="absolute inset-0 z-[1]" style={overlayStyle} />
         <div className="absolute inset-0 bg-gradient-to-t from-[#030810] via-transparent to-transparent z-[1]" />
-
         <CarouselHeroView
           slides={carouselSlides}
           primaryColor={primaryColor}
@@ -341,20 +312,19 @@ export default function PageHero({
           interval={slideInterval}
           animSpeed={animSpeed}
         />
-
         <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#030810] to-transparent z-[1]" />
       </section>
     );
   }
 
-  // Single hero mode (all other pages)
+  // Single hero mode
   return (
     <section className={`relative ${heightClass} flex flex-col justify-center overflow-hidden`}>
       {/* Background Image */}
-      {bgImage && (
+      {hero.background_image_url && (
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url(${bgImage})` }}
+          style={{ backgroundImage: `url(${hero.background_image_url})` }}
         />
       )}
 
@@ -374,7 +344,6 @@ export default function PageHero({
 
       {/* Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
-        {/* Breadcrumb */}
         {showBreadcrumb && breadcrumbItems.length > 0 && (
           <motion.nav
             initial={{ opacity: 0, y: -10 }}
@@ -399,12 +368,9 @@ export default function PageHero({
           </motion.nav>
         )}
 
-        {hero && (
-          <SingleHeroView hero={hero} primaryColor={primaryColor} txtColor={txtColor} />
-        )}
+        <SingleHeroView hero={hero} primaryColor={primaryColor} txtColor={txtColor} />
       </div>
 
-      {/* Bottom Fade */}
       <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#030810] to-transparent" />
     </section>
   );

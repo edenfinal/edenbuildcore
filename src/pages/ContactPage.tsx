@@ -49,10 +49,6 @@ export default function ContactPage() {
       {/* Hero Section */}
       <PageHero
         pageId="contact"
-        fallbackTitle="Contact Us"
-        fallbackSubtitle="Get In Touch"
-        fallbackDescription="Ready to start your project? Reach out to us and let's discuss how we can bring your vision to life."
-        fallbackImage="https://images.pexels.com/photos/323705/pexels-photo-323705.jpeg?auto=compress&cs=tinysrgb&w=1920"
       />
 
       {/* Contact Section */}

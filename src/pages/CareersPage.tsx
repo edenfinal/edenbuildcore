@@ -344,10 +344,6 @@ export default function CareersPage() {
       {/* Hero Section */}
       <PageHero
         pageId="careers"
-        fallbackTitle="Career Opportunities"
-        fallbackSubtitle="Join Our Team"
-        fallbackDescription="Build your career with Eden Buildcore. Join a team of passionate professionals shaping the future of construction."
-        fallbackImage="https://images.pexels.com/photos/323705/pexels-photo-323705.jpeg?auto=compress&cs=tinysrgb&w=1920"
       />
 
       {/* Filter */}
