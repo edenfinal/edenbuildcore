@@ -69,7 +69,11 @@ export default function Footer() {
               <img
                 src={settings?.logo_url || "/EDEN_BUILDCORE.png"}
                 alt={siteName}
-                className="h-14 sm:h-16 md:h-20 w-auto object-contain mx-auto sm:mx-0"
+                style={{
+                  height: `${parseInt(settings?.logo_size || '64') + 16}px`,
+                  objectFit: (settings?.logo_scale as any) || 'contain',
+                }}
+                className="w-auto mx-auto sm:mx-0"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                   const next = e.currentTarget.nextElementSibling as HTMLElement;

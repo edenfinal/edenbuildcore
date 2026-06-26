@@ -12,6 +12,40 @@ export const supabase = createClient(
   supabaseAnonKey || ''
 );
 
+// Centralized image upload utility — used by all admin upload components
+export async function uploadImage(
+  file: File,
+  folder: string = 'misc'
+): Promise<{ url: string | null; error: string | null }> {
+  if (!file.type.startsWith('image/')) {
+    return { url: null, error: 'Only image files are allowed' };
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    return { url: null, error: 'File too large (max 5MB)' };
+  }
+
+  const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
+  const fileName = `${folder}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+  const { data, error } = await supabase.storage
+    .from('site-assets')
+    .upload(fileName, file, {
+      cacheControl: '3600',
+      upsert: false,
+      contentType: file.type,
+    });
+
+  if (error) {
+    return { url: null, error: error.message };
+  }
+
+  const { data: urlData } = supabase.storage
+    .from('site-assets')
+    .getPublicUrl(data.path);
+
+  return { url: urlData.publicUrl, error: null };
+}
+
 export type Json =
   | string
   | number
@@ -79,6 +113,14 @@ export interface SiteSettings {
   success_color: string | null;
   warning_color: string | null;
   error_color: string | null;
+  company_start_year: number | null;
+  logo_size: string | null;
+  logo_scale: string | null;
+  founder_name: string | null;
+  founder_designation: string | null;
+  founder_bio: string | null;
+  founder_image_url: string | null;
+  founder_message: string | null;
 }
 
 export interface HeroSlide {

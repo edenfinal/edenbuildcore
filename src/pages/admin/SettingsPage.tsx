@@ -1,13 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import {
-  Save, AlertCircle, CheckCircle, Globe, Phone, Clock, Palette, Type,
-  Image as ImageIcon, Upload, X, Eye, Layout, Monitor, Sun, Moon,
-  MousePointer, ArrowRight, Hash, Check, ChevronDown, Sparkles,
-  Layers, Box, Ruler, CornerDownRight, Zap, Shield, Info
-} from 'lucide-react';
+import { Save, AlertCircle, CheckCircle, Globe, Phone, Clock, Palette, Type, Image as ImageIcon, Upload, X, Eye, LayoutGrid as Layout, Monitor, Sun, Moon, MousePointer, ArrowRight, Hash, Check, ChevronDown, Sparkles, Layers, Box, Ruler, CornerDownRight, Zap, Shield, Info, User } from 'lucide-react';
 import { useSiteSettings } from '../../hooks/useData';
-import { supabase } from '../../lib/supabase';
+import { supabase, uploadImage } from '../../lib/supabase';
 
 /* ─── Constants ─── */
 // Only fonts that are actually available on Google Fonts API
@@ -142,26 +137,14 @@ function FileUpload({
     setUploadError('');
 
     try {
-      const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
-      const fileName = `logos/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
-
-      const { data, error } = await supabase.storage.from(bucket).upload(fileName, file, {
-        cacheControl: '3600',
-        upsert: false,
-        contentType: file.type,
-      });
-
-      if (error) {
-        console.error('Upload error:', error.message, error);
-        setUploadError(`Upload failed: ${error.message}`);
+      const { url, error: uploadErr } = await uploadImage(file, 'logos');
+      if (uploadErr || !url) {
+        setUploadError(uploadErr || 'Upload failed');
         setUploading(false);
         return;
       }
-
-      const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(data.path);
-      const publicUrl = urlData.publicUrl;
-      setPreview(publicUrl);
-      onUpload(publicUrl);
+      setPreview(url);
+      onUpload(url);
     } catch (err: any) {
       console.error('Upload exception:', err);
       setUploadError(`Upload error: ${err?.message || 'Unknown error'}`);
@@ -614,6 +597,17 @@ export default function SettingsPage() {
                     <div className="md:col-span-2">
                       <TextArea label="Site Description" value={formData.site_description} onChange={(v: string) => handleChange('site_description', v)} rows={3} placeholder="Brief description about your company..." />
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">Company Start Year</label>
+                      <input
+                        type="number"
+                        value={formData.company_start_year || 2008}
+                        onChange={(e) => handleChange('company_start_year', parseInt(e.target.value) || 2008)}
+                        className="w-full px-4 py-3 bg-[#030810]/60 border border-[#c49028]/20 rounded-xl text-white focus:border-[#c49028]/50 focus:outline-none text-sm"
+                        placeholder="2008"
+                      />
+                      <p className="text-[#606060] text-xs mt-1.5">Used to auto-calculate years of experience across the site</p>
+                    </div>
                   </div>
                 </SectionCard>
 
@@ -623,12 +617,40 @@ export default function SettingsPage() {
                     <FileUpload label="Secondary Logo (Wordmark)" currentUrl={formData.secondary_logo_url} onUpload={(url: string) => handleChange('secondary_logo_url', url)} />
                     <FileUpload label="Favicon" currentUrl={formData.favicon_url} onUpload={(url: string) => handleChange('favicon_url', url)} accept="image/x-icon,image/png" />
                   </div>
+                  {/* Logo Size Settings */}
+                  <div className="mt-4 grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">Logo Height (px)</label>
+                      <input
+                        type="number"
+                        value={formData.logo_size || '64'}
+                        onChange={(e) => handleChange('logo_size', e.target.value)}
+                        className="w-full px-4 py-3 bg-[#030810]/60 border border-[#c49028]/20 rounded-xl text-white focus:border-[#c49028]/50 focus:outline-none text-sm"
+                        placeholder="64"
+                      />
+                      <p className="text-[#606060] text-xs mt-1.5">Navbar logo height in pixels</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">Logo Scale Mode</label>
+                      <select
+                        value={formData.logo_scale || 'auto'}
+                        onChange={(e) => handleChange('logo_scale', e.target.value)}
+                        className="w-full px-4 py-3 bg-[#030810]/60 border border-[#c49028]/20 rounded-xl text-white focus:border-[#c49028]/50 focus:outline-none text-sm"
+                      >
+                        <option value="auto">Auto Adjust (maintain aspect ratio)</option>
+                        <option value="contain">Contain</option>
+                        <option value="cover">Cover</option>
+                        <option value="fill">Fill</option>
+                      </select>
+                      <p className="text-[#606060] text-xs mt-1.5">How the logo image fits within its container</p>
+                    </div>
+                  </div>
                   {/* Logo Preview */}
                   <div className="mt-4 p-4 bg-[#030810]/40 rounded-xl border border-[#c49028]/10">
                     <p className="text-xs text-gray-500 mb-3 uppercase tracking-wider">Logo Preview</p>
                     <div className="flex items-center gap-4">
                       {formData.logo_url ? (
-                        <img src={formData.logo_url} alt="Logo" className="h-14 w-auto object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                        <img src={formData.logo_url} alt="Logo" style={{ height: `${formData.logo_size || 64}px` }} className="w-auto object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                       ) : (
                         <div className="flex flex-col">
                           <span className="text-2xl font-heading font-bold text-white">{formData.site_name?.split(' ')[0] || 'EDEN'}</span>
@@ -644,6 +666,24 @@ export default function SettingsPage() {
 
                 <SectionCard icon={Monitor} title="Footer">
                   <Input label="Copyright Text" value={formData.copyright_text} onChange={(v: string) => handleChange('copyright_text', v)} placeholder="© 2024 Eden Buildcore (Pvt.) Ltd. All Rights Reserved." />
+                </SectionCard>
+
+                {/* Founder Section */}
+                <SectionCard icon={User} title="Founder / CEO Section">
+                  <p className="text-gray-500 text-sm mb-4">This appears on the About page. Add your founder's information to showcase leadership.</p>
+                  <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
+                    <Input label="Founder Name" value={formData.founder_name} onChange={(v: string) => handleChange('founder_name', v)} placeholder="e.g., Muhammad Hassan" />
+                    <Input label="Founder Designation" value={formData.founder_designation} onChange={(v: string) => handleChange('founder_designation', v)} placeholder="e.g., CEO & Founder" />
+                    <div className="md:col-span-2">
+                      <TextArea label="Founder Bio" value={formData.founder_bio} onChange={(v: string) => handleChange('founder_bio', v)} rows={3} placeholder="Brief biography of the founder..." />
+                    </div>
+                    <div className="md:col-span-2">
+                      <TextArea label="Founder Message" value={formData.founder_message} onChange={(v: string) => handleChange('founder_message', v)} rows={3} placeholder="A message from the founder..." />
+                    </div>
+                    <div className="md:col-span-2">
+                      <FileUpload label="Founder Photo" currentUrl={formData.founder_image_url} onUpload={(url: string) => handleChange('founder_image_url', url)} />
+                    </div>
+                  </div>
                 </SectionCard>
               </div>
             )}

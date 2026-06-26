@@ -119,7 +119,11 @@ export default function Navbar() {
               <img
                 src={settings?.logo_url || "/EDEN_BUILDCORE.png"}
                 alt={siteName}
-                className="h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 object-contain drop-shadow-sm"
+                style={{
+                  height: `${settings?.logo_size || 64}px`,
+                  objectFit: (settings?.logo_scale as any) || 'contain',
+                }}
+                className="w-auto drop-shadow-sm transition-all"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                   const next = e.currentTarget.parentElement?.querySelector('.logo-fallback') as HTMLElement;

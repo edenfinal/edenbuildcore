@@ -93,9 +93,23 @@ export function useSiteSettings() {
     fetchSettings();
   }, []);
 
-  const updateSettings = async (updates: Partial<SiteSettings>) => {
-    if (!settings) {
-      // If settings haven't loaded yet, try to create or update the first row
+  const updateSettings = async (updates: Partial<SiteSettings>): Promise<boolean> => {
+    try {
+      // If we have settings loaded, update by id
+      if (settings?.id) {
+        const { error } = await supabase
+          .from('site_settings')
+          .update({ ...updates, updated_at: new Date().toISOString() })
+          .eq('id', settings.id);
+        if (error) {
+          console.error('Update settings error:', error);
+          return false;
+        }
+        setSettings({ ...settings, ...updates } as SiteSettings);
+        return true;
+      }
+
+      // Settings not loaded yet — find existing row or insert
       const { data: existing } = await supabase
         .from('site_settings')
         .select('id')
@@ -111,34 +125,26 @@ export function useSiteSettings() {
           console.error('Update settings error:', error);
           return false;
         }
-        setSettings({ ...settings, ...updates } as any);
-        return true;
-      } else {
-        // Insert new settings
-        const { data: newData, error } = await supabase
-          .from('site_settings')
-          .insert({ ...updates })
-          .select()
-          .single();
-        if (error) {
-          console.error('Insert settings error:', error);
-          return false;
-        }
-        setSettings(newData);
+        setSettings({ ...updates } as SiteSettings);
         return true;
       }
-    }
 
-    const { error } = await supabase
-      .from('site_settings')
-      .update({ ...updates, updated_at: new Date().toISOString() })
-      .eq('id', settings.id);
-    if (error) {
-      console.error('Update settings error:', error);
+      // No row exists — insert
+      const { data: newData, error } = await supabase
+        .from('site_settings')
+        .insert({ ...updates })
+        .select()
+        .maybeSingle();
+      if (error) {
+        console.error('Insert settings error:', error);
+        return false;
+      }
+      setSettings(newData as SiteSettings);
+      return true;
+    } catch (e) {
+      console.error('Update settings exception:', e);
       return false;
     }
-    setSettings({ ...settings, ...updates });
-    return true;
   };
 
   return { settings, loading, error, updateSettings };

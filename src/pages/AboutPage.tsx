@@ -1,9 +1,9 @@
 import { motion } from 'framer-motion';
 import {
   Target, Eye, Shield, Award, Users, Globe, Building2,
-  CheckCircle, History, TrendingUp, Heart, Lightbulb, Leaf
+  CheckCircle, History, TrendingUp, Heart, Lightbulb, Leaf, Quote
 } from 'lucide-react';
-import { useTeamMembers, usePageContent } from '../hooks/useData';
+import { useTeamMembers, usePageContent, useSiteSettings } from '../hooks/useData';
 import PageHero from '../components/PageHero';
 import type { TeamMember } from '../lib/supabase';
 
@@ -24,6 +24,96 @@ const coreValues = [
   { icon: Heart, title: 'Client Focus', description: 'Our clients are at the center of everything we do. Their success is our success.' },
   { icon: Leaf, title: 'Sustainability', description: 'We are committed to sustainable practices that protect our environment for future generations.' },
 ];
+
+function FounderSection() {
+  const { settings } = useSiteSettings();
+  const pageContent = usePageContent('about');
+  const c = (section: string, key: string, fallback: string) => pageContent.get(section, key, fallback);
+
+  const founderName = settings?.founder_name || c('founder', 'name', '');
+  const founderDesignation = settings?.founder_designation || c('founder', 'designation', '');
+  const founderBio = settings?.founder_bio || c('founder', 'bio', '');
+  const founderMessage = settings?.founder_message || c('founder', 'message', '');
+  const founderImage = settings?.founder_image_url || '';
+
+  // Don't render if no founder data
+  if (!founderName && !founderBio) return null;
+
+  return (
+    <section className="py-24 bg-gradient-to-b from-navy-950 to-navy-900">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="text-center mb-16">
+          <span className="inline-block px-4 py-1.5 bg-gold-500/20 text-gold-400 rounded-full text-sm font-medium tracking-wider uppercase mb-4">
+            {c('founder', 'badge', 'Our Leadership')}
+          </span>
+          <h2 className="text-4xl md:text-5xl font-heading font-bold text-white">
+            {c('founder', 'title', 'Message from the Founder')}
+          </h2>
+        </div>
+
+        <div className="grid lg:grid-cols-5 gap-12 items-center">
+          {/* Founder Image */}
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="lg:col-span-2"
+          >
+            <div className="relative">
+              <div className="aspect-[3/4] rounded-2xl overflow-hidden border-2 border-gold-500/20">
+                {founderImage ? (
+                  <img src={founderImage} alt={founderName} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-navy-800/50">
+                    <div className="text-center">
+                      <div className="w-24 h-24 rounded-full bg-gold-500/10 flex items-center justify-center mx-auto mb-4">
+                        <Users className="w-12 h-12 text-gold-500" />
+                      </div>
+                      <p className="text-gray-500">No photo uploaded</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+              {/* Name badge */}
+              <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-gold-600 to-gold-500 text-navy-950 px-6 py-3 rounded-xl shadow-gold-lg text-center min-w-[200px]">
+                <p className="font-heading font-bold text-lg">{founderName || 'Founder'}</p>
+                {founderDesignation && (
+                  <p className="text-xs font-medium opacity-90">{founderDesignation}</p>
+                )}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Founder Content */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="lg:col-span-3"
+          >
+            <Quote className="w-12 h-12 text-gold-500/30 mb-4" />
+            {founderMessage && (
+              <p className="text-xl text-gray-300 italic leading-relaxed mb-6 font-heading">
+                "{founderMessage}"
+              </p>
+            )}
+            {founderBio && (
+              <p className="text-gray-400 leading-relaxed mb-6">
+                {founderBio}
+              </p>
+            )}
+            <div className="flex items-center gap-4 pt-6 border-t border-gold-500/10">
+              <div>
+                <p className="text-white font-heading font-bold text-lg">{founderName}</p>
+                <p className="text-gold-500 text-sm">{founderDesignation}</p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 function TeamSection() {
   const { data: team } = useTeamMembers();
@@ -294,6 +384,9 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+
+      {/* Founder Section */}
+      <FounderSection />
 
       {/* Team Section */}
       <TeamSection />

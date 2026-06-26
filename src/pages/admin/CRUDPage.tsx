@@ -5,7 +5,7 @@ import {
   MoreVertical, ChevronDown, GripVertical, Image, Eye, EyeOff, Star,
   Layers, RefreshCw, Download, Upload, Copy, Archive, CheckCircle2
 } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { supabase, uploadImage } from '../../lib/supabase';
 
 interface CRUDPageProps {
   title: string;
@@ -766,32 +766,17 @@ function ImageUploadField({ value, onChange }: { value: string; onChange: (url: 
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      setError('Only image files allowed');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Max 5MB');
-      return;
-    }
     setUploading(true);
     setError('');
 
     try {
-      const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
-      const fileName = `crud/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const { data, error: upErr } = await supabase.storage.from('site-assets').upload(fileName, file, {
-        cacheControl: '3600',
-        upsert: false,
-        contentType: file.type,
-      });
-      if (upErr) {
-        setError(upErr.message);
+      const { url, error: uploadErr } = await uploadImage(file, 'crud');
+      if (uploadErr || !url) {
+        setError(uploadErr || 'Upload failed');
         setUploading(false);
         return;
       }
-      const { data: urlData } = supabase.storage.from('site-assets').getPublicUrl(data.path);
-      onChange(urlData.publicUrl);
+      onChange(url);
     } catch (e: any) {
       setError(e?.message || 'Upload failed');
     } finally {

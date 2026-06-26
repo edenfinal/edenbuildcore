@@ -223,6 +223,7 @@ const adminPages = [
       { key: 'description', label: 'Description', type: 'textarea' },
       { key: 'image_url', label: 'Image', type: 'image', required: true },
       { key: 'category', label: 'Category', type: 'text' },
+      { key: 'project_id', label: 'Project ID (optional)', type: 'text' },
       { key: 'type', label: 'Type', type: 'select', options: ['image', 'video'] },
       { key: 'is_featured', label: 'Featured', type: 'boolean' },
       { key: 'is_active', label: 'Active', type: 'boolean' },

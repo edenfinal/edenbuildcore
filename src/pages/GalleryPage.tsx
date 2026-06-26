@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight, Image, Video, Play } from 'lucide-react';
-import { useGallery, usePageContent } from '../hooks/useData';
+import { X, ChevronLeft, ChevronRight, Image, Video, Play, Filter } from 'lucide-react';
+import { useGallery, useProjects, usePageContent } from '../hooks/useData';
 import PageHero from '../components/PageHero';
-import type { GalleryItem } from '../lib/supabase';
+import type { GalleryItem, Project } from '../lib/supabase';
 
 const defaultGallery: GalleryItem[] = [
   { id: '1', title: 'Commercial Tower', image_url: 'https://images.pexels.com/photos/2219024/pexels-photo-2219024.jpeg', category: 'Commercial', type: 'image' },
@@ -22,18 +22,21 @@ const defaultGallery: GalleryItem[] = [
 
 export default function GalleryPage() {
   const { data: galleryItems } = useGallery();
+  const { data: projects } = useProjects();
   const pageContent = usePageContent('gallery');
   const c = (section: string, key: string, fallback: string) => pageContent.get(section, key, fallback);
   const [filter, setFilter] = useState('all');
+  const [projectFilter, setProjectFilter] = useState('all');
   const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const gallery = galleryItems.length > 0 ? galleryItems : defaultGallery;
   const categories = ['all', ...new Set(gallery.map(item => item.category).filter(Boolean))];
+  const projectOptions = projects.filter(p => p.is_published !== false);
 
-  const filteredGallery = filter === 'all'
-    ? gallery
-    : gallery.filter(item => item.category === filter);
+  const filteredGallery = gallery
+    .filter(item => filter === 'all' || item.category === filter)
+    .filter(item => projectFilter === 'all' || item.project_id === projectFilter);
 
   const openLightbox = (item: GalleryItem, index: number) => {
     setSelectedItem(item);
@@ -62,20 +65,54 @@ export default function GalleryPage() {
       {/* Filter Tabs */}
       <section className="py-8 bg-navy-950 border-b border-gold-500/10">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-wrap justify-center gap-3">
-            {categories.map((cat) => (
-              <button
-                key={cat as string}
-                onClick={() => setFilter(cat as string)}
-                className={`px-5 py-2 rounded-full capitalize font-medium transition-all ${
-                  filter === cat
-                    ? 'bg-gold-500 text-navy-950'
-                    : 'bg-navy-800/50 text-gray-400 hover:text-white border border-gold-500/20'
-                }`}
-              >
-                {cat === 'all' ? c('gallery.filters', 'all_text', 'All Projects') : cat}
-              </button>
-            ))}
+          <div className="flex flex-col gap-4">
+            {/* Category Filter */}
+            <div className="flex flex-wrap justify-center gap-3">
+              {categories.map((cat) => (
+                <button
+                  key={cat as string}
+                  onClick={() => setFilter(cat as string)}
+                  className={`px-5 py-2 rounded-full capitalize font-medium transition-all ${
+                    filter === cat
+                      ? 'bg-gold-500 text-navy-950'
+                      : 'bg-navy-800/50 text-gray-400 hover:text-white border border-gold-500/20'
+                  }`}
+                >
+                  {cat === 'all' ? c('gallery.filters', 'all_text', 'All Projects') : cat}
+                </button>
+              ))}
+            </div>
+            {/* Project Filter */}
+            {projectOptions.length > 0 && (
+              <div className="flex flex-wrap justify-center gap-3">
+                <span className="text-gray-500 text-sm flex items-center gap-1">
+                  <Filter className="w-4 h-4" /> By Project:
+                </span>
+                <button
+                  onClick={() => setProjectFilter('all')}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                    projectFilter === 'all'
+                      ? 'bg-gold-500/20 text-gold-400 border border-gold-500/30'
+                      : 'bg-navy-800/30 text-gray-500 hover:text-white border border-gold-500/10'
+                  }`}
+                >
+                  All
+                </button>
+                {projectOptions.map((project) => (
+                  <button
+                    key={project.id}
+                    onClick={() => setProjectFilter(project.id)}
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all truncate max-w-[200px] ${
+                      projectFilter === project.id
+                        ? 'bg-gold-500/20 text-gold-400 border border-gold-500/30'
+                        : 'bg-navy-800/30 text-gray-500 hover:text-white border border-gold-500/10'
+                    }`}
+                  >
+                    {project.title}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>

@@ -19,20 +19,19 @@ interface PageHeroProps {
 
 /* ─── Carousel Hook ─── */
 function useCarouselSlides(pageId: string, enabled: boolean) {
-  const [slides, setSlides] = useState<PageHeroType[]>([]);
+  const [slides, setSlides] = useState<any[]>([]);
   const [loading, setLoading] = useState(enabled);
 
   const fetchSlides = useCallback(async () => {
     if (!enabled) return;
     try {
       const { data, error } = await supabase
-        .from('page_heroes')
+        .from('hero_slides')
         .select('*')
-        .eq('page_id', pageId)
         .eq('is_active', true)
-        .order('created_at');
+        .order('order_index');
       if (error) throw error;
-      setSlides(data as PageHeroType[]);
+      setSlides(data || []);
     } catch (e) {
       console.error('Carousel slides error:', e);
     } finally {
@@ -227,7 +226,7 @@ function CarouselHeroView({
               </p>
             )}
 
-            {slide.show_button && slide.button_text && slide.button_link && (
+            {slide.button_text && slide.button_link && (
               <Link
                 to={slide.button_link}
                 className="inline-flex items-center gap-2 px-8 py-4 font-bold text-sm rounded-xl transition-all hover:scale-105 hover:shadow-lg group"

@@ -77,7 +77,7 @@ export default function ClientsPage() {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {(governmentClients.length > 0 ? governmentClients : [
               { id: '1', name: 'Ministry of Planning', description: 'Federal Government', logo_url: null, client_type: 'government' },
               { id: '2', name: 'Public Works Department', description: 'Provincial Authority', logo_url: null, client_type: 'government' },
@@ -92,23 +92,19 @@ export default function ClientsPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.05 }}
-                className="group bg-[#0c1a2e] border border-[#c49028]/10 rounded-xl p-6 hover:border-[#c49028]/30 transition-all duration-300"
+                className="group bg-[#0c1a2e] border border-[#c49028]/10 rounded-xl p-6 flex flex-col items-center justify-center aspect-square hover:border-[#c49028]/30 transition-all duration-300 text-center"
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-xl bg-[#c49028]/10 flex items-center justify-center flex-shrink-0 group-hover:bg-[#c49028]/20 transition-colors">
-                    {client.logo_url ? (
-                      <img src={client.logo_url} alt={client.name} className="max-w-full max-h-10 object-contain" />
-                    ) : (
-                      <Landmark className="w-7 h-7 text-[#c49028]" />
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="text-white font-semibold group-hover:text-[#c49028] transition-colors truncate">{client.name}</h3>
-                    {client.description && (
-                      <p className="text-gray-500 text-sm">{client.description}</p>
-                    )}
-                  </div>
+                <div className="w-16 h-16 rounded-xl bg-[#c49028]/10 flex items-center justify-center flex-shrink-0 group-hover:bg-[#c49028]/20 transition-colors mb-3">
+                  {client.logo_url ? (
+                    <img src={client.logo_url} alt={client.name} className="max-w-full max-h-12 object-contain" />
+                  ) : (
+                    <Landmark className="w-8 h-8 text-[#c49028]" />
+                  )}
                 </div>
+                <h3 className="text-white font-semibold group-hover:text-[#c49028] transition-colors text-sm leading-tight">{client.name}</h3>
+                {client.description && (
+                  <p className="text-gray-500 text-xs mt-1">{client.description}</p>
+                )}
               </motion.div>
             ))}
           </div>
@@ -136,7 +132,7 @@ export default function ClientsPage() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {(privateClients.length > 0 ? privateClients : [
               { id: 'p1', name: 'Engro Corp', logo_url: null },
               { id: 'p2', name: 'Lucky Cement', logo_url: null },

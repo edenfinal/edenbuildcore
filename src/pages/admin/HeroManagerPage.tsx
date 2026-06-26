@@ -1,12 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Save, AlertCircle, CheckCircle, Image, Type, Palette, Eye, EyeOff,
-  Layout, Monitor, ArrowRight, Upload, X, RefreshCw, SlidersHorizontal,
-  AlignLeft, AlignCenter, AlignRight, Check, Clock, Gauge, Plus, Minus
-} from 'lucide-react';
+import { Save, AlertCircle, CheckCircle, Image, Type, Palette, Eye, EyeOff, LayoutGrid as Layout, Monitor, ArrowRight, Upload, X, RefreshCw, SlidersHorizontal, AlignLeft, AlignCenter, AlignRight, Check, Clock, Gauge, Plus, Minus } from 'lucide-react';
 import { useAllPageHeroes } from '../../hooks/useData';
-import { supabase } from '../../lib/supabase';
+import { supabase, uploadImage } from '../../lib/supabase';
 import type { PageHero } from '../../lib/supabase';
 
 /* ─── Constants ─── */
@@ -62,16 +58,8 @@ function FileUpload({
 
   const handleFile = async (file: File) => {
     if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      setUploadError('Only image files allowed');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setUploadError('File too large (max 5MB)');
-      return;
-    }
 
-    // Check image dimensions
+    // Check image dimensions first
     const img = new Image();
     img.onload = async () => {
       setDimensions({ w: img.naturalWidth, h: img.naturalHeight });
@@ -79,24 +67,14 @@ function FileUpload({
 
       setUploading(true);
       try {
-        const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
-        const fileName = `heroes/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
-
-        const { data, error } = await supabase.storage.from(bucket).upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false,
-          contentType: file.type,
-        });
-
-        if (error) {
-          setUploadError(`Upload failed: ${error.message}`);
+        const { url, error: uploadErr } = await uploadImage(file, 'heroes');
+        if (uploadErr || !url) {
+          setUploadError(uploadErr || 'Upload failed');
           setUploading(false);
           return;
         }
-
-        const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(data.path);
-        setPreview(urlData.publicUrl);
-        onUpload(urlData.publicUrl);
+        setPreview(url);
+        onUpload(url);
       } catch (err: any) {
         setUploadError(`Upload error: ${err?.message || 'Unknown error'}`);
       } finally {
