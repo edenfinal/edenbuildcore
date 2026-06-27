@@ -796,59 +796,59 @@ function ImageUploadField({ value, onChange }: { value: string; onChange: (url: 
   const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = async (file: File) => {
+  const doUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) { setError('Only image files allowed'); return; }
     setUploading(true);
     setError('');
-
     try {
       const { url, error: uploadErr } = await uploadImage(file, 'crud');
       if (uploadErr || !url) {
         setError(uploadErr || 'Upload failed');
-        setUploading(false);
-        return;
+      } else {
+        onChange(url);
       }
-      onChange(url);
     } catch (e: any) {
       setError(e?.message || 'Upload failed');
     } finally {
       setUploading(false);
+      if (inputRef.current) inputRef.current.value = '';
     }
   };
 
   return (
-    <div className="space-y-2">
-      <div className="relative border-2 border-dashed border-[#c49028]/20 rounded-xl p-3 hover:border-[#c49028]/40 transition-colors bg-[#030810]/40">
-        {value ? (
-          <div className="relative">
-            <img src={value} alt="Preview" className="h-20 w-auto object-contain mx-auto rounded-lg" onError={() => onChange('')} />
-            <button
-              type="button"
-              onClick={() => onChange('')}
-              className="absolute -top-1 -right-1 w-5 h-5 bg-red-500/80 rounded-full flex items-center justify-center text-white hover:bg-red-500 z-10"
-            >
-              <X className="w-3 h-3" />
-            </button>
+    <div className="space-y-1.5">
+      {/* Hidden input — triggered by explicit button/click */}
+      <input ref={inputRef} type="file" accept="image/*" onChange={e => { if (e.target.files?.[0]) doUpload(e.target.files[0]); }} className="hidden" />
+      {value ? (
+        <div
+          className="relative rounded-xl overflow-hidden border border-[#c49028]/20 group cursor-pointer"
+          onClick={() => !uploading && inputRef.current?.click()}
+          title="Click to change image"
+        >
+          <img src={value} alt="Preview" className="h-24 w-full object-cover" onError={() => onChange('')} />
+          <div className="absolute inset-0 bg-[#030810]/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+            <span className="text-[#c49028] text-xs font-medium flex items-center gap-1"><Upload className="w-3 h-3" /> Change</span>
           </div>
-        ) : (
-          <div className="text-center py-3">
-            <Upload className="w-6 h-6 text-[#c49028]/40 mx-auto mb-1" />
-            <p className="text-[10px] text-gray-500">Click or drag image</p>
-          </div>
-        )}
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-        />
-        {uploading && (
-          <div className="absolute inset-0 bg-[#030810]/80 rounded-xl flex items-center justify-center z-20">
-            <div className="w-5 h-5 border-2 border-[#c49028] border-t-transparent rounded-full animate-spin" />
-          </div>
-        )}
-      </div>
-      {error && <p className="text-red-400 text-[10px]">{error}</p>}
+          <button type="button" onClick={e => { e.stopPropagation(); onChange(''); }} className="absolute top-1 right-1 w-5 h-5 bg-red-500/80 rounded-full flex items-center justify-center text-white hover:bg-red-500 z-10">
+            <X className="w-3 h-3" />
+          </button>
+          {uploading && <div className="absolute inset-0 bg-[#030810]/80 rounded-xl flex items-center justify-center z-20"><div className="w-5 h-5 border-2 border-[#c49028] border-t-transparent rounded-full animate-spin" /></div>}
+        </div>
+      ) : (
+        <div
+          onClick={() => !uploading && inputRef.current?.click()}
+          onDrop={e => { e.preventDefault(); if (e.dataTransfer.files[0]) doUpload(e.dataTransfer.files[0]); }}
+          onDragOver={e => e.preventDefault()}
+          className="relative border-2 border-dashed border-[#c49028]/20 rounded-xl p-3 hover:border-[#c49028]/40 transition-colors bg-[#030810]/40 cursor-pointer text-center"
+        >
+          {uploading ? (
+            <div className="flex items-center justify-center gap-2 py-2"><div className="w-5 h-5 border-2 border-[#c49028] border-t-transparent rounded-full animate-spin" /><span className="text-[#c49028] text-[10px]">Uploading...</span></div>
+          ) : (
+            <><Upload className="w-5 h-5 text-[#c49028]/40 mx-auto mb-1" /><p className="text-[10px] text-gray-500">Click or drag image</p></>
+          )}
+        </div>
+      )}
+      {error && <p className="text-red-400 text-[10px] flex items-center gap-1"><AlertCircle className="w-3 h-3" />{error}</p>}
     </div>
   );
 }

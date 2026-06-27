@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Calendar, User, Tag, ArrowRight, Clock, Search, FileText } from 'lucide-react';
 import { useBlogPosts, useBlogCategories, usePageContent } from '../hooks/useData';
 import PageHero from '../components/PageHero';
-import type { BlogPost, BlogCategory } from '../lib/supabase';
+import type { BlogPost } from '../lib/supabase';
 
 function PostCard({ post, featured = false }: { post: BlogPost; featured?: boolean }) {
   const tags = post.tags as string[] || [];
@@ -17,12 +17,18 @@ function PostCard({ post, featured = false }: { post: BlogPost; featured?: boole
       className={`group ${featured ? 'md:flex gap-8' : ''}`}
     >
       <Link to={`/blog/${post.slug || post.id}`} className={`block ${featured ? 'md:w-1/2' : ''}`}>
-        <div className={`relative rounded-2xl overflow-hidden mb-4 ${featured ? 'aspect-[16/9]' : 'aspect-video'}`}>
-          <img
-            src={post.featured_image_url || ''}
-            alt={post.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
+        <div className={`relative rounded-2xl overflow-hidden mb-4 bg-navy-800/50 ${featured ? 'aspect-[16/9]' : 'aspect-video'}`}>
+          {post.featured_image_url ? (
+            <img
+              src={post.featured_image_url}
+              alt={post.title}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <FileText className="w-12 h-12 text-gold-500/20" />
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-navy-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <div className="absolute top-4 left-4 px-3 py-1 bg-gold-500 text-navy-950 text-xs font-semibold rounded-full">
             {post.category || 'Article'}
@@ -76,10 +82,11 @@ function PostCard({ post, featured = false }: { post: BlogPost; featured?: boole
 
 function PostDetail() {
   const { slug } = useParams();
-  const { data: posts } = useBlogPosts();
+  const { data: allPosts } = useBlogPosts();
   const pageContent = usePageContent('blog');
-  const c = (section: string, key: string, fallback: string) => pageContent.get(section, key, fallback);
+  const c = (section: string, key: string, fallback = '') => pageContent.get(section, key, fallback);
 
+  const posts = allPosts.filter(p => p.is_published);
   const post = posts.find(p => p.slug === slug || p.id === slug);
 
   if (!post) {
@@ -98,20 +105,18 @@ function PostDetail() {
 
   return (
     <div className="min-h-screen bg-navy-950 pt-24">
-      {/* Hero */}
       <section className="relative h-[50vh] min-h-[300px]">
-        <img
-          src={post.featured_image_url || ''}
-          alt={post.title}
-          className="w-full h-full object-cover"
-        />
+        {post.featured_image_url ? (
+          <img src={post.featured_image_url} alt={post.title} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full bg-navy-900 flex items-center justify-center">
+            <FileText className="w-24 h-24 text-gold-500/20" />
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/50 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-8">
           <div className="max-w-4xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
+            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
               <span className="px-3 py-1 bg-gold-500 text-navy-950 text-sm font-semibold rounded-full mb-4 inline-block">
                 {post.category || 'Article'}
               </span>
@@ -135,32 +140,31 @@ function PostDetail() {
         </div>
       </section>
 
-      {/* Content */}
       <section className="py-16">
         <div className="max-w-4xl mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="prose prose-lg prose-invert max-w-none"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="prose prose-lg prose-invert max-w-none">
             <p className="text-xl text-gray-300 leading-relaxed mb-8">{post.excerpt}</p>
             <div className="text-gray-400 leading-relaxed whitespace-pre-line">
-              {post.content || 'Full article content coming soon...'}
+              {post.content || c('detail', 'no_content', 'Full article content coming soon...')}
             </div>
           </motion.div>
 
           {tags.length > 0 && (
             <div className="mt-12 pt-8 border-t border-gold-500/10">
-              <h4 className="text-white font-semibold mb-4">{c('blog.detail', 'tags_title', 'Tags')}</h4>
+              <h4 className="text-white font-semibold mb-4">{c('filters', 'tags_title', 'Tags')}</h4>
               <div className="flex flex-wrap gap-2">
                 {tags.map((tag) => (
-                  <span key={tag} className="px-4 py-2 bg-navy-800/50 text-gray-300 rounded-full text-sm">
-                    #{tag}
-                  </span>
+                  <span key={tag} className="px-4 py-2 bg-navy-800/50 text-gray-300 rounded-full text-sm">#{tag}</span>
                 ))}
               </div>
             </div>
           )}
+
+          <div className="mt-8">
+            <Link to="/blog" className="inline-flex items-center gap-2 text-gold-500 hover:text-gold-400 font-medium transition-colors">
+              <ArrowRight className="w-4 h-4 rotate-180" /> Back to Blog
+            </Link>
+          </div>
         </div>
       </section>
     </div>
@@ -169,68 +173,60 @@ function PostDetail() {
 
 export default function BlogPage() {
   const { slug } = useParams();
-  const { data: posts } = useBlogPosts();
-  const { data: categories } = useBlogCategories();
+  const { data: allPosts } = useBlogPosts();
   const pageContent = usePageContent('blog');
-  const c = (section: string, key: string, fallback: string) => pageContent.get(section, key, fallback);
+  const c = (section: string, key: string, fallback = '') => pageContent.get(section, key, fallback);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
 
-  // If slug exists, show post detail
-  if (slug) {
-    return <PostDetail />;
-  }
+  if (slug) return <PostDetail />;
 
-  const displayPosts = posts.length > 0 ? posts : defaultPosts;
-  const featuredPost = displayPosts.find(p => p.is_featured) || displayPosts[0];
+  // Only show published posts — no hardcoded fallback data
+  const posts = allPosts.filter(p => p.is_published);
+  const featuredPost = posts.find(p => p.is_featured) || posts[0] || null;
 
-  const filteredPosts = displayPosts
+  const filteredPosts = posts
     .filter(p => p.id !== featuredPost?.id)
     .filter(p => {
-      const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      const matchesSearch =
+        p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (p.excerpt?.toLowerCase() || '').includes(searchQuery.toLowerCase());
       const matchesCategory = activeCategory === 'all' || p.category === activeCategory;
       return matchesSearch && matchesCategory;
     });
 
-  const blogCategories = ['all', ...new Set(displayPosts.map(p => p.category).filter(Boolean))];
+  const blogCategories = ['all', ...new Set(posts.map(p => p.category).filter(Boolean) as string[])];
 
   return (
     <>
-      {/* Hero Section */}
-      <PageHero
-        pageId="blog"
-      />
+      <PageHero pageId="blog" />
 
       {/* Search & Filter */}
       <section className="py-8 bg-navy-900 border-y border-gold-500/10">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row gap-4 justify-between">
-            {/* Search */}
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
               <input
                 type="text"
-                placeholder={c('blog.filters', 'search_placeholder', 'Search articles...')}
+                placeholder={c('filters', 'search_placeholder', 'Search articles...')}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 bg-navy-800/50 border border-gold-500/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-gold-500/50"
               />
             </div>
-
-            {/* Categories */}
             <div className="flex flex-wrap gap-2">
               {blogCategories.map((cat) => (
                 <button
-                  key={cat as string}
-                  onClick={() => setActiveCategory(cat as string)}
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                     activeCategory === cat
                       ? 'bg-gold-500 text-navy-950'
                       : 'bg-navy-800/50 text-gray-400 hover:text-white border border-gold-500/20'
                   }`}
                 >
-                  {cat === 'all' ? c('blog.filters', 'all_text', 'All') : cat}
+                  {cat === 'all' ? c('filters', 'all_text', 'All') : cat}
                 </button>
               ))}
             </div>
@@ -238,12 +234,23 @@ export default function BlogPage() {
         </div>
       </section>
 
+      {/* No posts state */}
+      {posts.length === 0 && (
+        <section className="py-32 bg-navy-950">
+          <div className="max-w-4xl mx-auto px-6 text-center">
+            <FileText className="w-20 h-20 text-gold-500/20 mx-auto mb-6" />
+            <h2 className="text-2xl font-heading font-bold text-white mb-3">No Articles Yet</h2>
+            <p className="text-gray-400">Blog posts added from the admin panel will appear here.</p>
+          </div>
+        </section>
+      )}
+
       {/* Featured Post */}
       {featuredPost && (
         <section className="py-12 bg-navy-950">
           <div className="max-w-7xl mx-auto px-6">
             <span className="text-gold-500 text-sm font-medium tracking-wider uppercase mb-6 block">
-              {c('blog.detail', 'featured_label', 'Featured Article')}
+              {c('detail', 'featured_label', 'Featured Article')}
             </span>
             <PostCard post={featuredPost} featured />
           </div>
@@ -251,22 +258,22 @@ export default function BlogPage() {
       )}
 
       {/* Posts Grid */}
-      <section className="py-16 bg-navy-950">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredPosts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
-          </div>
-
-          {filteredPosts.length === 0 && (
-            <div className="text-center py-16">
-              <FileText className="w-16 h-16 text-gold-500/50 mx-auto mb-4" />
-              <p className="text-gray-400">{c('blog.empty', 'no_results', 'No articles found matching your criteria.')}</p>
+      {filteredPosts.length > 0 && (
+        <section className="py-16 bg-navy-950">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredPosts.map((post) => (
+                <PostCard key={post.id} post={post} />
+              ))}
             </div>
-          )}
-        </div>
-      </section>
+            {filteredPosts.length === 0 && searchQuery && (
+              <div className="text-center py-16">
+                <p className="text-gray-400">{c('empty', 'no_results', 'No articles found.')}</p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
     </>
   );
 }

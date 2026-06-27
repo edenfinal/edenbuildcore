@@ -33,13 +33,13 @@ const ALIGN_OPTIONS = [
 ];
 
 /* ─── FileUpload Component ─── */
+// Completely rebuilt to avoid input-overlay issues
 function FileUpload({
   label,
   currentUrl,
   onUpload,
   recommendedWidth,
   recommendedHeight,
-  bucket = 'site-assets',
 }: {
   label: string;
   currentUrl: string;
@@ -51,107 +51,136 @@ function FileUpload({
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(currentUrl);
   const [uploadError, setUploadError] = useState('');
-  const [dimensions, setDimensions] = useState<{ w: number; h: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setPreview(currentUrl); }, [currentUrl]);
 
-  const handleFile = async (file: File) => {
-    if (!file) return;
-
-    // Check image dimensions first
-    const img = new Image();
-    img.onload = async () => {
-      setDimensions({ w: img.naturalWidth, h: img.naturalHeight });
-      setUploadError('');
-
-      setUploading(true);
-      try {
-        const { url, error: uploadErr } = await uploadImage(file, 'heroes');
-        if (uploadErr || !url) {
-          setUploadError(uploadErr || 'Upload failed');
-          setUploading(false);
-          return;
-        }
+  const doUpload = async (file: File) => {
+    if (!file || !file.type.startsWith('image/')) {
+      setUploadError('Only image files are allowed');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError('File too large (max 10MB)');
+      return;
+    }
+    setUploading(true);
+    setUploadError('');
+    try {
+      const { url, error: uploadErr } = await uploadImage(file, 'heroes');
+      if (uploadErr || !url) {
+        setUploadError(uploadErr || 'Upload failed — please try again');
+      } else {
         setPreview(url);
         onUpload(url);
-      } catch (err: any) {
-        setUploadError(`Upload error: ${err?.message || 'Unknown error'}`);
-      } finally {
-        setUploading(false);
       }
-    };
-    img.onerror = () => setUploadError('Could not read image dimensions');
-    img.src = URL.createObjectURL(file);
+    } catch (err: any) {
+      setUploadError(err?.message || 'Upload failed');
+    } finally {
+      setUploading(false);
+      // Reset input so same file can be selected again
+      if (inputRef.current) inputRef.current.value = '';
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) doUpload(file);
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
+    if (file) doUpload(file);
   };
-
-  const dimWarning = dimensions && recommendedWidth && recommendedHeight &&
-    (dimensions.w < recommendedWidth || dimensions.h < recommendedHeight);
 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <label className="block text-sm font-medium text-gray-400">{label}</label>
-        {(recommendedWidth && recommendedHeight) && (
-          <span className="text-[10px] text-gray-500">Recommended: {recommendedWidth}x{recommendedHeight}px</span>
+        {recommendedWidth && recommendedHeight && (
+          <span className="text-[10px] text-gray-500">Recommended: {recommendedWidth}×{recommendedHeight}px</span>
         )}
       </div>
-      <div
-        onDrop={handleDrop}
-        onDragOver={(e) => e.preventDefault()}
-        className="relative border-2 border-dashed border-[#c49028]/20 rounded-xl overflow-hidden hover:border-[#c49028]/40 transition-colors bg-[#030810]/40"
-      >
-        {preview ? (
-          <div className="relative">
-            <img src={preview} alt="Preview" className="w-full h-48 object-cover" onError={() => setPreview('')} />
+
+      {/* Hidden file input — triggered explicitly */}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleInputChange}
+        className="hidden"
+      />
+
+      {preview ? (
+        /* ── Preview Mode ── */
+        <div className="relative rounded-xl overflow-hidden border border-[#c49028]/20">
+          <img
+            src={preview}
+            alt="Background preview"
+            className="w-full h-48 object-cover"
+            onError={() => { setPreview(''); onUpload(''); }}
+          />
+          {/* Overlay controls */}
+          <div className="absolute inset-0 bg-[#030810]/60 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
             <button
               type="button"
-              onClick={() => { setPreview(''); onUpload(''); setUploadError(''); setDimensions(null); }}
-              className="absolute top-2 right-2 w-7 h-7 bg-red-500/80 rounded-full flex items-center justify-center text-white hover:bg-red-500 transition-colors z-10"
+              onClick={() => inputRef.current?.click()}
+              disabled={uploading}
+              className="px-4 py-2 bg-[#c49028] text-[#030810] font-semibold text-sm rounded-lg hover:bg-[#e8b84a] transition-colors flex items-center gap-2"
             >
-              <X className="w-3.5 h-3.5" />
+              <Upload className="w-4 h-4" />
+              Change
             </button>
-            {dimensions && (
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#030810] to-transparent p-3">
-                <p className={`text-xs ${dimWarning ? 'text-amber-400' : 'text-gray-400'}`}>
-                  {dimensions.w}x{dimensions.h}px {dimWarning && '(below recommended)'}
-                </p>
+            <button
+              type="button"
+              onClick={() => { setPreview(''); onUpload(''); setUploadError(''); }}
+              className="px-4 py-2 bg-red-500/80 text-white font-semibold text-sm rounded-lg hover:bg-red-500 transition-colors flex items-center gap-2"
+            >
+              <X className="w-4 h-4" />
+              Remove
+            </button>
+          </div>
+          {uploading && (
+            <div className="absolute inset-0 bg-[#030810]/80 flex flex-col items-center justify-center gap-2">
+              <div className="w-8 h-8 border-2 border-[#c49028] border-t-transparent rounded-full animate-spin" />
+              <p className="text-[#c49028] text-xs">Uploading...</p>
+            </div>
+          )}
+        </div>
+      ) : (
+        /* ── Drop Zone (no preview) ── */
+        <div
+          onDrop={handleDrop}
+          onDragOver={(e) => e.preventDefault()}
+          onClick={() => !uploading && inputRef.current?.click()}
+          className="relative border-2 border-dashed border-[#c49028]/20 rounded-xl hover:border-[#c49028]/50 transition-colors bg-[#030810]/40 cursor-pointer"
+        >
+          <div className="text-center py-10 px-4">
+            {uploading ? (
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-8 h-8 border-2 border-[#c49028] border-t-transparent rounded-full animate-spin" />
+                <p className="text-[#c49028] text-sm">Uploading image...</p>
               </div>
+            ) : (
+              <>
+                <Upload className="w-8 h-8 text-[#c49028]/50 mx-auto mb-3" />
+                <p className="text-sm text-gray-400 font-medium">Click or drag & drop to upload</p>
+                <p className="text-[10px] text-gray-600 mt-1">JPG, PNG, WebP — max 10MB</p>
+                {recommendedWidth && recommendedHeight && (
+                  <p className="text-[10px] text-gray-600 mt-0.5">Recommended {recommendedWidth}×{recommendedHeight}px</p>
+                )}
+              </>
             )}
           </div>
-        ) : (
-          <div className="text-center py-10">
-            <Upload className="w-8 h-8 text-[#c49028]/40 mx-auto mb-2" />
-            <p className="text-xs text-gray-500">Drag & drop or click to upload</p>
-            <p className="text-[10px] text-gray-600 mt-1">Max 5MB, Images only</p>
-            {(recommendedWidth && recommendedHeight) && (
-              <p className="text-[10px] text-gray-600 mt-0.5">Recommended {recommendedWidth}x{recommendedHeight}px</p>
-            )}
-          </div>
-        )}
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-        />
-        {uploading && (
-          <div className="absolute inset-0 bg-[#030810]/80 flex items-center justify-center z-20">
-            <div className="w-6 h-6 border-2 border-[#c49028] border-t-transparent rounded-full animate-spin" />
-          </div>
-        )}
-      </div>
+        </div>
+      )}
+
       {uploadError && (
-        <p className="text-red-400 text-xs flex items-center gap-1">
-          <AlertCircle className="w-3 h-3" /> {uploadError}
-        </p>
+        <div className="flex items-center gap-2 p-2.5 bg-red-500/10 border border-red-500/20 rounded-lg">
+          <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+          <p className="text-red-400 text-xs">{uploadError}</p>
+        </div>
       )}
     </div>
   );

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Save, Search, ChevronDown, ChevronRight, CheckCircle, AlertCircle, FileText, Type, AlignLeft, Palette, Bold, Italic, Underline, Strikethrough, AlignCenter, AlignRight, List, ListOrdered, Link as LinkIcon, Image, Undo, Redo, Code, Eye, EyeOff, Trash2, Copy, Sparkles, LayoutGrid as Layout, Heading, Hash, Quote, Minus, Table, Columns2 as Columns, Maximize2, Minimize2, RefreshCw, Check, X, Pencil, ChevronLeft, ChevronRight as ChevronRightIcon, Type as TypeIcon, Baseline, CaseSensitive, Paintbrush, Wand2 } from 'lucide-react';
 import { useAllPageContent } from '../../hooks/useData';
+import { uploadImage } from '../../lib/supabase';
 import type { PageContent } from '../../lib/supabase';
 
 /* ─── Types ─── */
@@ -528,6 +529,72 @@ function BulkActionsBar({
   );
 }
 
+/* ─── Helpers ─── */
+function isImageField(item: PageContent): boolean {
+  return (
+    item.content_type === 'image' ||
+    item.content_key.endsWith('_url') ||
+    item.content_key.endsWith('_image') ||
+    item.content_key === 'logo' ||
+    item.content_key === 'background'
+  );
+}
+
+/* ─── Inline Image Upload for Content Editor ─── */
+function InlineImageUpload({ value, onChange }: { value: string; onChange: (url: string) => void }) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const doUpload = async (file: File) => {
+    setUploading(true);
+    setError('');
+    try {
+      const { url, error: err } = await uploadImage(file, 'content');
+      if (err || !url) { setError(err || 'Upload failed'); }
+      else { onChange(url); }
+    } catch (e: any) {
+      setError(e?.message || 'Upload failed');
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = '';
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <input ref={inputRef} type="file" accept="image/*" onChange={e => { if (e.target.files?.[0]) doUpload(e.target.files[0]); }} className="hidden" />
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder="Enter image URL or upload below"
+          className="flex-1 px-3 py-2 bg-[#060d18] border border-[#c49028]/15 rounded-lg text-white text-sm focus:outline-none focus:border-[#c49028]/40"
+        />
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className="px-3 py-2 bg-[#c49028]/10 text-[#c49028] rounded-lg hover:bg-[#c49028]/20 transition-all text-xs font-medium flex items-center gap-1.5 border border-[#c49028]/20"
+        >
+          {uploading ? <div className="w-3 h-3 border-2 border-[#c49028] border-t-transparent rounded-full animate-spin" /> : <Image className="w-3.5 h-3.5" />}
+          {uploading ? 'Uploading...' : 'Upload'}
+        </button>
+      </div>
+      {value && (
+        <div className="relative rounded-lg overflow-hidden border border-[#c49028]/10 group">
+          <img src={value} alt="Preview" className="h-20 w-full object-cover" onError={() => onChange('')} />
+          <button type="button" onClick={() => onChange('')} className="absolute top-1 right-1 w-5 h-5 bg-red-500/80 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500">
+            <X className="w-3 h-3" />
+          </button>
+        </div>
+      )}
+      {error && <p className="text-red-400 text-[10px]">{error}</p>}
+    </div>
+  );
+}
+
 /* ─── Main Component ─── */
 export default function ContentEditorPage() {
   const { content, loading, error, refetch, updateItem } = useAllPageContent();
@@ -977,6 +1044,11 @@ export default function ContentEditorPage() {
                                                         className="w-full min-h-[100px] px-3 py-2.5 bg-[#060d18] border border-[#c49028]/15 rounded-lg text-white text-sm focus:outline-none focus:border-[#c49028]/40 resize-y overflow-auto"
                                                         style={{ fontFamily: activeStyle.fontFamily }}
                                                         dangerouslySetInnerHTML={{ __html: editValues[item.id] ?? item.content_value }}
+                                                      />
+                                                    ) : isImageField(item) ? (
+                                                      <InlineImageUpload
+                                                        value={editValues[item.id] ?? item.content_value}
+                                                        onChange={(url) => setEditValues((prev) => ({ ...prev, [item.id]: url }))}
                                                       />
                                                     ) : (
                                                       <input
