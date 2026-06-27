@@ -36,7 +36,7 @@ function ProjectCard({ project }: { project: Project }) {
             project.status === 'ongoing' ? 'bg-blue-500 text-white' :
             'bg-orange-500 text-white'
           }`}>
-            {project.status}
+            {project.status ? project.status.charAt(0).toUpperCase() + project.status.slice(1) : ''}
           </div>
 
           {/* Hover Overlay */}
@@ -111,7 +111,8 @@ function ProjectDetail() {
         <img
           src={project.thumbnail_url || ''}
           alt={project.title}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover object-center scale-100"
+          style={{ objectPosition: 'center 20%' }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/50 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-8">
@@ -238,7 +239,7 @@ function ProjectDetail() {
                 <h3 className="text-lg font-semibold text-white mb-6">{c('projects.detail', 'sidebar_title', 'Project Details')}</h3>
                 <div className="space-y-4">
                   {[
-                    { label: 'Status', value: project.status },
+                    { label: 'Status', value: project.status ? project.status.charAt(0).toUpperCase() + project.status.slice(1) : undefined },
                     { label: 'Category', value: project.category },
                     { label: 'Client', value: project.client_name },
                     { label: 'Location', value: project.location },

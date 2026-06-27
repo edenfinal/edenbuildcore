@@ -345,6 +345,7 @@ function AppRoutes() {
         <Route path="blog/:slug" element={<BlogPage />} />
         <Route path="clients" element={<ClientsPage />} />
         <Route path="certifications" element={<CertificationsPage />} />
+        <Route path="certifications/:id" element={<CertificationsPage />} />
         <Route path="privacy" element={<PrivacyPolicyPage />} />
         <Route path="terms" element={<TermsOfServicePage />} />
       </Route>

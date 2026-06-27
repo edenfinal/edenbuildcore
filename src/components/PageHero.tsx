@@ -84,8 +84,20 @@ function SingleHeroView({
           className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-bold leading-tight mb-6"
           style={{ color: txtColor }}
         >
-          <span style={{ color: primaryColor }}>{hero.title.split(' ')[0]}</span>
-          {hero.title.includes(' ') ? ' ' + hero.title.split(' ').slice(1).join(' ') : ''}
+          {(() => {
+            const lines = hero.title.split(/\n|\\n/);
+            return lines.length > 1 ? (
+              <>
+                <span style={{ color: primaryColor }}>{lines[0]}</span>
+                {lines.slice(1).map((line, i) => <span key={i}><br />{line}</span>)}
+              </>
+            ) : (
+              <>
+                <span style={{ color: primaryColor }}>{hero.title.split(' ').slice(0, Math.ceil(hero.title.split(' ').length / 2)).join(' ')}</span>
+                {' '}{hero.title.split(' ').slice(Math.ceil(hero.title.split(' ').length / 2)).join(' ')}
+              </>
+            );
+          })()}
         </motion.h1>
       )}
 
@@ -199,8 +211,20 @@ function CarouselHeroView({
 
             {slide.title && (
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-bold leading-tight mb-6" style={{ color: txtColor }}>
-                <span style={{ color: primaryColor }}>{slide.title.split(' ')[0]}</span>
-                {slide.title.includes(' ') ? ' ' + slide.title.split(' ').slice(1).join(' ') : ''}
+                {(() => {
+                  const lines = slide.title.split(/\n|\\n/);
+                  return lines.length > 1 ? (
+                    <>
+                      <span style={{ color: primaryColor }}>{lines[0]}</span>
+                      {lines.slice(1).map((line, i) => <span key={i}><br />{line}</span>)}
+                    </>
+                  ) : (
+                    <>
+                      <span style={{ color: primaryColor }}>{slide.title.split(' ').slice(0, Math.ceil(slide.title.split(' ').length / 2)).join(' ')}</span>
+                      {' '}{slide.title.split(' ').slice(Math.ceil(slide.title.split(' ').length / 2)).join(' ')}
+                    </>
+                  );
+                })()}
               </h1>
             )}
 
