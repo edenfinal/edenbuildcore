@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Calendar, ArrowRight, Building2, Filter, X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useProjects, useProjectCategories, usePageContent } from '../hooks/useData';
+import { useProjects, usePageContent } from '../hooks/useData';
 import PageHero from '../components/PageHero';
 import type { Project } from '../lib/supabase';
 
@@ -195,18 +195,33 @@ function ProjectDetail() {
                     )}
                   </div>
                   {images.length > 1 && (
-                    <div className="grid grid-cols-4 gap-2">
-                      {images.slice(0, 4).map((img, index) => (
-                        <button
-                          key={index}
-                          onClick={() => setCurrentImage(index)}
-                          className={`aspect-video rounded-lg overflow-hidden border-2 transition-colors ${
-                            currentImage === index ? 'border-gold-500' : 'border-transparent'
-                          }`}
-                        >
-                          <img src={img} alt="" className="w-full h-full object-cover" />
-                        </button>
-                      ))}
+                    <div className="space-y-2">
+                      {/* Scrollable thumbnail strip — shows ALL images */}
+                      <div className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar">
+                        {images.map((img, index) => (
+                          <button
+                            key={index}
+                            onClick={() => setCurrentImage(index)}
+                            className={`relative flex-shrink-0 w-24 h-16 rounded-lg overflow-hidden border-2 transition-all hover:opacity-90 ${
+                              currentImage === index
+                                ? 'border-gold-500 ring-1 ring-gold-500/50'
+                                : 'border-white/10 hover:border-gold-500/50'
+                            }`}
+                          >
+                            <img src={img} alt={`Image ${index + 1}`} className="w-full h-full object-cover" />
+                            {/* Current indicator */}
+                            {currentImage === index && (
+                              <div className="absolute inset-0 bg-gold-500/20" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                      {/* Count indicator */}
+                      <p className="text-xs text-gray-500 text-right">
+                        <span className="text-gold-400 font-medium">{currentImage + 1}</span>
+                        {' / '}
+                        {images.length} images
+                      </p>
                     </div>
                   )}
                 </motion.div>
@@ -256,25 +271,19 @@ function ProjectDetail() {
 export default function ProjectsPage() {
   const { slug } = useParams();
   const { data: projects } = useProjects();
-  const { data: categories } = useProjectCategories();
   const pageContent = usePageContent('projects');
   const c = (section: string, key: string, fallback: string) => pageContent.get(section, key, fallback);
   const [filter, setFilter] = useState<string>('all');
-  const [showFilters, setShowFilters] = useState(false);
 
   // If slug exists, show project detail
   if (slug) {
     return <ProjectDetail />;
   }
 
-  const displayProjects = projects.length > 0 ? projects : [
-    { id: '1', title: 'Commercial Tower Complex', category: 'Commercial', status: 'completed', location: 'Karachi', description: 'A 25-story commercial tower with modern amenities.' },
-    { id: '2', title: 'Highway Expansion Project', category: 'Infrastructure', status: 'ongoing', location: 'Lahore', description: 'Major highway expansion spanning 50 kilometers.' },
-    { id: '3', title: 'Residential Township', category: 'Residential', status: 'ongoing', location: 'Islamabad', description: 'Premium residential community with 500 units.' },
-    { id: '4', title: 'Industrial Complex', category: 'Industrial', status: 'completed', location: 'Faisalabad', description: 'Modern manufacturing facility with warehouse.' },
-    { id: '5', title: 'Solar Power Plant', category: 'Energy', status: 'planning', location: 'Multan', description: '100MW solar power generation facility.' },
-    { id: '6', title: 'Hospital Building', category: 'Healthcare', status: 'completed', location: 'Peshawar', description: '500-bed modern healthcare facility.' },
-  ] as Project[];
+  const displayProjects = projects.filter(p => p.is_published !== false);
+
+  // Derive categories from actual project data
+  const categoryNames = [...new Set(displayProjects.map(p => p.category).filter(Boolean) as string[])];
 
   const filteredProjects = filter === 'all'
     ? displayProjects
@@ -291,7 +300,7 @@ export default function ProjectsPage() {
       <section className="py-8 bg-navy-950 border-b border-gold-500/10">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-wrap justify-center gap-3">
-            {['all', ...categories].map((cat) => (
+            {(['all', ...categoryNames] as string[]).map((cat) => (
               <button
                 key={cat}
                 onClick={() => setFilter(cat)}
