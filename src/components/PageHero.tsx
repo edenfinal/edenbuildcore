@@ -84,7 +84,8 @@ function SingleHeroView({
           className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-bold leading-tight mb-6"
           style={{ color: txtColor }}
         >
-          {hero.title}
+          <span style={{ color: primaryColor }}>{hero.title.split(' ')[0]}</span>
+          {hero.title.includes(' ') ? ' ' + hero.title.split(' ').slice(1).join(' ') : ''}
         </motion.h1>
       )}
 
@@ -198,9 +199,8 @@ function CarouselHeroView({
 
             {slide.title && (
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-bold leading-tight mb-6" style={{ color: txtColor }}>
-                {slide.title?.split(' ').slice(0, 2).join(' ')}
-                <br className="hidden sm:block" />
-                {slide.title?.split(' ').slice(2).join(' ')}
+                <span style={{ color: primaryColor }}>{slide.title.split(' ')[0]}</span>
+                {slide.title.includes(' ') ? ' ' + slide.title.split(' ').slice(1).join(' ') : ''}
               </h1>
             )}
 
