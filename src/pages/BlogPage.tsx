@@ -104,35 +104,34 @@ function PostDetail() {
   const tags = post.tags as string[] || [];
 
   return (
-    <div className="min-h-screen bg-navy-950 pt-24">
-      <section className="relative h-[50vh] min-h-[300px]">
+    <div className="min-h-screen bg-navy-950">
+      {/* Hero image fills full width, starts at top behind navbar */}
+      <section className="relative h-[70vh] min-h-[420px] overflow-hidden">
         {post.featured_image_url ? (
-          <img src={post.featured_image_url} alt={post.title} className="w-full h-full object-cover" />
+          <img src={post.featured_image_url} alt={post.title} className="absolute inset-0 w-full h-full object-cover object-center" />
         ) : (
-          <div className="w-full h-full bg-navy-900 flex items-center justify-center">
+          <div className="absolute inset-0 bg-gradient-to-br from-navy-900 to-navy-950 flex items-center justify-center">
             <FileText className="w-24 h-24 text-gold-500/20" />
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/50 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 p-8">
+        <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/50 to-navy-950/20" />
+        <div className="absolute inset-x-0 bottom-0 p-8 pb-12">
           <div className="max-w-4xl mx-auto">
             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
               <span className="px-3 py-1 bg-gold-500 text-navy-950 text-sm font-semibold rounded-full mb-4 inline-block">
                 {post.category || 'Article'}
               </span>
-              <h1 className="text-4xl md:text-5xl font-heading font-bold text-white mb-4">{post.title}</h1>
+              <h1 className="text-3xl md:text-5xl font-heading font-bold text-white mb-4 leading-tight">{post.title}</h1>
               <div className="flex flex-wrap items-center gap-6 text-gray-300">
-                <span className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-gold-500" />
-                  {post.published_at ? new Date(post.published_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'N/A'}
-                </span>
+                {post.published_at && (
+                  <span className="flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-gold-500" />
+                    {new Date(post.published_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                  </span>
+                )}
                 <span className="flex items-center gap-2">
                   <Clock className="w-5 h-5 text-gold-500" />
                   {post.reading_time || 5} min read
-                </span>
-                <span className="flex items-center gap-2">
-                  <User className="w-5 h-5 text-gold-500" />
-                  Eden Buildcore
                 </span>
               </div>
             </motion.div>
@@ -142,10 +141,32 @@ function PostDetail() {
 
       <section className="py-16">
         <div className="max-w-4xl mx-auto px-6">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="prose prose-lg prose-invert max-w-none">
-            <p className="text-xl text-gray-300 leading-relaxed mb-8">{post.excerpt}</p>
-            <div className="text-gray-400 leading-relaxed whitespace-pre-line">
-              {post.content || c('detail', 'no_content', 'Full article content coming soon...')}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            {post.excerpt && (
+              <p className="text-xl text-gray-300 leading-relaxed mb-10 pb-10 border-b border-gold-500/10">{post.excerpt}</p>
+            )}
+            <div className="prose-content text-gray-300 leading-relaxed space-y-4">
+              {(post.content || '').split(/\n\n+/).map((para, i) => {
+                const trimmed = para.trim();
+                if (!trimmed) return null;
+                // Heading lines starting with #
+                if (trimmed.startsWith('### ')) return <h3 key={i} className="text-xl font-heading font-bold text-white mt-8 mb-3">{trimmed.slice(4)}</h3>;
+                if (trimmed.startsWith('## ')) return <h2 key={i} className="text-2xl font-heading font-bold text-white mt-10 mb-4">{trimmed.slice(3)}</h2>;
+                if (trimmed.startsWith('# ')) return <h1 key={i} className="text-3xl font-heading font-bold text-white mt-10 mb-4">{trimmed.slice(2)}</h1>;
+                // Bullet lists
+                const lines = trimmed.split('\n');
+                const isList = lines.every(l => l.startsWith('- ') || l.startsWith('* ') || l.startsWith('• ') || /^\d+\.\s/.test(l));
+                if (isList) {
+                  return (
+                    <ul key={i} className="list-disc list-inside space-y-1 pl-2">
+                      {lines.map((l, j) => <li key={j} className="text-gray-300">{l.replace(/^[-*•]\s|^\d+\.\s/, '')}</li>)}
+                    </ul>
+                  );
+                }
+                // Normal paragraph — handle inline line breaks
+                return <p key={i} className="text-gray-300">{lines.map((l, j) => j === 0 ? l : [<br key={j} />, l])}</p>;
+              })}
+              {!post.content && <p className="text-gray-500 italic">Full article content coming soon...</p>}
             </div>
           </motion.div>
 

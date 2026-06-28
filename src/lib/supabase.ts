@@ -138,6 +138,9 @@ export interface HeroSlide {
   background_image_url: string | null;
   button_text: string | null;
   button_link: string | null;
+  button2_text: string | null;
+  button2_link: string | null;
+  line_two: string | null;
   overlay_opacity: number;
   text_alignment: string;
   order_index: number;
@@ -454,12 +457,15 @@ export interface PageHero {
   page_id: string;
   title: string | null;
   subtitle: string | null;
+  line_two: string | null;
   description: string | null;
   background_image_url: string | null;
   overlay_opacity: number;
   text_alignment: string;
   button_text: string | null;
   button_link: string | null;
+  button2_text: string | null;
+  button2_link: string | null;
   show_button: boolean;
   height: string;
   text_color: string;

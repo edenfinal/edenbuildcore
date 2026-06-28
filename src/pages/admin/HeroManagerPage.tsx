@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Save, AlertCircle, CheckCircle, Image, Type, Palette, Eye, EyeOff, LayoutGrid as Layout, Monitor, ArrowRight, Upload, X, RefreshCw, SlidersHorizontal, AlignLeft, AlignCenter, AlignRight, Check, Clock, Gauge, Plus, Minus } from 'lucide-react';
-import { useAllPageHeroes } from '../../hooks/useData';
+import { Save, AlertCircle, CheckCircle, Image, Type, Palette, Eye, EyeOff, LayoutGrid as Layout, Monitor, ArrowRight, Upload, X, RefreshCw, SlidersHorizontal, AlignLeft, AlignCenter, AlignRight, Check, Clock, Gauge, Plus, Minus, Trash2, Pencil, GripVertical } from 'lucide-react';
+import { useAllPageHeroes, useHeroSlides } from '../../hooks/useData';
 import { supabase, uploadImage } from '../../lib/supabase';
-import type { PageHero } from '../../lib/supabase';
+import type { PageHero, HeroSlide } from '../../lib/supabase';
 
 /* ─── Constants ─── */
 const PAGE_LABELS: Record<string, string> = {
@@ -241,6 +241,215 @@ function HeroPreview({ hero }: { hero: Partial<PageHero> }) {
   );
 }
 
+/* ─── Hero Slides Manager (for carousel) ─── */
+function HeroSlidesManager() {
+  const { data: slides, refetch } = useHeroSlides();
+  const [editingSlide, setEditingSlide] = useState<HeroSlide | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState<Partial<HeroSlide>>({});
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const allSlides = [...slides].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
+
+  const openNew = () => {
+    setEditingSlide(null);
+    setForm({ is_active: true, order_index: allSlides.length, overlay_opacity: 50, text_alignment: 'center' });
+    setShowForm(true);
+  };
+  const openEdit = (s: HeroSlide) => {
+    setEditingSlide(s);
+    setForm({ ...s });
+    setShowForm(true);
+  };
+  const closeForm = () => { setShowForm(false); setEditingSlide(null); setForm({}); };
+
+  const handleImageUpload = async (file: File) => {
+    setUploading(true);
+    const { url } = await uploadImage(file, 'heroes');
+    if (url) setForm(f => ({ ...f, background_image_url: url }));
+    setUploading(false);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    if (editingSlide) {
+      await supabase.from('hero_slides').update({ ...form, updated_at: new Date().toISOString() }).eq('id', editingSlide.id);
+    } else {
+      await supabase.from('hero_slides').insert(form);
+    }
+    await refetch();
+    closeForm();
+    setSaving(false);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Delete this slide?')) return;
+    await supabase.from('hero_slides').delete().eq('id', id);
+    refetch();
+  };
+
+  return (
+    <div className="mt-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-base font-semibold text-white">Home Page Slides</h3>
+        <button onClick={openNew} className="inline-flex items-center gap-2 px-4 py-2 bg-[#c49028]/10 text-[#c49028] border border-[#c49028]/20 rounded-lg text-sm hover:bg-[#c49028]/20 transition-all">
+          <Plus className="w-4 h-4" /> Add Slide
+        </button>
+      </div>
+
+      {allSlides.length === 0 && !showForm && (
+        <p className="text-gray-500 text-sm py-4 text-center">No slides yet. Click "Add Slide" to create the first one.</p>
+      )}
+
+      <div className="space-y-3">
+        {allSlides.map((slide, i) => (
+          <div key={slide.id} className="flex items-center gap-3 bg-[#030810]/50 border border-[#c49028]/10 rounded-xl p-3">
+            <GripVertical className="w-4 h-4 text-gray-600 flex-shrink-0" />
+            {slide.background_image_url && (
+              <img src={slide.background_image_url} alt="" className="w-16 h-10 object-cover rounded-lg flex-shrink-0" />
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-white text-sm font-medium truncate">{slide.title || 'Untitled'}</p>
+              <p className="text-gray-500 text-xs truncate">{slide.subtitle || slide.description || '—'}</p>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${slide.is_active ? 'bg-green-500/15 text-green-400' : 'bg-gray-700 text-gray-500'}`}>
+                {slide.is_active ? 'Active' : 'Off'}
+              </span>
+              <button onClick={() => openEdit(slide)} className="p-1.5 text-gray-500 hover:text-[#c49028] transition-colors">
+                <Pencil className="w-4 h-4" />
+              </button>
+              <button onClick={() => handleDelete(slide.id)} className="p-1.5 text-gray-500 hover:text-red-400 transition-colors">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Slide Form */}
+      <AnimatePresence>
+        {showForm && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#030810]/80 backdrop-blur-sm"
+          >
+            <div className="bg-[#0c1a2e] border border-[#c49028]/20 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-[#0c1a2e] border-b border-[#c49028]/10 px-6 py-4 flex items-center justify-between z-10">
+                <h3 className="text-lg font-semibold text-white">{editingSlide ? 'Edit Slide' : 'New Slide'}</h3>
+                <button onClick={closeForm} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 text-gray-400">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="p-6 space-y-5">
+                {/* Background Image */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Background Image</label>
+                  <div className="relative aspect-video rounded-xl overflow-hidden bg-[#030810] border-2 border-dashed border-[#c49028]/20 flex items-center justify-center cursor-pointer hover:border-[#c49028]/40 transition-colors"
+                    onClick={() => fileRef.current?.click()}>
+                    {form.background_image_url ? (
+                      <img src={form.background_image_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                    ) : (
+                      <div className="text-center p-6">
+                        <Upload className="w-8 h-8 text-[#c49028]/40 mx-auto mb-2" />
+                        <p className="text-gray-500 text-sm">Click to upload background image</p>
+                      </div>
+                    )}
+                    {uploading && <div className="absolute inset-0 bg-[#030810]/70 flex items-center justify-center"><div className="w-8 h-8 border-2 border-[#c49028] border-t-transparent rounded-full animate-spin" /></div>}
+                    <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0])} />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Title (Line 1 — gold)</label>
+                    <input type="text" value={form.title || ''} onChange={e => setForm(f => ({...f, title: e.target.value}))}
+                      className="w-full px-4 py-3 bg-[#030810]/60 border border-[#c49028]/20 rounded-xl text-white focus:border-[#c49028]/50 focus:outline-none text-sm" placeholder="e.g., Building Tomorrow" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Title Line 2</label>
+                    <input type="text" value={form.line_two || ''} onChange={e => setForm(f => ({...f, line_two: e.target.value}))}
+                      className="w-full px-4 py-3 bg-[#030810]/60 border border-[#c49028]/20 rounded-xl text-white focus:border-[#c49028]/50 focus:outline-none text-sm" placeholder="e.g., With Excellence" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Subtitle</label>
+                  <input type="text" value={form.subtitle || ''} onChange={e => setForm(f => ({...f, subtitle: e.target.value}))}
+                    className="w-full px-4 py-3 bg-[#030810]/60 border border-[#c49028]/20 rounded-xl text-white focus:border-[#c49028]/50 focus:outline-none text-sm" placeholder="Short tagline below the title" />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Description</label>
+                  <textarea value={form.description || ''} onChange={e => setForm(f => ({...f, description: e.target.value}))} rows={3}
+                    className="w-full px-4 py-3 bg-[#030810]/60 border border-[#c49028]/20 rounded-xl text-white focus:border-[#c49028]/50 focus:outline-none text-sm resize-none" placeholder="Longer description text..." />
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Button 1 Text</label>
+                    <input type="text" value={form.button_text || ''} onChange={e => setForm(f => ({...f, button_text: e.target.value}))}
+                      className="w-full px-4 py-3 bg-[#030810]/60 border border-[#c49028]/20 rounded-xl text-white focus:border-[#c49028]/50 focus:outline-none text-sm" placeholder="e.g., View Projects" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Button 1 Link</label>
+                    <input type="text" value={form.button_link || ''} onChange={e => setForm(f => ({...f, button_link: e.target.value}))}
+                      className="w-full px-4 py-3 bg-[#030810]/60 border border-[#c49028]/20 rounded-xl text-white focus:border-[#c49028]/50 focus:outline-none text-sm" placeholder="/projects" />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Button 2 Text <span className="text-gray-600">(optional)</span></label>
+                    <input type="text" value={form.button2_text || ''} onChange={e => setForm(f => ({...f, button2_text: e.target.value}))}
+                      className="w-full px-4 py-3 bg-[#030810]/60 border border-[#c49028]/20 rounded-xl text-white focus:border-[#c49028]/50 focus:outline-none text-sm" placeholder="e.g., Contact Us" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Button 2 Link</label>
+                    <input type="text" value={form.button2_link || ''} onChange={e => setForm(f => ({...f, button2_link: e.target.value}))}
+                      className="w-full px-4 py-3 bg-[#030810]/60 border border-[#c49028]/20 rounded-xl text-white focus:border-[#c49028]/50 focus:outline-none text-sm" placeholder="/contact" />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Overlay Opacity: {form.overlay_opacity ?? 50}%</label>
+                    <input type="range" min="0" max="90" step="5" value={form.overlay_opacity ?? 50}
+                      onChange={e => setForm(f => ({...f, overlay_opacity: parseInt(e.target.value)}))} className="w-full accent-[#c49028]" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Display Order</label>
+                    <input type="number" value={form.order_index ?? 0} min="0"
+                      onChange={e => setForm(f => ({...f, order_index: parseInt(e.target.value)}))}
+                      className="w-full px-4 py-3 bg-[#030810]/60 border border-[#c49028]/20 rounded-xl text-white focus:border-[#c49028]/50 focus:outline-none text-sm" />
+                  </div>
+                </div>
+
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input type="checkbox" checked={form.is_active ?? true} onChange={e => setForm(f => ({...f, is_active: e.target.checked}))}
+                    className="w-4 h-4 accent-[#c49028]" />
+                  <span className="text-sm text-gray-300">Active (visible on site)</span>
+                </label>
+              </div>
+
+              <div className="sticky bottom-0 bg-[#0c1a2e] border-t border-[#c49028]/10 px-6 py-4 flex gap-3 justify-end">
+                <button onClick={closeForm} className="px-5 py-2 border border-[#c49028]/20 text-gray-400 rounded-xl hover:text-white transition-all text-sm">Cancel</button>
+                <button onClick={handleSave} disabled={saving} className="px-6 py-2 bg-gradient-to-r from-[#a67820] to-[#c49028] text-[#030810] font-bold rounded-xl hover:shadow-lg transition-all text-sm disabled:opacity-50 flex items-center gap-2">
+                  {saving ? <><div className="w-4 h-4 border-2 border-[#030810] border-t-transparent rounded-full animate-spin" /> Saving...</> : <><Save className="w-4 h-4" /> Save Slide</>}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 /* ─── Main Component ─── */
 export default function HeroManagerPage() {
   const { heroes, loading, error, refetch, updateHero } = useAllPageHeroes();
@@ -271,12 +480,15 @@ export default function HeroManagerPage() {
     const updates = {
       title: editForm.title,
       subtitle: editForm.subtitle,
+      line_two: (editForm as any).line_two,
       description: editForm.description,
       background_image_url: editForm.background_image_url,
       overlay_opacity: editForm.overlay_opacity,
       text_alignment: editForm.text_alignment,
       button_text: editForm.button_text,
       button_link: editForm.button_link,
+      button2_text: (editForm as any).button2_text,
+      button2_link: (editForm as any).button2_link,
       show_button: editForm.show_button,
       height: editForm.height,
       text_color: editForm.text_color,
@@ -400,13 +612,23 @@ export default function HeroManagerPage() {
 
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">Title</label>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Title <span className="text-[#c49028]">(Line 1 — gold)</span></label>
                     <input
                       type="text"
                       value={editForm.title || ''}
                       onChange={(e) => handleChange('title', e.target.value)}
                       className="w-full px-4 py-3 bg-[#030810]/60 border border-[#c49028]/20 rounded-xl text-white focus:border-[#c49028]/50 focus:outline-none text-sm"
-                      placeholder="Main heading"
+                      placeholder="e.g., Building Tomorrow"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Title Line 2 <span className="text-gray-600">(white)</span></label>
+                    <input
+                      type="text"
+                      value={(editForm as any).line_two || ''}
+                      onChange={(e) => handleChange('line_two', e.target.value)}
+                      className="w-full px-4 py-3 bg-[#030810]/60 border border-[#c49028]/20 rounded-xl text-white focus:border-[#c49028]/50 focus:outline-none text-sm"
+                      placeholder="e.g., With Excellence"
                     />
                   </div>
                   <div>
@@ -416,10 +638,10 @@ export default function HeroManagerPage() {
                       value={editForm.subtitle || ''}
                       onChange={(e) => handleChange('subtitle', e.target.value)}
                       className="w-full px-4 py-3 bg-[#030810]/60 border border-[#c49028]/20 rounded-xl text-white focus:border-[#c49028]/50 focus:outline-none text-sm"
-                      placeholder="Subheading"
+                      placeholder="Short tagline below title"
                     />
                   </div>
-                  <div className="md:col-span-2">
+                  <div>
                     <label className="block text-sm font-medium text-gray-400 mb-2">Description</label>
                     <textarea
                       value={editForm.description || ''}
@@ -605,6 +827,7 @@ export default function HeroManagerPage() {
                   </div>
 
                   {editForm.is_carousel && (
+                    <>
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-400 mb-2">Slide Interval (ms)</label>
@@ -637,18 +860,19 @@ export default function HeroManagerPage() {
                         </div>
                       </div>
                     </div>
+                    <HeroSlidesManager />
+                    </>
                   )}
                 </div>
               )}
 
-              {/* CTA Button */}
               <div className="bg-[#0c1a2e] border border-[#c49028]/10 rounded-xl p-5">
                 <div className="flex items-center justify-between mb-5">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-lg bg-[#c49028]/10 flex items-center justify-center">
                       <ArrowRight className="w-4 h-4 text-[#c49028]" />
                     </div>
-                    <h2 className="text-lg font-semibold text-white">Call to Action</h2>
+                    <h2 className="text-lg font-semibold text-white">Call to Action Buttons</h2>
                   </div>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -657,31 +881,55 @@ export default function HeroManagerPage() {
                       onChange={(e) => handleChange('show_button', e.target.checked)}
                       className="w-4 h-4 rounded border-[#c49028]/30 accent-[#c49028]"
                     />
-                    <span className="text-sm text-gray-400">Show Button</span>
+                    <span className="text-sm text-gray-400">Show Buttons</span>
                   </label>
                 </div>
 
                 {editForm.show_button && (
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-400 mb-2">Button Text</label>
-                      <input
-                        type="text"
-                        value={editForm.button_text || ''}
-                        onChange={(e) => handleChange('button_text', e.target.value)}
-                        className="w-full px-4 py-3 bg-[#030810]/60 border border-[#c49028]/20 rounded-xl text-white focus:border-[#c49028]/50 focus:outline-none text-sm"
-                        placeholder="e.g., Explore Projects"
-                      />
+                  <div className="space-y-4">
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">Button 1 Text</label>
+                        <input
+                          type="text"
+                          value={editForm.button_text || ''}
+                          onChange={(e) => handleChange('button_text', e.target.value)}
+                          className="w-full px-4 py-3 bg-[#030810]/60 border border-[#c49028]/20 rounded-xl text-white focus:border-[#c49028]/50 focus:outline-none text-sm"
+                          placeholder="e.g., Explore Projects"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">Button 1 Link</label>
+                        <input
+                          type="text"
+                          value={editForm.button_link || ''}
+                          onChange={(e) => handleChange('button_link', e.target.value)}
+                          className="w-full px-4 py-3 bg-[#030810]/60 border border-[#c49028]/20 rounded-xl text-white focus:border-[#c49028]/50 focus:outline-none text-sm"
+                          placeholder="e.g., /projects"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-400 mb-2">Button Link</label>
-                      <input
-                        type="text"
-                        value={editForm.button_link || ''}
-                        onChange={(e) => handleChange('button_link', e.target.value)}
-                        className="w-full px-4 py-3 bg-[#030810]/60 border border-[#c49028]/20 rounded-xl text-white focus:border-[#c49028]/50 focus:outline-none text-sm"
-                        placeholder="e.g., /projects or #contact"
-                      />
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">Button 2 Text <span className="text-gray-600">(optional)</span></label>
+                        <input
+                          type="text"
+                          value={editForm.button2_text || ''}
+                          onChange={(e) => handleChange('button2_text', e.target.value)}
+                          className="w-full px-4 py-3 bg-[#030810]/60 border border-[#c49028]/20 rounded-xl text-white focus:border-[#c49028]/50 focus:outline-none text-sm"
+                          placeholder="e.g., Contact Us"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">Button 2 Link</label>
+                        <input
+                          type="text"
+                          value={editForm.button2_link || ''}
+                          onChange={(e) => handleChange('button2_link', e.target.value)}
+                          className="w-full px-4 py-3 bg-[#030810]/60 border border-[#c49028]/20 rounded-xl text-white focus:border-[#c49028]/50 focus:outline-none text-sm"
+                          placeholder="e.g., /contact"
+                        />
+                      </div>
                     </div>
                   </div>
                 )}

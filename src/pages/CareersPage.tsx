@@ -5,65 +5,7 @@ import { useJobs, submitJobApplication, usePageContent } from '../hooks/useData'
 import PageHero from '../components/PageHero';
 import type { Job } from '../lib/supabase';
 
-const defaultJobs: Job[] = [
-  {
-    id: '1',
-    title: 'Senior Civil Engineer',
-    slug: 'senior-civil-engineer',
-    department: 'Engineering',
-    location: 'Karachi',
-    employment_type: 'Full-time',
-    experience_level: 'Senior (5-10 years)',
-    salary_range: 'Competitive',
-    description: 'We are looking for an experienced Civil Engineer to lead our construction projects.',
-    requirements: ['Bachelor\'s in Civil Engineering', '5+ years experience', 'Project management skills', 'PEC registration'],
-    responsibilities: ['Lead construction projects', 'Coordinate with teams', 'Ensure quality standards', 'Client communication'],
-    benefits: ['Health insurance', 'Provident fund', 'Annual bonus', 'Professional development'],
-    is_featured: true,
-    is_active: true,
-    openings: 2,
-    created_at: '',
-    updated_at: ''
-  },
-  {
-    id: '2',
-    title: 'Project Manager',
-    slug: 'project-manager',
-    department: 'Management',
-    location: 'Lahore',
-    employment_type: 'Full-time',
-    experience_level: 'Senior (7+ years)',
-    salary_range: 'Market Competitive',
-    description: 'Experienced Project Manager needed to oversee multiple construction projects.',
-    requirements: ['Engineering background', 'PMP certification preferred', '7+ years experience', 'Strong leadership'],
-    responsibilities: ['Project planning', 'Resource allocation', 'Budget management', 'Stakeholder communication'],
-    benefits: ['Health insurance', 'Company vehicle', 'Performance bonus', 'Travel allowance'],
-    is_featured: true,
-    is_active: true,
-    openings: 1,
-    created_at: '',
-    updated_at: ''
-  },
-  {
-    id: '3',
-    title: 'Site Supervisor',
-    slug: 'site-supervisor',
-    department: 'Operations',
-    location: 'Islamabad',
-    employment_type: 'Full-time',
-    experience_level: 'Mid-level (3-5 years)',
-    salary_range: 'Commensurate with experience',
-    description: 'Site Supervisor needed for ongoing construction projects.',
-    requirements: ['Diploma in Civil Technology', '3+ years experience', 'Strong communication', 'Safety certifications'],
-    responsibilities: ['Daily site supervision', 'Worker coordination', 'Safety compliance', 'Progress reporting'],
-    benefits: ['Health insurance', 'Accommodation', 'Transportation', 'Overtime pay'],
-    is_featured: false,
-    is_active: true,
-    openings: 3,
-    created_at: '',
-    updated_at: ''
-  },
-];
+
 
 function JobCard({ job, onApply, c }: { job: Job; onApply: () => void; c: (section: string, key: string, fallback: string) => string }) {
   const [expanded, setExpanded] = useState(false);
@@ -115,8 +57,13 @@ function JobCard({ job, onApply, c }: { job: Job; onApply: () => void; c: (secti
                 {job.openings} Opening{job.openings > 1 ? 's' : ''}
               </span>
             )}
+            {job.salary_range && (
+              <span className="text-sm text-gold-400 flex items-center gap-1">
+                <DollarSign className="w-3.5 h-3.5" />{job.salary_range}
+              </span>
+            )}
             {job.experience_level && (
-              <span className="text-sm text-gold-400">{job.experience_level}</span>
+              <span className="text-sm text-gray-500">{job.experience_level}</span>
             )}
           </div>
         </div>
@@ -332,7 +279,7 @@ export default function CareersPage() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [filter, setFilter] = useState('all');
 
-  const displayJobs = jobs.length > 0 ? jobs : defaultJobs;
+  const displayJobs = jobs.filter(j => j.is_active !== false);
   const departments = ['all', ...new Set(displayJobs.map(j => j.department).filter(Boolean))];
 
   const filteredJobs = filter === 'all'
@@ -381,10 +328,17 @@ export default function CareersPage() {
             ))}
           </div>
 
-          {filteredJobs.length === 0 && (
+          {displayJobs.length === 0 && (
             <div className="text-center py-16">
               <Briefcase className="w-16 h-16 text-gold-500/50 mx-auto mb-4" />
-              <p className="text-gray-400">{c('careers.filters', 'all_text', 'No positions available in this category.')}</p>
+              <h3 className="text-xl font-heading font-semibold text-white mb-2">No Open Positions</h3>
+              <p className="text-gray-400">Check back soon — we'll post new openings here.</p>
+            </div>
+          )}
+          {displayJobs.length > 0 && filteredJobs.length === 0 && (
+            <div className="text-center py-16">
+              <Briefcase className="w-16 h-16 text-gold-500/50 mx-auto mb-4" />
+              <p className="text-gray-400">No positions in this department.</p>
             </div>
           )}
         </div>

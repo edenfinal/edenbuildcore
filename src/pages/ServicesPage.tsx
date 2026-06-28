@@ -47,12 +47,31 @@ export default function ServicesPage() {
                   {/* Top accent */}
                   <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-gold-600 via-gold-400 to-gold-600 opacity-0 group-hover:opacity-100 transition-opacity" />
 
+                  {/* Service Image */}
+                  {service.image_url && (
+                    <div className="relative w-full h-52 overflow-hidden">
+                      <img
+                        src={service.image_url}
+                        alt={service.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-navy-900 via-navy-900/40 to-transparent" />
+                      <div className="absolute bottom-4 left-4">
+                        <div className="w-12 h-12 rounded-xl bg-navy-950/80 backdrop-blur-sm flex items-center justify-center border border-gold-500/20">
+                          <Icon className="w-6 h-6 text-gold-500" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="p-8">
                     <div className="flex items-start gap-6">
-                      {/* Icon */}
-                      <div className="w-16 h-16 rounded-xl bg-gold-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-gold-500/20 transition-colors">
-                        <Icon className="w-8 h-8 text-gold-500" />
-                      </div>
+                      {/* Icon — only if no image */}
+                      {!service.image_url && (
+                        <div className="w-16 h-16 rounded-xl bg-gold-500/10 flex items-center justify-center flex-shrink-0 group-hover:bg-gold-500/20 transition-colors">
+                          <Icon className="w-8 h-8 text-gold-500" />
+                        </div>
+                      )}
 
                       {/* Content */}
                       <div className="flex-1">

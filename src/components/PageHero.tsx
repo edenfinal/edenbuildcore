@@ -85,7 +85,9 @@ function SingleHeroView({
           style={{ color: txtColor }}
         >
           {(() => {
-            const lines = hero.title.split(/\n|\\n/);
+            const lines = hero.line_two
+              ? [hero.title, hero.line_two]
+              : hero.title.split(/\n|\\n/);
             return lines.length > 1 ? (
               <>
                 <span style={{ color: primaryColor }}>{lines[0]}</span>
@@ -113,34 +115,57 @@ function SingleHeroView({
         </motion.p>
       )}
 
-      {hero.show_button && hero.button_text && hero.button_link && (
+      {(hero.show_button && hero.button_text && hero.button_link) || (hero.button2_text && hero.button2_link) ? (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.6 }}
-          className="mt-8"
+          className="mt-8 flex flex-wrap gap-4 items-center justify-center"
         >
-          {hero.button_link.startsWith('/') || hero.button_link.startsWith('#') ? (
-            <Link
-              to={hero.button_link}
-              className="inline-flex items-center gap-2 px-8 py-4 font-bold text-sm rounded-xl transition-all hover:scale-105 hover:shadow-lg group"
-              style={{ backgroundColor: primaryColor, color: '#030810' }}
-            >
-              {hero.button_text}
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          ) : (
-            <a
-              href={hero.button_link}
-              className="inline-flex items-center gap-2 px-8 py-4 font-bold text-sm rounded-xl transition-all hover:scale-105 hover:shadow-lg group"
-              style={{ backgroundColor: primaryColor, color: '#030810' }}
-            >
-              {hero.button_text}
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </a>
+          {hero.show_button && hero.button_text && hero.button_link && (
+            hero.button_link.startsWith('/') || hero.button_link.startsWith('#') ? (
+              <Link
+                to={hero.button_link}
+                className="inline-flex items-center gap-2 px-8 py-4 font-bold text-sm rounded-xl transition-all hover:scale-105 hover:shadow-lg group"
+                style={{ backgroundColor: primaryColor, color: '#030810' }}
+              >
+                {hero.button_text}
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            ) : (
+              <a
+                href={hero.button_link}
+                className="inline-flex items-center gap-2 px-8 py-4 font-bold text-sm rounded-xl transition-all hover:scale-105 hover:shadow-lg group"
+                style={{ backgroundColor: primaryColor, color: '#030810' }}
+              >
+                {hero.button_text}
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </a>
+            )
+          )}
+          {hero.button2_text && hero.button2_link && (
+            hero.button2_link.startsWith('/') || hero.button2_link.startsWith('#') ? (
+              <Link
+                to={hero.button2_link}
+                className="inline-flex items-center gap-2 px-8 py-4 font-bold text-sm rounded-xl border-2 transition-all hover:scale-105 group"
+                style={{ borderColor: primaryColor, color: primaryColor }}
+              >
+                {hero.button2_text}
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            ) : (
+              <a
+                href={hero.button2_link}
+                className="inline-flex items-center gap-2 px-8 py-4 font-bold text-sm rounded-xl border-2 transition-all hover:scale-105 group"
+                style={{ borderColor: primaryColor, color: primaryColor }}
+              >
+                {hero.button2_text}
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </a>
+            )
           )}
         </motion.div>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -212,7 +237,9 @@ function CarouselHeroView({
             {slide.title && (
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-bold leading-tight mb-6" style={{ color: txtColor }}>
                 {(() => {
-                  const lines = slide.title.split(/\n|\\n/);
+                  const lines = slide.line_two
+                    ? [slide.title, slide.line_two]
+                    : slide.title.split(/\n|\\n/);
                   return lines.length > 1 ? (
                     <>
                       <span style={{ color: primaryColor }}>{lines[0]}</span>
@@ -234,16 +261,30 @@ function CarouselHeroView({
               </p>
             )}
 
-            {slide.button_text && slide.button_link && (
-              <Link
-                to={slide.button_link}
-                className="inline-flex items-center gap-2 px-8 py-4 font-bold text-sm rounded-xl transition-all hover:scale-105 hover:shadow-lg group"
-                style={{ backgroundColor: primaryColor, color: '#030810' }}
-              >
-                {slide.button_text}
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            )}
+            {(slide.button_text && slide.button_link) || (slide.button2_text && slide.button2_link) ? (
+              <div className="flex flex-wrap gap-4 items-center justify-center mt-2">
+                {slide.button_text && slide.button_link && (
+                  <Link
+                    to={slide.button_link}
+                    className="inline-flex items-center gap-2 px-8 py-4 font-bold text-sm rounded-xl transition-all hover:scale-105 hover:shadow-lg group"
+                    style={{ backgroundColor: primaryColor, color: '#030810' }}
+                  >
+                    {slide.button_text}
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                )}
+                {slide.button2_text && slide.button2_link && (
+                  <Link
+                    to={slide.button2_link}
+                    className="inline-flex items-center gap-2 px-8 py-4 font-bold text-sm rounded-xl border-2 transition-all hover:scale-105 group"
+                    style={{ borderColor: primaryColor, color: primaryColor }}
+                  >
+                    {slide.button2_text}
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                )}
+              </div>
+            ) : null}
           </motion.div>
         </AnimatePresence>
 
