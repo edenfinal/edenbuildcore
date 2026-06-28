@@ -15,6 +15,7 @@ import CareersPage from './pages/CareersPage';
 import BlogPage from './pages/BlogPage';
 import ClientsPage from './pages/ClientsPage';
 import CertificationsPage from './pages/CertificationsPage';
+import OurTeamPage from './pages/OurTeamPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
 
@@ -180,6 +181,8 @@ const adminPages = [
       { key: 'email', label: 'Email', type: 'email' },
       { key: 'phone', label: 'Phone', type: 'text' },
       { key: 'linkedin_url', label: 'LinkedIn URL', type: 'url' },
+      { key: 'twitter_url', label: 'Twitter/X URL', type: 'url' },
+      { key: 'is_featured', label: 'Featured (Leadership)', type: 'boolean' },
       { key: 'is_active', label: 'Active', type: 'boolean' },
       { key: 'order_index', label: 'Order', type: 'number' },
     ],
@@ -187,9 +190,11 @@ const adminPages = [
       { key: 'image_url', label: 'Image' },
       { key: 'full_name', label: 'Name' },
       { key: 'designation', label: 'Designation' },
+      { key: 'department', label: 'Department' },
+      { key: 'is_featured', label: 'Featured' },
       { key: 'is_active', label: 'Active' },
     ],
-    defaultValues: { is_active: true, order_index: 0 },
+    defaultValues: { is_active: true, is_featured: false, order_index: 0 },
   },
   {
     path: 'certifications',
@@ -336,6 +341,7 @@ function AppRoutes() {
       <Route path="/" element={<Layout />}>
         <Route index element={<HomePage />} />
         <Route path="about" element={<AboutPage />} />
+        <Route path="our-team" element={<OurTeamPage />} />
         <Route path="projects" element={<ProjectsPage />} />
         <Route path="projects/:slug" element={<ProjectsPage />} />
         <Route path="services" element={<ServicesPage />} />

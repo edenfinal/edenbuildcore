@@ -128,6 +128,7 @@ export interface SiteSettings {
   founder_bio: string | null;
   founder_image_url: string | null;
   founder_message: string | null;
+  about_image_url: string | null;
 }
 
 export interface HeroSlide {
@@ -227,6 +228,8 @@ export interface TeamMember {
   email: string | null;
   phone: string | null;
   linkedin_url: string | null;
+  twitter_url: string | null;
+  is_featured: boolean;
   order_index: number;
   is_active: boolean;
   created_at: string;

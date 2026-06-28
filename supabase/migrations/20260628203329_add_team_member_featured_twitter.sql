@@ -1,0 +1,3 @@
+ALTER TABLE team_members
+  ADD COLUMN IF NOT EXISTS is_featured BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS twitter_url VARCHAR(500);

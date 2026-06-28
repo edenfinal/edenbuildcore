@@ -15,7 +15,7 @@ const navLinks = [
     submenu: [
       { name: 'Clients', path: '/clients' },
       { name: 'Certifications', path: '/certifications' },
-      { name: 'Our Team', path: '/about#team' },
+      { name: 'Our Team', path: '/our-team' },
     ]
   },
   { name: 'Gallery', path: '/gallery' },

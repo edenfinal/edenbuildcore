@@ -152,17 +152,17 @@ export default function AboutPage() {
             </motion.div>
 
             <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="relative">
-              {settings?.secondary_logo_url ? (
+              {settings?.about_image_url ? (
                 <div className="aspect-video rounded-2xl overflow-hidden">
-                  <img src={settings.secondary_logo_url} alt="Company" className="w-full h-full object-cover" />
+                  <img src={settings.about_image_url} alt="Company" className="w-full h-full object-cover" />
                 </div>
               ) : (
                 <div className="aspect-video rounded-2xl bg-navy-800/50 border border-gold-500/10 flex items-center justify-center">
-                  <div className="text-center">
+                  <div className="text-center p-8">
                     <div className="w-20 h-20 rounded-full bg-gold-500/10 flex items-center justify-center mx-auto mb-4">
                       <Users className="w-10 h-10 text-gold-500/40" />
                     </div>
-                    <p className="text-gray-500 text-sm">Upload company image in Settings</p>
+                    <p className="text-gray-500 text-sm">Upload About page image in Settings</p>
                   </div>
                 </div>
               )}
