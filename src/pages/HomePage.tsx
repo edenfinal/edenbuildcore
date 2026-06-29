@@ -234,6 +234,7 @@ function AboutPreview({ c }: { c: (section: string, key: string, fallback: strin
 
             <Link
               to="/about"
+              onClick={() => console.log("Clicked")}
               className="inline-flex items-center gap-2 text-gold-400 hover:text-gold-300 font-medium text-sm sm:text-base transition-colors group"
             >
               {c('about_preview', 'link_text', 'Learn More About Us')}
