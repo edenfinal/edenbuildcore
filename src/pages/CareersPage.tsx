@@ -59,7 +59,7 @@ function JobCard({ job, onApply, c }: { job: Job; onApply: () => void; c: (secti
             )}
             {job.salary_range && (
             <span className="text-sm text-gold-400 flex items-center gap-1">
-            <span className="font-semibold text-xs">PKR</span>
+            <span className="font-semibold">PKR</span>
             {job.salary_range}
             </span>
             )}
