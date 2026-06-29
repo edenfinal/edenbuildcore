@@ -184,7 +184,7 @@ export default function Navbar() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.97 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute top-full left-0 mt-1 w-52 bg-[#0c1a2e]/98 backdrop-blur-xl border border-[#c49028]/20 rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.5)] overflow-hidden"
+                      className="absolute top-full left-0 mt-2 w-52 bg-[#08121f]/70 backdrop-blur-2xl border border-[#c49028]/15 rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)] overflow-hidden z-[100]"
                     >
                       {link.submenu.map((sublink) => (
                         <Link
