@@ -64,7 +64,7 @@ export default function Navbar() {
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-      scrolled ? 'bg-[#030810]/85 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)]' : 'bg-transparent'
+      scrolled ? 'bg-[#030810]/97 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.5)]' : 'bg-transparent'
     }`}>
       {/* Top announcement bar */}
       <div className={`hidden lg:block border-b transition-all duration-500 ${
@@ -182,7 +182,7 @@ export default function Navbar() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.97 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute top-full left-0 mt-2 w-52 bg-[#08121f]/70 backdrop-blur-2xl border border-[#c49028]/15 rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)] overflow-hidden z-[100]"
+                      className="absolute top-full left-0 mt-1 w-52 bg-[#0c1a2e]/98 backdrop-blur-xl border border-[#c49028]/20 rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.5)] overflow-hidden"
                     >
                       {link.submenu.map((sublink) => (
                         <Link
