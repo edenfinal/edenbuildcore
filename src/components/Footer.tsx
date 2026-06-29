@@ -63,7 +63,7 @@ export default function Footer() {
               </div>
             </Link>
             <p className="text-[#909090] text-xs sm:text-sm leading-relaxed mb-4 sm:mb-6">
-              {settings?.site_description || }
+              {settings?.site_description || ''}
             </p>
             {socialLinks.length > 0 && (
               <div className="flex gap-2 justify-center sm:justify-start">
