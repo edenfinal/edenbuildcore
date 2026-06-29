@@ -64,10 +64,8 @@ export default function Navbar() {
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-  scrolled
-    ? 'bg-[#030810]/85 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)]'
-    : 'bg-transparent'
-}`}>
+      scrolled ? 'bg-[#030810]/87 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.5)]' : 'bg-transparent'
+    }`}>
       {/* Top announcement bar */}
       <div className={`hidden lg:block border-b transition-all duration-500 ${
         scrolled ? 'bg-[#020609] border-[#c49028]/10' : 'bg-[#030810]/80 border-[#c49028]/20'
