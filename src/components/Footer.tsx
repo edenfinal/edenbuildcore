@@ -37,7 +37,10 @@ export default function Footer() {
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#c49028] to-transparent" />
 
 
-     
+      {/* Main Footer */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-12 md:py-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10">
+          
 
           {/* Quick Links */}
           <div className="text-center sm:text-left">
