@@ -36,30 +36,6 @@ export default function Footer() {
       {/* Golden accent line */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#c49028] to-transparent" />
 
-      {/* Newsletter strip */}
-      <div className="bg-gradient-to-r from-[#0c1a2e] via-[#0f2035] to-[#0c1a2e] border-b border-[#c49028]/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-6 md:py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6">
-            <div className="text-center md:text-left">
-              <h3 className="text-lg sm:text-xl font-heading font-bold text-white mb-1">Stay Updated with {siteNameParts[0] || 'Eden'}</h3>
-              <p className="text-[#a0a0a0] text-xs sm:text-sm">Get the latest news, projects and insights delivered to your inbox.</p>
-            </div>
-            <form className="flex w-full max-w-md gap-2" onSubmit={e => e.preventDefault()}>
-              <input
-                type="email"
-                placeholder="Enter your email address"
-                className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 bg-[#030810] border border-[#c49028]/20 rounded-lg sm:rounded-xl text-white placeholder-[#606060] text-xs sm:text-sm focus:outline-none focus:border-[#c49028]/50 transition-colors"
-              />
-              <button
-                type="submit"
-                className="px-4 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-[#a67820] to-[#c49028] text-[#030810] font-bold rounded-lg sm:rounded-xl text-xs sm:text-sm hover:from-[#c49028] hover:to-[#e8b84a] transition-all whitespace-nowrap"
-              >
-                Subscribe
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
 
       {/* Main Footer */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-12 md:py-16">
