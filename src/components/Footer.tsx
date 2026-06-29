@@ -40,7 +40,46 @@ export default function Footer() {
       {/* Main Footer */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-12 md:py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10">
-          
+          {/* Brand */}
+          <div className="sm:col-span-2 lg:col-span-1 text-center sm:text-left">
+            <Link to="/" className="inline-block mb-4 sm:mb-6">
+              <img
+                src={settings?.logo_url || "/EDEN_BUILDCORE.png"}
+                alt={siteName}
+                style={{
+                  height: `${parseInt(settings?.logo_size || '64') + 16}px`,
+                  objectFit: (settings?.logo_scale as any) || 'contain',
+                }}
+                className="w-auto mx-auto sm:mx-0"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  const next = e.currentTarget.nextElementSibling as HTMLElement;
+                  if (next) next.style.display = 'block';
+                }}
+              />
+              <div style={{ display: 'none' }} className="flex flex-col">
+                <span className="text-xl sm:text-2xl font-heading font-bold text-white">{siteNameParts[0] || 'EDEN'}</span>
+                <span className="text-[10px] sm:text-xs text-[#c49028] tracking-widest">{siteNameParts[1] || 'BUILDCORE'}</span>
+              </div>
+            </Link>
+            
+            {socialLinks.length > 0 && (
+              <div className="flex gap-2 justify-center sm:justify-start">
+                {socialLinks.map((social) => (
+                  <a
+                    key={social.name}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={social.name}
+                    className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-[#0c1a2e] border border-[#c49028]/15 text-[#909090] hover:text-[#c49028] hover:border-[#c49028]/40 hover:bg-[#c49028]/5 transition-all"
+                  >
+                    <social.icon size={14} className="sm:w-4 sm:h-4" />
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Quick Links */}
           <div className="text-center sm:text-left">
