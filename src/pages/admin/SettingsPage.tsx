@@ -619,7 +619,7 @@ export default function SettingsPage() {
                     <FileUpload label="Favicon" currentUrl={formData.favicon_url} onUpload={(url: string) => handleChange('favicon_url', url)} accept="image/x-icon,image/png" />
                   </div>
                   <div className="mt-6">
-                    <p className="text-sm font-semibold text-gray-300 mb-3">About Page</p>
+                    <p className="text-sm font-semibold text-gray-300 mb-3">About Page & Home Page (About Section Images)</p>
                     <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
                       <FileUpload label="About Page Company Image" currentUrl={formData.about_image_url} onUpload={(url: string) => handleChange('about_image_url', url)} />
                       <FileUpload label="Home Page About Us Image" currentUrl={formData.secondary_logo_url} onUpload={(url: string) => handleChange('secondary_logo_url', url)} />
