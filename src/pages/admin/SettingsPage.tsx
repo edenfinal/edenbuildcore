@@ -666,7 +666,7 @@ export default function SettingsPage() {
                         </div>
                       )}
                       {formData.secondary_logo_url && (
-                        <img src={formData.secondary_logo_url} alt="" className="h-10 w-auto object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                        <img src={formData.secondary_logo_url} alt="Wordmark" className="h-10 w-auto object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                       )}
                     </div>
                   </div>
