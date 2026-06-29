@@ -230,16 +230,17 @@ function AboutPreview({ c }: { c: (section: string, key: string, fallback: strin
                   <span>{feature}</span>
                 </div>
               ))}
-            <div className="relative z-50 inline-block">
-  <Link
-    to="/about"
-    className="inline-flex items-center gap-2 text-gold-400 hover:text-gold-300 font-medium text-sm sm:text-base transition-colors group cursor-pointer"
-    style={{ pointerEvents: 'auto' }}
-  >
-    {c('about_preview', 'link_text', 'Learn More About Us')}
-    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-  </Link>
-</div>
+            </div>
+
+            <Link
+              to="/about"
+              className="inline-flex items-center gap-2 text-gold-400 hover:text-gold-300 font-medium text-sm sm:text-base transition-colors group"
+            >
+              {c('about_preview', 'link_text', 'Learn More About Us')}
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </motion.div>
+        </div>
       </div>
     </section>
   );
