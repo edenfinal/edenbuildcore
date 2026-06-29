@@ -234,7 +234,7 @@ function AboutPreview({ c }: { c: (section: string, key: string, fallback: strin
 
             <Link
               to="/about"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-gold-600 to-gold-500 text-navy-950 font-semibold text-sm sm:text-base hover:from-gold-500 hover:to-gold-400 transition-all duration-300 group shadow-gold hover:shadow-gold-lg"
+              className="inline-flex items-center gap-2 text-gold-400 hover:text-gold-300 font-medium text-sm sm:text-base transition-colors group"
             >
               {c('about_preview', 'link_text', 'Learn More About Us')}
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
