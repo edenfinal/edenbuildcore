@@ -615,13 +615,14 @@ export default function SettingsPage() {
                 <SectionCard icon={ImageIcon} title="Logo & Branding">
                   <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
                     <FileUpload label="Primary Logo" currentUrl={formData.logo_url} onUpload={(url: string) => handleChange('logo_url', url)} />
-                    <FileUpload label="Home Page About Us Image" currentUrl={formData.secondary_logo_url} onUpload={(url: string) => handleChange('secondary_logo_url', url)} />
+                    
                     <FileUpload label="Favicon" currentUrl={formData.favicon_url} onUpload={(url: string) => handleChange('favicon_url', url)} accept="image/x-icon,image/png" />
                   </div>
                   <div className="mt-6">
                     <p className="text-sm font-semibold text-gray-300 mb-3">About Page</p>
                     <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
                       <FileUpload label="About Page Company Image" currentUrl={formData.about_image_url} onUpload={(url: string) => handleChange('about_image_url', url)} />
+                      <FileUpload label="Home Page About Us Image" currentUrl={formData.secondary_logo_url} onUpload={(url: string) => handleChange('secondary_logo_url', url)} />
                     </div>
                     <p className="text-xs text-gray-500 mt-2">This image appears on the About page next to the company overview text.</p>
                   </div>
