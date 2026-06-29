@@ -112,12 +112,12 @@ export default function Footer() {
             </h4>
             <ul className="space-y-2 sm:space-y-2.5">
               {(services.length > 0 ? services : [
-                { id: '1', title: 'Civil Construction', slug: 'civil' },
-                { id: '2', title: 'Infrastructure Development', slug: 'infrastructure' },
-                { id: '3', title: 'MEP Works', slug: 'mep' },
-                { id: '4', title: 'Solar Projects', slug: 'solar' },
-                { id: '5', title: 'Renovation', slug: 'renovation' },
-                { id: '6', title: 'Engineering Consultancy', slug: 'consultancy' },
+                { id: '1', title: 'Civil Construction', slug: 'civil-construction' },
+                { id: '2', title: 'Infrastructure Development', slug: 'infrastructure-development' },
+                { id: '3', title: 'MEP Works', slug: 'mep-works' },
+                { id: '4', title: 'Solar Energy Projects', slug: 'solar-energy-projects' },
+                { id: '5', title: 'Renovation & Remodeling', slug: 'renovation-remodeling' },
+                { id: '6', title: 'Industrial Construction', slug: 'industrial-construction' },
               ]).slice(0, 6).map((service) => (
                 <li key={service.id}>
                   <Link
