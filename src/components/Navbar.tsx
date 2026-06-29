@@ -132,15 +132,7 @@ export default function Navbar() {
                   if (next) next.style.display = 'flex';
                 }}
               />
-              {/* Secondary Logo (wordmark) */}
-              {settings?.secondary_logo_url && (
-                <img
-                  src={settings.secondary_logo_url}
-                  alt={`${siteName} Wordmark`}
-                  className="h-8 sm:h-10 md:h-12 w-auto object-contain hidden sm:block"
-                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                />
-              )}
+              
               {/* Fallback text when no logo images load */}
               <div className="logo-fallback hidden flex-col justify-center">
                 <span className="text-lg sm:text-xl md:text-2xl font-heading font-bold text-white tracking-widest leading-none">{siteNameParts[0] || 'EDEN'}</span>
