@@ -62,7 +62,7 @@ export default function Footer() {
                 <span className="text-[10px] sm:text-xs text-[#c49028] tracking-widest">{siteNameParts[1] || 'BUILDCORE'}</span>
               </div>
             </Link>
-            <p className="text-[#909090] text-xs sm:text-sm leading-relaxed mb-4 sm:mb-6">
+            <p className="text-[#909090] text-xs sm:text-sm leading-relaxed mb-4 sm:mb-6 justify-center">
               {settings?.site_description || ''}
             </p>
             {socialLinks.length > 0 && (
