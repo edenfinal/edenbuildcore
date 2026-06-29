@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Briefcase, MapPin, Clock, DollarSign, Users, ChevronDown, Send, CheckCircle, AlertCircle, FileText } from 'lucide-react';
+import { Briefcase, MapPin, Clock, Users, ChevronDown, Send, CheckCircle, AlertCircle, FileText } from 'lucide-react';
 import { useJobs, submitJobApplication, usePageContent } from '../hooks/useData';
 import PageHero from '../components/PageHero';
 import type { Job } from '../lib/supabase';
@@ -58,9 +58,10 @@ function JobCard({ job, onApply, c }: { job: Job; onApply: () => void; c: (secti
               </span>
             )}
             {job.salary_range && (
-              <span className="text-sm text-gold-400 flex items-center gap-1">
-                <DollarSign className="w-3.5 h-3.5" />{job.salary_range}
-              </span>
+            <span className="text-sm text-gold-400 flex items-center gap-1">
+            <span>PKR</span>
+            <span>{job.salary_range}</span>
+            </span>
             )}
             {job.experience_level && (
               <span className="text-sm text-gray-500">{job.experience_level}</span>
