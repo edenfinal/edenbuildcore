@@ -23,11 +23,11 @@ interface SEOContextType {
 const SEOContext = createContext<SEOContextType | undefined>(undefined);
 
 const defaultSEO: SEOData = {
-  meta_title: 'Eden Buildcore - Building Excellence Since 2008',
+  meta_title: 'Eden Buildcore - Building Excellence Since 2021',
   meta_description: 'Leading construction company in Pakistan specializing in commercial, residential, and infrastructure projects.',
   meta_keywords: 'construction, building, Pakistan, commercial, residential, infrastructure',
   og_title: 'Eden Buildcore',
-  og_description: 'Building Excellence Since 2008',
+  og_description: 'Building Excellence Since 2021',
   og_image: '',
   canonical_url: '',
   schema_type: 'Organization',
