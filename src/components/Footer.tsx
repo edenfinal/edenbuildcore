@@ -117,7 +117,7 @@ export default function Footer() {
                 { id: '3', title: 'MEP Works', slug: 'mep-works' },
                 { id: '4', title: 'Solar Energy Projects', slug: 'solar-energy-projects' },
                 { id: '5', title: 'Renovation & Remodeling', slug: 'renovation-remodeling' },
-                { id: '6', title: 'Engineerin', slug: 'consultancy' },
+                { id: '6', title: 'Industrial Construction', slug: 'industrial-construction' },
               ]).slice(0, 6).map((service) => (
                 <li key={service.id}>
                   <Link
