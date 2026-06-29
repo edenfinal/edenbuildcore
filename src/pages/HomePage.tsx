@@ -10,9 +10,6 @@ import { useSiteSettings, useServices, useProjects, useClients, useTestimonials,
 import PageHero from '../components/PageHero';
 import type { Project, Client, Testimonial, Service, Certification, Statistic } from '../lib/supabase';
 
-const quickLinks = [
-  { name: 'Learn More About Us', path: '/about' },
-
 // Animated Counter Component
 function AnimatedCounter({ value, suffix = '', prefix = '', duration = 2000 }: { value: number; suffix?: string; prefix?: string; duration?: number }) {
   const [count, setCount] = useState(0);
@@ -236,12 +233,12 @@ function AboutPreview({ c }: { c: (section: string, key: string, fallback: strin
             </div>
 
             <Link
-                    to={link.path}
-                    className="flex items-center gap-1.5 sm:gap-2 text-[#909090] hover:text-[#c49028] transition-colors text-xs sm:text-sm group justify-center sm:justify-start"
-                  >
-                    <ArrowRight size={10} className="sm:w-3 sm:h-3 text-[#c49028]/40 group-hover:text-[#c49028] group-hover:translate-x-0.5 transition-all" />
-                    {link.name}
-                  </Link>
+              to="/about"
+              className="inline-flex items-center gap-2 text-gold-400 hover:text-gold-300 font-medium text-sm sm:text-base transition-colors group"
+            >
+              {c('about_preview', 'link_text', 'Learn More About Us')}
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
           </motion.div>
         </div>
       </div>
