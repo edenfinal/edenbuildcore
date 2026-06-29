@@ -1,5 +1,4 @@
-import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 
 // Layouts
@@ -29,16 +28,6 @@ import SettingsPage from './pages/admin/SettingsPage';
 import ContentEditorPage from './pages/admin/ContentEditorPage';
 import HeroManagerPage from './pages/admin/HeroManagerPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
-
-function ScrollToTop() {
-  const { pathname } = useLocation();
-
-  React.useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
-
-  return null;
-}
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -421,8 +410,6 @@ function AppRoutes() {
 function App() {
   return (
     <BrowserRouter>
-      <ScrollToTop />
-
       <AuthProvider>
         <AppRoutes />
       </AuthProvider>
