@@ -400,10 +400,7 @@ function ClientsSection({ clients, c }: { clients: Client[]; c: (section: string
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-8 sm:mb-12">
           <span className="text-gold-500 text-xs sm:text-sm font-medium tracking-wider uppercase">{c('clients', 'badge', 'Trusted By')}</span>
-          <h2 className="text-xl sm:text-2xl font-heading font-semibold text-white mt-1 sm:mt-2">{c('clients', 'title', 'Our Esteemed Clients')}</h2>
-        </div>
-
-        <div className="relative overflow-hidden">
+         <div className="relative overflow-hidden">
           {/* Gradient Overlays */}
           <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-16 md:w-24 bg-gradient-to-r from-navy-950 to-transparent z-10 pointer-events-none" />
           <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-16 md:w-24 bg-gradient-to-l from-navy-950 to-transparent z-10 pointer-events-none" />
@@ -443,7 +440,10 @@ function ClientsSection({ clients, c }: { clients: Client[]; c: (section: string
       </div>
     </section>
   );
-}
+}        <h2 className="text-xl sm:text-2xl font-heading font-semibold text-white mt-1 sm:mt-2">{c('clients', 'title', 'Our Esteemed Clients')}</h2>
+        </div>
+
+ 
 
 // Testimonials Section
 function TestimonialsSection({ testimonials, c }: { testimonials: Testimonial[]; c: (section: string, key: string, fallback: string) => string }) {
