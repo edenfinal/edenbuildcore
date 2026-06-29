@@ -665,9 +665,7 @@ export default function SettingsPage() {
                           <span className="text-xs text-[#c49028] tracking-widest uppercase">{formData.site_name?.split(' ')[1] || 'BUILDCORE'}</span>
                         </div>
                       )}
-                      {formData.secondary_logo_url && (
-                        <img src={formData.secondary_logo_url} alt="Wordmark" className="h-10 w-auto object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                      )}
+                      
                     </div>
                   </div>
                 </SectionCard>
