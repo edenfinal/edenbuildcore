@@ -10,6 +10,7 @@ const quickLinks = [
   { name: 'Gallery', path: '/gallery' },
   { name: 'Certifications', path: '/certifications' },
   { name: 'Careers', path: '/careers' },
+  { name: 'Blog', path: '/blog' },
   { name: 'Contact Us', path: '/contact' },
 ];
 
