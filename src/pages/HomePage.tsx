@@ -230,9 +230,7 @@ function AboutPreview({ c }: { c: (section: string, key: string, fallback: strin
                   <span>{feature}</span>
                 </div>
               ))}
-            </div>
-
-           <div className="relative z-50 inline-block">
+            <div className="relative z-50 inline-block">
   <Link
     to="/about"
     className="inline-flex items-center gap-2 text-gold-400 hover:text-gold-300 font-medium text-sm sm:text-base transition-colors group cursor-pointer"
@@ -242,7 +240,6 @@ function AboutPreview({ c }: { c: (section: string, key: string, fallback: strin
     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
   </Link>
 </div>
-        </div>
       </div>
     </section>
   );
