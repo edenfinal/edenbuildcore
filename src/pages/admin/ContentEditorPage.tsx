@@ -86,6 +86,14 @@ const PAGE_HIDDEN_SECTIONS: Record<string, Set<string>> = {
   about: new Set(['founder']),
 };
 
+const PAGE_HIDDEN_FIELDS: Record<string, Set<string>> = {
+  home: new Set([
+    'cta.title',
+    'cta.button_text',
+    'cta.secondary_button_text',
+  ]),
+};
+
 const FONT_OPTIONS = [
   { label: 'Inter', value: "'Inter', sans-serif" },
   { label: 'Playfair Display', value: "'Playfair Display', serif" },
@@ -152,6 +160,7 @@ function groupByPage(items: PageContent[]): Record<string, Record<string, PageCo
 function isContentEditorVisible(item: PageContent): boolean {
   if (GLOBALLY_HIDDEN_SECTIONS.has(item.section_key)) return false;
   if (PAGE_HIDDEN_SECTIONS[item.page_id]?.has(item.section_key)) return false;
+  if (PAGE_HIDDEN_FIELDS[item.page_id]?.has(`${item.section_key}.${item.content_key}`)) return false;
   return true;
 }
 

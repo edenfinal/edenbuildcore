@@ -630,22 +630,22 @@ function CTASection({ c }: { c: (section: string, key: string, fallback: string)
             <span className="block bg-gradient-to-r from-gold-400 to-gold-500 bg-clip-text text-transparent">{c('cta', 'title_line2', 'Dream Project?')}</span>
           </h2>
           <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
-            {c('cta', 'description', "Let's discuss your construction needs and bring your vision to life. Our expert team is ready to deliver excellence.")}
+            {c('cta', 'description', "Let's discuss how Eden Buildcore can bring your vision to life with excellence and precision.")}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to={c('cta', 'button_link', '/contact')}
               className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-gold-600 to-gold-500 text-navy-950 font-bold rounded-xl hover:from-gold-500 hover:to-gold-400 transition-all shadow-gold hover:shadow-gold-lg"
             >
-              {c('cta', 'button_text', 'Get a Free Quote')}
+              {c('cta', 'button_primary', 'Get a Free Quote')}
               <ArrowRight className="w-5 h-5" />
             </Link>
             <a
-              href={c('cta', 'secondary_button_link', `tel:${settings?.phone || '+1234567890'}`)}
+              href={c('cta', 'secondary_button_link', `tel:${settings?.phone || '+92 51 2726997'}`)}
               className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-transparent border-2 border-gold-500 text-gold-400 font-bold rounded-xl hover:bg-gold-500/10 transition-all"
             >
               <Phone className="w-5 h-5" />
-              {c('cta', 'secondary_button_text', 'Call Us Now')}
+              {c('cta', 'button_secondary', 'Call Us Now')}
             </a>
           </div>
         </motion.div>
