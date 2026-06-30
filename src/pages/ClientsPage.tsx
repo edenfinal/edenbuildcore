@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Building2, Award, Users, Star, Handshake, Landmark, Briefcase, Globe, ArrowRight } from 'lucide-react';
-import { useClients, useTestimonials, usePageContent, useStatistics } from '../hooks/useData';
+import { useClients, useTestimonials, usePageContent, useAutoCounters } from '../hooks/useData';
 import PageHero from '../components/PageHero';
 import type { Client } from '../lib/supabase';
 
@@ -66,7 +66,7 @@ function ClientCard({ client, index }: { client: Client; index: number }) {
 export default function ClientsPage() {
   const { data: clients } = useClients();
   const { data: testimonials } = useTestimonials();
-  const { data: statistics } = useStatistics();
+  const { counters } = useAutoCounters();
   const pageContent = usePageContent('clients');
   const c = (section: string, key: string, fallback: string) => pageContent.get(section, key, fallback);
 
@@ -81,16 +81,11 @@ export default function ClientsPage() {
     grouped[type].push(cl);
   });
 
-  // Stats from statistics table
-  const projStat  = statistics.find(s => s.stat_key === 'projects_completed');
-  const clientStat = statistics.find(s => s.stat_key === 'happy_clients');
-  const expStat   = statistics.find(s => s.stat_key === 'experience');
-
   const stats = [
-    { value: (clientStat?.stat_value || '350') + (clientStat?.stat_suffix || '+'), label: clientStat?.description || 'Satisfied Clients', icon: Users },
-    { value: (projStat?.stat_value || '500') + (projStat?.stat_suffix || '+'),  label: projStat?.description  || 'Projects Delivered', icon: Award },
-    { value: (expStat?.stat_value || '7') + (expStat?.stat_suffix || '+'),     label: expStat?.description   || 'Years of Excellence', icon: Star },
-    { value: c('stats', 'stat_4_value', '100%'), label: c('stats', 'stat_4_label', 'Client Satisfaction'), icon: Handshake },
+    { value: `${counters.prefixes.clients}${counters.clients}${counters.suffixes.clients}`, label: counters.labels.clients, icon: Users },
+    { value: `${counters.prefixes.projects}${counters.projects}${counters.suffixes.projects}`, label: counters.labels.projects, icon: Award },
+    { value: `${counters.prefixes.experience}${counters.experience}${counters.suffixes.experience}`, label: counters.labels.experience, icon: Star },
+    { value: `${counters.prefixes.team}${counters.team}${counters.suffixes.team}`, label: counters.labels.team, icon: Handshake },
   ];
 
   return (

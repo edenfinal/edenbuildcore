@@ -335,6 +335,24 @@ export function useAutoCounters() {
     clients: 0,
     team: 0,
     experience: 0,
+    labels: {
+      experience: '',
+      projects: '',
+      clients: '',
+      team: '',
+    },
+    suffixes: {
+      experience: '+',
+      projects: '+',
+      clients: '+',
+      team: '+',
+    },
+    prefixes: {
+      experience: '',
+      projects: '',
+      clients: '',
+      team: '',
+    },
   });
   const [loading, setLoading] = useState(true);
 
@@ -342,26 +360,45 @@ export function useAutoCounters() {
     async function fetchCounters() {
       try {
         const [statsRes, settingsRes] = await Promise.all([
-          supabase.from('statistics').select('stat_key, stat_value').eq('is_active', true),
+          supabase.from('statistics').select('stat_key, stat_value, stat_prefix, stat_suffix, description').eq('is_active', true),
           supabase.from('site_settings').select('company_start_year').limit(1).maybeSingle(),
         ]);
 
-        const statsMap: Record<string, number> = {};
+        const statsMap: Record<string, any> = {};
         (statsRes.data || []).forEach((s: any) => {
-          statsMap[s.stat_key] = parseInt(s.stat_value) || 0;
+          statsMap[s.stat_key] = s;
         });
 
-        // Experience always calculated from company_start_year
         const startYear = settingsRes.data?.company_start_year
           ? parseInt(String(settingsRes.data.company_start_year))
-          : 1999;
-        const experience = new Date().getFullYear() - startYear;
+          : new Date().getFullYear();
+        const experience = Math.max(0, new Date().getFullYear() - startYear);
+        const readValue = (key: string) => parseInt(statsMap[key]?.stat_value || '0') || 0;
+        const readText = (key: string, field: string) => statsMap[key]?.[field] || '';
 
         setCounters({
-          projects: statsMap['projects_completed'] || 0,
-          clients: statsMap['happy_clients'] || 0,
-          team: statsMap['team_members'] || 0,
+          projects: readValue('projects_completed'),
+          clients: readValue('happy_clients'),
+          team: readValue('team_members'),
           experience,
+          labels: {
+            experience: readText('years_experience', 'description'),
+            projects: readText('projects_completed', 'description'),
+            clients: readText('happy_clients', 'description'),
+            team: readText('team_members', 'description'),
+          },
+          suffixes: {
+            experience: readText('years_experience', 'stat_suffix') || '+',
+            projects: readText('projects_completed', 'stat_suffix') || '+',
+            clients: readText('happy_clients', 'stat_suffix') || '+',
+            team: readText('team_members', 'stat_suffix') || '+',
+          },
+          prefixes: {
+            experience: readText('years_experience', 'stat_prefix'),
+            projects: readText('projects_completed', 'stat_prefix'),
+            clients: readText('happy_clients', 'stat_prefix'),
+            team: readText('team_members', 'stat_prefix'),
+          },
         });
       } catch (e) {
         console.error('Counter fetch error:', e);

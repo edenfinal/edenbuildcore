@@ -169,7 +169,7 @@ export default function AboutPage() {
               {counters.experience > 0 && (
                 <div className="absolute -bottom-6 -left-6 bg-gradient-to-r from-gold-600 to-gold-500 text-navy-950 p-6 rounded-2xl shadow-gold-lg">
                   <div className="text-3xl font-heading font-bold">{counters.experience}+</div>
-                  <div className="text-sm font-medium">Years Experience</div>
+                  <div className="text-sm font-medium">{counters.labels.experience}</div>
                 </div>
               )}
             </motion.div>

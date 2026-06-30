@@ -6,9 +6,9 @@ import {
   ArrowRight, Star, Quote, Shield, Target, Eye, Globe, MapPin,
   Phone, Mail, Clock, CheckCircle, TrendingUp
 } from 'lucide-react';
-import { useSiteSettings, useServices, useProjects, useClients, useTestimonials, useCertifications, useStatistics, usePageContent, useAutoCounters } from '../hooks/useData';
+import { useSiteSettings, useServices, useProjects, useClients, useTestimonials, useCertifications, usePageContent, useAutoCounters } from '../hooks/useData';
 import PageHero from '../components/PageHero';
-import type { Project, Client, Testimonial, Service, Certification, Statistic } from '../lib/supabase';
+import type { Project, Client, Testimonial, Service, Certification } from '../lib/supabase';
 
 // Animated Counter Component
 function AnimatedCounter({ value, suffix = '', prefix = '', duration = 2000 }: { value: number; suffix?: string; prefix?: string; duration?: number }) {
@@ -18,6 +18,10 @@ function AnimatedCounter({ value, suffix = '', prefix = '', duration = 2000 }: {
 
   useEffect(() => {
     if (isInView) {
+      if (value <= 0) {
+        setCount(0);
+        return;
+      }
       let start = 0;
       const end = value;
       const stepTime = Math.abs(Math.floor(duration / end));
@@ -74,45 +78,38 @@ function SectionTitle({ subtitle, title, description, light = false }: { subtitl
 }
 
 // Hero Section - Only shows admin-managed slides, no hardcoded defaults
-// Stats Section - values and labels are managed from the admin Statistics table.
-function StatsSection({ stats, c }: { stats: Statistic[]; c: (section: string, key: string, fallback: string) => string }) {
+// Stats Section - values are managed in Site Settings and stored in Supabase.
+function StatsSection() {
   const { counters } = useAutoCounters();
-
-  // Stats are admin-editable via the Statistics CRUD page.
-  // Years can still fall back to company_start_year if the statistics row is missing.
-  const expStat = stats.find(s => s.stat_key === 'years_experience');
-  const projStat = stats.find(s => s.stat_key === 'projects_completed');
-  const clientStat = stats.find(s => s.stat_key === 'happy_clients');
-  const teamStat = stats.find(s => s.stat_key === 'team_members');
 
   const statItems = [
     {
       key: 'stat_1',
-      value: expStat?.stat_value || String(counters.experience || 0),
-      prefix: expStat?.stat_prefix || '',
-      suffix: expStat?.stat_suffix || '+',
-      desc: expStat?.description || c('stats', 'stat_1_description', 'Years of Excellence'),
+      value: counters.experience,
+      prefix: counters.prefixes.experience,
+      suffix: counters.suffixes.experience,
+      desc: counters.labels.experience,
     },
     {
       key: 'stat_2',
-      value: projStat?.stat_value || String(counters.projects || 0),
-      prefix: projStat?.stat_prefix || '',
-      suffix: projStat?.stat_suffix || '+',
-      desc: projStat?.description || c('stats', 'stat_2_description', 'Projects Delivered'),
+      value: counters.projects,
+      prefix: counters.prefixes.projects,
+      suffix: counters.suffixes.projects,
+      desc: counters.labels.projects,
     },
     {
       key: 'stat_3',
-      value: clientStat?.stat_value || String(counters.clients || 0),
-      prefix: clientStat?.stat_prefix || '',
-      suffix: clientStat?.stat_suffix || '+',
-      desc: clientStat?.description || c('stats', 'stat_3_description', 'Satisfied Clients'),
+      value: counters.clients,
+      prefix: counters.prefixes.clients,
+      suffix: counters.suffixes.clients,
+      desc: counters.labels.clients,
     },
     {
       key: 'stat_4',
-      value: teamStat?.stat_value || String(counters.team || 0),
-      prefix: teamStat?.stat_prefix || '',
-      suffix: teamStat?.stat_suffix || '+',
-      desc: teamStat?.description || c('stats', 'stat_4_description', 'Expert Team Members'),
+      value: counters.team,
+      prefix: counters.prefixes.team,
+      suffix: counters.suffixes.team,
+      desc: counters.labels.team,
     },
   ];
 
@@ -139,7 +136,7 @@ function StatsSection({ stats, c }: { stats: Statistic[]; c: (section: string, k
                   </div>
                   <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-white mb-1 sm:mb-2">
                     <AnimatedCounter
-                      value={parseInt(stat.value || '0')}
+                      value={stat.value}
                       prefix={stat.prefix}
                       suffix={stat.suffix}
                     />
@@ -190,7 +187,7 @@ function AboutPreview({ c }: { c: (section: string, key: string, fallback: strin
             {counters.experience > 0 && (
               <div className="absolute -bottom-4 sm:-bottom-6 right-2 sm:right-4 md:right-8 bg-gradient-to-r from-gold-600 to-gold-500 text-navy-950 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-gold-lg">
                 <div className="text-2xl sm:text-3xl md:text-4xl font-heading font-bold">{counters.experience}+</div>
-                <div className="text-xs sm:text-sm font-medium">{c('about_preview', 'badge_text', 'Years of Excellence')}</div>
+                <div className="text-xs sm:text-sm font-medium">{counters.labels.experience}</div>
               </div>
             )}
           </motion.div>
@@ -664,14 +661,13 @@ export default function HomePage() {
   const { data: clients } = useClients();
   const { data: testimonials } = useTestimonials();
   const { data: certifications } = useCertifications();
-  const { data: statistics } = useStatistics();
   const pageContent = usePageContent('home');
   const c = (section: string, key: string, fallback: string) => pageContent.get(section, key, fallback);
 
   return (
     <>
       <PageHero pageId="home" />
-      <StatsSection stats={statistics} c={c} />
+      <StatsSection />
       <AboutPreview c={c} />
       <ServicesPreview services={services} c={c} />
       <FeaturedProjects projects={projects} c={c} />

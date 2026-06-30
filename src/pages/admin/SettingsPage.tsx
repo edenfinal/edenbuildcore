@@ -101,6 +101,13 @@ const SPACING_OPTIONS = [
   { label: 'Spacious', value: 'spacious' },
 ];
 
+const COUNTER_STATS = [
+  { key: 'years_experience', valueField: 'counter_years_value', labelField: 'counter_years_label', label: 'Years of Excellence', auto: true },
+  { key: 'projects_completed', valueField: 'counter_projects_value', labelField: 'counter_projects_label', label: 'Projects Delivered' },
+  { key: 'happy_clients', valueField: 'counter_clients_value', labelField: 'counter_clients_label', label: 'Satisfied Clients' },
+  { key: 'team_members', valueField: 'counter_team_value', labelField: 'counter_team_label', label: 'Expert Team Members' },
+];
+
 /* ─── FileUpload Component ─── */
 function FileUpload({
   label,
@@ -380,7 +387,9 @@ function LivePreview({ formData }: { formData: any }) {
               <Layers className="w-3 h-3" style={{ color: primary }} />
             </div>
             <p className="text-xs font-medium" style={{ color: text }}>Projects</p>
-            <p className="text-[10px]" style={{ color: muted }}>500+ completed</p>
+            <p className="text-[10px]" style={{ color: muted }}>
+              {formData.counter_projects_value ? `${formData.counter_projects_value}+ completed` : 'Managed in counters'}
+            </p>
           </div>
           <div
             className="p-3 border"
@@ -433,6 +442,7 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
   const [changed, setChanged] = useState(false);
+  const [counterStats, setCounterStats] = useState<Record<string, any>>({});
 
   const defaults = {
     site_name: 'Eden Buildcore (Pvt.) Ltd.',
@@ -478,19 +488,51 @@ export default function SettingsPage() {
     success_color: '#10b981',
     warning_color: '#f59e0b',
     error_color: '#ef4444',
+    counter_years_label: '',
+    counter_projects_value: '',
+    counter_projects_label: '',
+    counter_clients_value: '',
+    counter_clients_label: '',
+    counter_team_value: '',
+    counter_team_label: '',
   };
+
+  const fetchCounterStats = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('statistics')
+      .select('id, stat_key, stat_value, stat_prefix, stat_suffix, description, order_index, is_active')
+      .in('stat_key', COUNTER_STATS.map((stat) => stat.key));
+
+    if (error) {
+      console.error('Counter stats fetch error:', error);
+      return {};
+    }
+
+    return (data || []).reduce((acc: Record<string, any>, item: any) => {
+      acc[item.stat_key] = item;
+      return acc;
+    }, {});
+  }, []);
 
   useEffect(() => {
     if (settings) {
-      const merged = { ...defaults };
+      const merged: any = { ...defaults };
       Object.keys(settings).forEach((key) => {
         if (settings[key as keyof typeof settings] !== null && settings[key as keyof typeof settings] !== undefined) {
-          (merged as any)[key] = settings[key as keyof typeof settings];
+          merged[key] = settings[key as keyof typeof settings];
         }
       });
-      setFormData(merged);
+      fetchCounterStats().then((stats) => {
+        setCounterStats(stats);
+        COUNTER_STATS.forEach((stat) => {
+          const row = stats[stat.key];
+          merged[stat.valueField] = stat.auto ? '' : row?.stat_value || '';
+          merged[stat.labelField] = row?.description || '';
+        });
+        setFormData(merged);
+      });
     }
-  }, [settings]);
+  }, [settings, fetchCounterStats]);
 
   const handleChange = (key: string, value: any) => {
     setFormData((prev: any) => ({ ...prev, [key]: value }));
@@ -520,11 +562,45 @@ export default function SettingsPage() {
     setSaved(false);
 
     const payload = { ...formData };
+    COUNTER_STATS.forEach((stat) => {
+      delete payload[stat.valueField];
+      delete payload[stat.labelField];
+    });
     delete payload.id;
     delete payload.created_at;
     delete payload.updated_at;
 
     const success = await updateSettings(payload);
+    if (success) {
+      for (const [index, stat] of COUNTER_STATS.entries()) {
+        const existing = counterStats[stat.key];
+        const updates: Record<string, any> = {
+          description: formData[stat.labelField] || existing?.description || '',
+          stat_suffix: existing?.stat_suffix || '+',
+          stat_prefix: existing?.stat_prefix || '',
+          is_active: true,
+          order_index: existing?.order_index ?? index + 1,
+          updated_at: new Date().toISOString(),
+        };
+
+        if (!stat.auto) {
+          updates.stat_value = String(formData[stat.valueField] || '0');
+        }
+
+        const query = supabase.from('statistics');
+        const { error: statError } = existing?.id
+          ? await query.update(updates).eq('id', existing.id)
+          : await query.insert({ ...updates, stat_key: stat.key, stat_value: stat.auto ? '0' : String(formData[stat.valueField] || '0') });
+
+        if (statError) {
+          console.error('Counter stat save error:', statError);
+          setError('Failed to save counter settings. Please try again.');
+          setSaving(false);
+          return;
+        }
+      }
+      setCounterStats(await fetchCounterStats());
+    }
     setSaving(false);
 
     if (success) {
@@ -609,6 +685,62 @@ export default function SettingsPage() {
                       />
                       <p className="text-[#606060] text-xs mt-1.5">Used to auto-calculate years of experience across the site</p>
                     </div>
+                  </div>
+                </SectionCard>
+
+                <SectionCard icon={Hash} title="Site Counters">
+                  <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
+                    <Input
+                      label="Years Label"
+                      value={formData.counter_years_label}
+                      onChange={(v: string) => handleChange('counter_years_label', v)}
+                      placeholder="Years of Excellence"
+                    />
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">Years Count</label>
+                      <div className="px-4 py-3 bg-[#030810]/40 border border-[#c49028]/10 rounded-xl text-gray-400 text-sm">
+                        Auto from Company Start Year: {Math.max(0, new Date().getFullYear() - (parseInt(String(formData.company_start_year)) || new Date().getFullYear()))}+
+                      </div>
+                    </div>
+                    <Input
+                      label="Projects Delivered"
+                      type="number"
+                      value={formData.counter_projects_value}
+                      onChange={(v: string) => handleChange('counter_projects_value', v)}
+                      placeholder="500"
+                    />
+                    <Input
+                      label="Projects Label"
+                      value={formData.counter_projects_label}
+                      onChange={(v: string) => handleChange('counter_projects_label', v)}
+                      placeholder="Projects Delivered"
+                    />
+                    <Input
+                      label="Satisfied Clients"
+                      type="number"
+                      value={formData.counter_clients_value}
+                      onChange={(v: string) => handleChange('counter_clients_value', v)}
+                      placeholder="350"
+                    />
+                    <Input
+                      label="Clients Label"
+                      value={formData.counter_clients_label}
+                      onChange={(v: string) => handleChange('counter_clients_label', v)}
+                      placeholder="Satisfied Clients"
+                    />
+                    <Input
+                      label="Expert Team Members"
+                      type="number"
+                      value={formData.counter_team_value}
+                      onChange={(v: string) => handleChange('counter_team_value', v)}
+                      placeholder="150"
+                    />
+                    <Input
+                      label="Team Label"
+                      value={formData.counter_team_label}
+                      onChange={(v: string) => handleChange('counter_team_label', v)}
+                      placeholder="Expert Team Members"
+                    />
                   </div>
                 </SectionCard>
 
