@@ -51,28 +51,6 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 // Admin CRUD Pages Configuration
 const adminPages = [
   {
-    path: 'hero',
-    title: 'Hero Slides',
-    tableName: 'hero_slides',
-    columns: [
-      { key: 'title', label: 'Title', type: 'text', required: true },
-      { key: 'subtitle', label: 'Subtitle', type: 'text' },
-      { key: 'description', label: 'Description', type: 'textarea' },
-      { key: 'background_image_url', label: 'Background Image', type: 'image' },
-      { key: 'button_text', label: 'Button Text', type: 'text' },
-      { key: 'button_link', label: 'Button Link', type: 'text' },
-      { key: 'overlay_opacity', label: 'Overlay Opacity (0-1)', type: 'number' },
-      { key: 'order_index', label: 'Order', type: 'number' },
-      { key: 'is_active', label: 'Active', type: 'boolean' },
-    ],
-    displayFields: [
-      { key: 'title', label: 'Title' },
-      { key: 'subtitle', label: 'Subtitle' },
-      { key: 'is_active', label: 'Active' },
-    ],
-    defaultValues: { is_active: true, overlay_opacity: 0.6, order_index: 0 },
-  },
-  {
     path: 'projects',
     title: 'Projects',
     tableName: 'projects',

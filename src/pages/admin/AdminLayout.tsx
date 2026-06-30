@@ -32,7 +32,6 @@ const menuSections = [
   {
     title: 'Content Management',
     items: [
-      { name: 'Hero Slides', path: '/admin/hero', icon: Image },
       { name: 'Projects', path: '/admin/projects', icon: Building2 },
       { name: 'Services', path: '/admin/services', icon: Layers },
       { name: 'Gallery', path: '/admin/gallery', icon: FolderKanban },
