@@ -144,8 +144,8 @@ export default function OurTeamPage() {
             <p className="text-gray-400 text-lg max-w-2xl mx-auto mb-8">
               {c('cta', 'description', "We're always looking for talented individuals to join our growing team. Explore open positions.")}
             </p>
-            <a href="/careers" className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-[#a67820] to-[#c49028] text-[#030810] font-bold rounded-xl hover:shadow-[0_0_30px_rgba(196,144,40,0.3)] transition-all">
-              View Open Positions
+            <a href={c('cta', 'button_link', '/careers')} className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-[#a67820] to-[#c49028] text-[#030810] font-bold rounded-xl hover:shadow-[0_0_30px_rgba(196,144,40,0.3)] transition-all">
+              {c('cta', 'button_text', 'View Open Positions')}
             </a>
           </motion.div>
         </div>

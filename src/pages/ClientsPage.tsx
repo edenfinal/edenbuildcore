@@ -220,11 +220,11 @@ export default function ClientsPage() {
               {c('cta', 'description', 'Join our growing network of satisfied clients. We deliver excellence on every project, big or small.')}
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <a href="/contact" className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-[#a67820] to-[#c49028] text-[#030810] font-bold rounded-xl hover:shadow-[0_0_30px_rgba(196,144,40,0.3)] transition-all">
-                Start a Project
+              <a href={c('cta', 'button_1_link', '/contact')} className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-[#a67820] to-[#c49028] text-[#030810] font-bold rounded-xl hover:shadow-[0_0_30px_rgba(196,144,40,0.3)] transition-all">
+                {c('cta', 'button_1', 'Start a Project')}
               </a>
-              <a href="/projects" className="inline-flex items-center gap-2 px-8 py-4 border-2 border-[#c49028] text-[#c49028] font-bold rounded-xl hover:bg-[#c49028]/10 transition-all">
-                View Our Work
+              <a href={c('cta', 'button_2_link', '/projects')} className="inline-flex items-center gap-2 px-8 py-4 border-2 border-[#c49028] text-[#c49028] font-bold rounded-xl hover:bg-[#c49028]/10 transition-all">
+                {c('cta', 'button_2', 'View Our Work')}
               </a>
             </div>
           </motion.div>

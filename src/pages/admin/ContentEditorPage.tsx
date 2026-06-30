@@ -42,6 +42,7 @@ const PAGE_LABELS: Record<string, string> = {
   blog: 'Blog Page',
   clients: 'Clients Page',
   certifications: 'Certifications Page',
+  team: 'Our Team Page',
 };
 
 const SECTION_LABELS: Record<string, string> = {

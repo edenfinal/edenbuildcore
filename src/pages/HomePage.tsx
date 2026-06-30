@@ -634,14 +634,14 @@ function CTASection({ c }: { c: (section: string, key: string, fallback: string)
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              to="/contact"
+              to={c('cta', 'button_link', '/contact')}
               className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-gold-600 to-gold-500 text-navy-950 font-bold rounded-xl hover:from-gold-500 hover:to-gold-400 transition-all shadow-gold hover:shadow-gold-lg"
             >
               {c('cta', 'button_text', 'Get a Free Quote')}
               <ArrowRight className="w-5 h-5" />
             </Link>
             <a
-              href={`tel:${settings?.phone || '+1234567890'}`}
+              href={c('cta', 'secondary_button_link', `tel:${settings?.phone || '+1234567890'}`)}
               className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-transparent border-2 border-gold-500 text-gold-400 font-bold rounded-xl hover:bg-gold-500/10 transition-all"
             >
               <Phone className="w-5 h-5" />

@@ -95,7 +95,7 @@ function ProjectDetail() {
       <div className="min-h-screen bg-navy-950 flex items-center justify-center">
         <div className="text-center">
           <Building2 className="w-16 h-16 text-gold-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-heading font-bold text-white mb-2">{c('projects.detail', 'not_found', 'Project Not Found')}</h2>
+          <h2 className="text-2xl font-heading font-bold text-white mb-2">{c('detail', 'not_found', 'Project Not Found')}</h2>
           <Link to="/projects" className="text-gold-500 hover:text-gold-400">Back to Projects</Link>
         </div>
       </div>
@@ -157,7 +157,7 @@ function ProjectDetail() {
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-navy-800/50 backdrop-blur-sm border border-gold-500/10 rounded-2xl p-8"
               >
-                <h2 className="text-2xl font-heading font-bold text-white mb-4">{c('projects.detail', 'overview_title', 'Project Overview')}</h2>
+                <h2 className="text-2xl font-heading font-bold text-white mb-4">{c('detail', 'overview_title', 'Project Overview')}</h2>
                 <p className="text-gray-400 leading-relaxed">
                   {project.detailed_description || project.description || 'No description available for this project.'}
                 </p>
@@ -171,7 +171,7 @@ function ProjectDetail() {
                   transition={{ delay: 0.1 }}
                   className="bg-navy-800/50 backdrop-blur-sm border border-gold-500/10 rounded-2xl p-8"
                 >
-                  <h2 className="text-2xl font-heading font-bold text-white mb-6">{c('projects.detail', 'gallery_title', 'Project Gallery')}</h2>
+                  <h2 className="text-2xl font-heading font-bold text-white mb-6">{c('detail', 'gallery_title', 'Project Gallery')}</h2>
                   <div className="relative aspect-video rounded-xl overflow-hidden mb-4">
                     <img
                       src={images[currentImage] || project.thumbnail_url || ''}
@@ -236,7 +236,7 @@ function ProjectDetail() {
                 animate={{ opacity: 1, x: 0 }}
                 className="bg-navy-800/50 backdrop-blur-sm border border-gold-500/10 rounded-2xl p-6"
               >
-                <h3 className="text-lg font-semibold text-white mb-6">{c('projects.detail', 'sidebar_title', 'Project Details')}</h3>
+                <h3 className="text-lg font-semibold text-white mb-6">{c('detail', 'sidebar_title', 'Project Details')}</h3>
                 <div className="space-y-4">
                   {[
                     { label: 'Status', value: project.status ? project.status.charAt(0).toUpperCase() + project.status.slice(1) : undefined },
@@ -256,10 +256,10 @@ function ProjectDetail() {
               </motion.div>
 
               <Link
-                to="/contact"
+                to={c('detail', 'cta_link', '/contact')}
                 className="block text-center py-4 bg-gradient-to-r from-gold-600 to-gold-500 text-navy-950 font-bold rounded-xl hover:from-gold-500 hover:to-gold-400 transition-all"
               >
-                {c('projects.detail', 'cta_button', 'Start Similar Project')}
+                {c('detail', 'cta_button', 'Start Similar Project')}
               </Link>
             </div>
           </div>

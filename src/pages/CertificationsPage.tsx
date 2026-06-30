@@ -313,10 +313,10 @@ export default function CertificationsPage() {
               </h2>
               <p className="text-gray-400 mb-8 max-w-xl mx-auto">{c('cta', 'description', 'Our certifications reflect our unwavering commitment to quality, safety, and responsibility.')}</p>
               <div className="flex flex-wrap justify-center gap-4">
-                <Link to="/contact" className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-gold-600 to-gold-500 text-navy-950 font-bold rounded-xl hover:from-gold-500 hover:to-gold-400 transition-all">
+                <Link to={c('cta', 'button_1_link', '/contact')} className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-gold-600 to-gold-500 text-navy-950 font-bold rounded-xl hover:from-gold-500 hover:to-gold-400 transition-all">
                   {c('cta', 'button_1', 'Partner With Us')}
                 </Link>
-                <Link to="/projects" className="inline-flex items-center gap-2 px-8 py-3 border-2 border-gold-500 text-gold-500 font-bold rounded-xl hover:bg-gold-500/10 transition-all">
+                <Link to={c('cta', 'button_2_link', '/projects')} className="inline-flex items-center gap-2 px-8 py-3 border-2 border-gold-500 text-gold-500 font-bold rounded-xl hover:bg-gold-500/10 transition-all">
                   {c('cta', 'button_2', 'View Our Projects')}
                 </Link>
               </div>

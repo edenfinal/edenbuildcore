@@ -172,7 +172,7 @@ export default function ServicesPage() {
               {c('cta', 'description', 'Our team is ready to discuss your specific requirements and provide tailored solutions.')}
             </p>
             <Link
-              to="/contact"
+              to={c('cta', 'button_link', '/contact')}
               className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-gold-600 to-gold-500 text-navy-950 font-bold rounded-xl hover:from-gold-500 hover:to-gold-400 transition-all shadow-gold hover:shadow-gold-lg"
             >
               {c('cta', 'button_text', 'Contact Us Today')}
