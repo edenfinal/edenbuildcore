@@ -236,7 +236,7 @@ function CarouselHeroView({
     button_link: slide.button_link,
     button2_text: slide.button2_text,
     button2_link: slide.button2_link,
-    show_button: true,
+    show_button: 'show_button' in slide ? Boolean(slide.show_button) : true,
   } as PageHeroType;
 
   return (
@@ -345,12 +345,36 @@ export default function PageHero({
     full: 'min-h-[80vh] md:min-h-[90vh]',
   }[height] || 'min-h-[50vh] md:min-h-[65vh]';
 
+  const baseCarouselSlide = {
+    id: `${hero.id}-base`,
+    title: hero.title || '',
+    subtitle: hero.subtitle,
+    description: hero.description,
+    background_image_url: hero.background_image_url,
+    button_text: hero.button_text,
+    button_link: hero.button_link,
+    button2_text: hero.button2_text,
+    button2_link: hero.button2_link,
+    line_two: hero.line_two,
+    overlay_opacity: hero.overlay_opacity,
+    text_alignment: hero.text_alignment,
+    order_index: -1,
+    is_active: true,
+    show_button: hero.show_button,
+    created_at: hero.created_at,
+    updated_at: hero.updated_at,
+  } as HeroSlide & { show_button?: boolean };
+
+  const visibleCarouselSlides = isCarousel
+    ? [baseCarouselSlide, ...carouselSlides.filter((slide) => slide.id !== baseCarouselSlide.id)]
+    : carouselSlides;
+
   // Carousel mode
-  if (isCarousel && carouselSlides.length > 0) {
+  if (isCarousel && visibleCarouselSlides.length > 0 && !carouselLoading) {
     return (
       <section className={`relative ${heightClass} flex flex-col justify-center overflow-hidden`}>
         <CarouselHeroView
-          slides={carouselSlides}
+          slides={visibleCarouselSlides}
           baseHero={hero}
           primaryColor={primaryColor}
           txtColor={txtColor}
