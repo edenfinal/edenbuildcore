@@ -1,5 +1,5 @@
-import { lazy, Suspense, type ComponentType } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { lazy, Suspense, useEffect, type ComponentType } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 
 // Layouts
@@ -300,6 +300,16 @@ function lazyElement(Component: ComponentType) {
   );
 }
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [pathname]);
+
+  return null;
+}
+
 function AppRoutes() {
   return (
     <Routes>
@@ -383,6 +393,7 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <ScrollToTop />
         <AppRoutes />
       </AuthProvider>
     </BrowserRouter>
