@@ -74,12 +74,10 @@ function SectionTitle({ subtitle, title, description, light = false }: { subtitl
 }
 
 // Hero Section - Only shows admin-managed slides, no hardcoded defaults
-// Stats Section - Uses page_content for editable values, falls back to DB statistics table
+// Stats Section - values and labels are managed from the admin Statistics table.
 function StatsSection({ stats, c }: { stats: Statistic[]; c: (section: string, key: string, fallback: string) => string }) {
-  const { counters, loading: countersLoading } = useAutoCounters();
+  const { counters } = useAutoCounters();
 
-  // Build stats from page_content keys for full editability
-  // Use auto-counters from database, fallback to page_content, then to static stats
   // Stat 1 = Years Experience (ALWAYS auto-calculated from company_start_year in site_settings)
   // Stats 2/3/4 = from statistics table (admin-editable via Statistics CRUD page)
   const projStat = stats.find(s => s.stat_key === 'projects_completed');
@@ -97,23 +95,23 @@ function StatsSection({ stats, c }: { stats: Statistic[]; c: (section: string, k
     {
       key: 'stat_2',
       value: projStat?.stat_value || String(counters.projects || 0),
-      prefix: '',
+      prefix: projStat?.stat_prefix || '',
       suffix: projStat?.stat_suffix || '+',
-      desc: c('stats', 'stat_2_description', projStat?.description || 'Projects Completed'),
+      desc: projStat?.description || c('stats', 'stat_2_description', 'Projects Delivered'),
     },
     {
       key: 'stat_3',
       value: clientStat?.stat_value || String(counters.clients || 0),
-      prefix: '',
+      prefix: clientStat?.stat_prefix || '',
       suffix: clientStat?.stat_suffix || '+',
-      desc: c('stats', 'stat_3_description', clientStat?.description || 'Happy Clients'),
+      desc: clientStat?.description || c('stats', 'stat_3_description', 'Satisfied Clients'),
     },
     {
       key: 'stat_4',
       value: teamStat?.stat_value || String(counters.team || 0),
-      prefix: '',
+      prefix: teamStat?.stat_prefix || '',
       suffix: teamStat?.stat_suffix || '+',
-      desc: c('stats', 'stat_4_description', teamStat?.description || 'Team Members'),
+      desc: teamStat?.description || c('stats', 'stat_4_description', 'Expert Team Members'),
     },
   ];
 
