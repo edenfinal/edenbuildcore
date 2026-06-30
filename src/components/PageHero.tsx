@@ -271,19 +271,20 @@ function CarouselHeroView({
           </motion.div>
         </AnimatePresence>
 
-        {slides.length > 1 && (
-          <div className="absolute bottom-10 left-1/2 z-20 flex -translate-x-1/2 items-center justify-center gap-3">
-            {slides.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => goTo(i)}
-                aria-label={`Go to hero slide ${i + 1}`}
-                className={`h-2.5 rounded-full transition-all duration-300 ${i === current ? 'bg-[#c49028] w-9' : 'w-2.5 bg-white/40 hover:bg-white/70'}`}
-              />
-            ))}
-          </div>
-        )}
       </div>
+
+      {slides.length > 1 && (
+        <div className="absolute bottom-8 left-1/2 z-20 flex -translate-x-1/2 items-center justify-center gap-3 md:bottom-10">
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => goTo(i)}
+              aria-label={`Go to hero slide ${i + 1}`}
+              className={`h-2.5 rounded-full transition-all duration-300 ${i === current ? 'bg-[#c49028] w-9' : 'w-2.5 bg-white/40 hover:bg-white/70'}`}
+            />
+          ))}
+        </div>
+      )}
     </>
   );
 }
