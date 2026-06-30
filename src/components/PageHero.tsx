@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { usePageHero } from '../hooks/useData';
 import { useSiteSettings } from '../hooks/useData';
 import { supabase } from '../lib/supabase';
-import type { PageHero as PageHeroType } from '../lib/supabase';
+import type { HeroSlide, PageHero as PageHeroType } from '../lib/supabase';
 
 interface PageHeroProps {
   pageId: string;
@@ -15,12 +15,19 @@ interface PageHeroProps {
 
 /* ─── Carousel Hook ─── */
 function useCarouselSlides(pageId: string, enabled: boolean) {
-  const [slides, setSlides] = useState<any[]>([]);
-  const [loading, setLoading] = useState(enabled);
+  const [slides, setSlides] = useState<HeroSlide[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
 
   const fetchSlides = useCallback(async () => {
-    if (!enabled) return;
+    if (!enabled) {
+      setSlides([]);
+      setHasFetched(false);
+      setLoading(false);
+      return;
+    }
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('hero_slides')
         .select('*')
@@ -31,6 +38,7 @@ function useCarouselSlides(pageId: string, enabled: boolean) {
     } catch (e) {
       console.error('Carousel slides error:', e);
     } finally {
+      setHasFetched(true);
       setLoading(false);
     }
   }, [pageId, enabled]);
@@ -39,7 +47,7 @@ function useCarouselSlides(pageId: string, enabled: boolean) {
     fetchSlides();
   }, [fetchSlides]);
 
-  return { slides, loading };
+  return { slides, loading: enabled && (!hasFetched || loading) };
 }
 
 /* ─── Single Hero View ─── */
@@ -178,13 +186,20 @@ function CarouselHeroView({
   interval,
   animSpeed,
 }: {
-  slides: PageHeroType[];
+  slides: HeroSlide[];
+  baseHero: PageHeroType;
   primaryColor: string;
   txtColor: string;
+  overlayColor: string;
+  baseOpacity: number;
   interval: number;
   animSpeed: number;
 }) {
   const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    setCurrent(0);
+  }, [slides.length]);
 
   useEffect(() => {
     if (slides.length <= 1) return;
@@ -201,9 +216,29 @@ function CarouselHeroView({
   const slide = slides[current];
   if (!slide) return null;
 
+  const slideOpacity = slide.overlay_opacity ?? baseOpacity;
+  const overlayStyle = {
+    background: `linear-gradient(135deg, ${overlayColor}${Math.round(slideOpacity * 255).toString(16).padStart(2, '0')} 0%, ${overlayColor}${Math.round((slideOpacity * 0.7) * 255).toString(16).padStart(2, '0')} 50%, ${overlayColor}${Math.round((slideOpacity * 0.4) * 255).toString(16).padStart(2, '0')} 100%)`,
+  };
+  const slideHero = {
+    ...baseHero,
+    title: slide.title,
+    subtitle: slide.subtitle,
+    line_two: slide.line_two,
+    description: slide.description,
+    background_image_url: slide.background_image_url,
+    overlay_opacity: slide.overlay_opacity,
+    text_alignment: slide.text_alignment || baseHero.text_alignment,
+    button_text: slide.button_text,
+    button_link: slide.button_link,
+    button2_text: slide.button2_text,
+    button2_link: slide.button2_link,
+    show_button: true,
+  } as PageHeroType;
+
   return (
     <>
-      <AnimatePresence initial={false}>
+      <AnimatePresence mode="wait">
         <motion.div
           key={slide.id}
           initial={{ opacity: 0 }}
@@ -214,6 +249,12 @@ function CarouselHeroView({
           style={{ backgroundImage: slide.background_image_url ? `url(${slide.background_image_url})` : undefined }}
         />
       </AnimatePresence>
+      <div className="absolute inset-0" style={overlayStyle} />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#030810] via-transparent to-transparent" />
+
+      <div className="absolute top-1/4 left-10 w-32 h-32 border border-[#c49028]/10 rounded-full opacity-30 animate-pulse" />
+      <div className="absolute bottom-1/3 right-16 w-24 h-24 border border-[#c49028]/10 rounded-full opacity-20 animate-pulse" style={{ animationDelay: '1s' }} />
+      <div className="absolute top-1/3 right-1/4 w-2 h-2 bg-[#c49028]/40 rounded-full animate-ping" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
         <AnimatePresence mode="wait">
@@ -223,68 +264,9 @@ function CarouselHeroView({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.6 }}
-            className="text-center max-w-4xl mx-auto"
+            className="w-full"
           >
-            {slide.subtitle && (
-              <span
-                className="inline-block px-4 py-1.5 rounded-full text-sm font-medium tracking-wider uppercase mb-4 border"
-                style={{ color: primaryColor, borderColor: `${primaryColor}40`, backgroundColor: `${primaryColor}15` }}
-              >
-                {slide.subtitle}
-              </span>
-            )}
-
-            {slide.title && (
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-bold leading-tight mb-6" style={{ color: txtColor }}>
-                {(() => {
-                  const lines = slide.line_two
-                    ? [slide.title, slide.line_two]
-                    : slide.title.split(/\n|\\n/);
-                  return lines.length > 1 ? (
-                    <>
-                      <span style={{ color: primaryColor }}>{lines[0]}</span>
-                      {lines.slice(1).map((line, i) => <span key={i}><br />{line}</span>)}
-                    </>
-                  ) : (
-                    <>
-                      <span style={{ color: primaryColor }}>{slide.title.split(' ').slice(0, Math.ceil(slide.title.split(' ').length / 2)).join(' ')}</span>
-                      {' '}{slide.title.split(' ').slice(Math.ceil(slide.title.split(' ').length / 2)).join(' ')}
-                    </>
-                  );
-                })()}
-              </h1>
-            )}
-
-            {slide.description && (
-              <p className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed mb-8" style={{ color: `${txtColor}cc` }}>
-                {slide.description}
-              </p>
-            )}
-
-            {(slide.button_text && slide.button_link) || (slide.button2_text && slide.button2_link) ? (
-              <div className="flex flex-wrap gap-4 items-center justify-center mt-2">
-                {slide.button_text && slide.button_link && (
-                  <Link
-                    to={slide.button_link}
-                    className="inline-flex items-center gap-2 px-8 py-4 font-bold text-sm rounded-xl transition-all hover:scale-105 hover:shadow-lg group"
-                    style={{ backgroundColor: primaryColor, color: '#030810' }}
-                  >
-                    {slide.button_text}
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                )}
-                {slide.button2_text && slide.button2_link && (
-                  <Link
-                    to={slide.button2_link}
-                    className="inline-flex items-center gap-2 px-8 py-4 font-bold text-sm rounded-xl border-2 transition-all hover:scale-105 group"
-                    style={{ borderColor: primaryColor, color: primaryColor }}
-                  >
-                    {slide.button2_text}
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                )}
-              </div>
-            ) : null}
+            <SingleHeroView hero={slideHero} primaryColor={primaryColor} txtColor={txtColor} />
           </motion.div>
         </AnimatePresence>
 
@@ -329,7 +311,7 @@ export default function PageHero({
 }: PageHeroProps) {
   const { hero, loading } = usePageHero(pageId);
   const { settings } = useSiteSettings();
-  const { slides: carouselSlides } = useCarouselSlides(pageId, hero?.is_carousel ?? false);
+  const { slides: carouselSlides, loading: carouselLoading } = useCarouselSlides(pageId, hero?.is_carousel ?? false);
 
   const primaryColor = settings?.primary_color || '#c49028';
 
@@ -360,24 +342,29 @@ export default function PageHero({
     full: 'min-h-[80vh] md:min-h-[90vh]',
   }[height] || 'min-h-[50vh] md:min-h-[65vh]';
 
-  const overlayStyle = {
-    background: `linear-gradient(135deg, ${overlayColor}${Math.round(opacity * 255).toString(16).padStart(2, '0')} 0%, ${overlayColor}${Math.round((opacity * 0.5) * 255).toString(16).padStart(2, '0')} 100%)`,
-  };
-
   // Carousel mode
   if (isCarousel && carouselSlides.length > 0) {
     return (
       <section className={`relative ${heightClass} flex flex-col justify-center overflow-hidden`}>
-        <div className="absolute inset-0 z-[1]" style={overlayStyle} />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#030810] via-transparent to-transparent z-[1]" />
         <CarouselHeroView
           slides={carouselSlides}
+          baseHero={hero}
           primaryColor={primaryColor}
           txtColor={txtColor}
+          overlayColor={overlayColor}
+          baseOpacity={opacity}
           interval={slideInterval}
           animSpeed={animSpeed}
         />
         <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#030810] to-transparent z-[1]" />
+      </section>
+    );
+  }
+
+  if (isCarousel && carouselLoading) {
+    return (
+      <section className={`relative ${heightClass} flex items-center justify-center overflow-hidden bg-[#030810]`}>
+        <div className="w-8 h-8 border-2 border-[#c49028] border-t-transparent rounded-full animate-spin" />
       </section>
     );
   }
