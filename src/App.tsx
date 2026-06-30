@@ -1,3 +1,4 @@
+import { lazy, Suspense, type ComponentType } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 
@@ -5,29 +6,29 @@ import { AuthProvider, useAuth } from './hooks/useAuth';
 import Layout from './components/Layout';
 
 // Public Pages
-import HomePage from './pages/HomePage';
-import AboutPage from './pages/AboutPage';
-import ProjectsPage from './pages/ProjectsPage';
-import ServicesPage from './pages/ServicesPage';
-import GalleryPage from './pages/GalleryPage';
-import ContactPage from './pages/ContactPage';
-import CareersPage from './pages/CareersPage';
-import BlogPage from './pages/BlogPage';
-import ClientsPage from './pages/ClientsPage';
-import CertificationsPage from './pages/CertificationsPage';
-import OurTeamPage from './pages/OurTeamPage';
-import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
-import TermsOfServicePage from './pages/TermsOfServicePage';
+const HomePage = lazy(() => import('./pages/HomePage'));
+const AboutPage = lazy(() => import('./pages/AboutPage'));
+const ProjectsPage = lazy(() => import('./pages/ProjectsPage'));
+const ServicesPage = lazy(() => import('./pages/ServicesPage'));
+const GalleryPage = lazy(() => import('./pages/GalleryPage'));
+const ContactPage = lazy(() => import('./pages/ContactPage'));
+const CareersPage = lazy(() => import('./pages/CareersPage'));
+const BlogPage = lazy(() => import('./pages/BlogPage'));
+const ClientsPage = lazy(() => import('./pages/ClientsPage'));
+const CertificationsPage = lazy(() => import('./pages/CertificationsPage'));
+const OurTeamPage = lazy(() => import('./pages/OurTeamPage'));
+const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage'));
+const TermsOfServicePage = lazy(() => import('./pages/TermsOfServicePage'));
 
 // Admin Pages
-import AdminLogin from './pages/admin/AdminLogin';
-import AdminLayout from './pages/admin/AdminLayout';
-import Dashboard from './pages/admin/Dashboard';
-import CRUDPage from './pages/admin/CRUDPage';
-import SettingsPage from './pages/admin/SettingsPage';
-import ContentEditorPage from './pages/admin/ContentEditorPage';
-import HeroManagerPage from './pages/admin/HeroManagerPage';
-import AdminUsersPage from './pages/admin/AdminUsersPage';
+const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
+const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
+const Dashboard = lazy(() => import('./pages/admin/Dashboard'));
+const CRUDPage = lazy(() => import('./pages/admin/CRUDPage'));
+const SettingsPage = lazy(() => import('./pages/admin/SettingsPage'));
+const ContentEditorPage = lazy(() => import('./pages/admin/ContentEditorPage'));
+const HeroManagerPage = lazy(() => import('./pages/admin/HeroManagerPage'));
+const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'));
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -291,54 +292,66 @@ const inquiriesDisplayFields = [
   { key: 'priority', label: 'Priority' },
 ];
 
+function lazyElement(Component: ComponentType) {
+  return (
+    <Suspense fallback={null}>
+      <Component />
+    </Suspense>
+  );
+}
+
 function AppRoutes() {
   return (
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<Layout />}>
-        <Route index element={<HomePage />} />
-        <Route path="about" element={<AboutPage />} />
-        <Route path="our-team" element={<OurTeamPage />} />
-        <Route path="projects" element={<ProjectsPage />} />
-        <Route path="projects/:slug" element={<ProjectsPage />} />
-        <Route path="services" element={<ServicesPage />} />
-        <Route path="gallery" element={<GalleryPage />} />
-        <Route path="contact" element={<ContactPage />} />
-        <Route path="careers" element={<CareersPage />} />
-        <Route path="blog" element={<BlogPage />} />
-        <Route path="blog/:slug" element={<BlogPage />} />
-        <Route path="clients" element={<ClientsPage />} />
-        <Route path="certifications" element={<CertificationsPage />} />
-        <Route path="certifications/:id" element={<CertificationsPage />} />
-        <Route path="privacy" element={<PrivacyPolicyPage />} />
-        <Route path="terms" element={<TermsOfServicePage />} />
+        <Route index element={lazyElement(HomePage)} />
+        <Route path="about" element={lazyElement(AboutPage)} />
+        <Route path="our-team" element={lazyElement(OurTeamPage)} />
+        <Route path="projects" element={lazyElement(ProjectsPage)} />
+        <Route path="projects/:slug" element={lazyElement(ProjectsPage)} />
+        <Route path="services" element={lazyElement(ServicesPage)} />
+        <Route path="gallery" element={lazyElement(GalleryPage)} />
+        <Route path="contact" element={lazyElement(ContactPage)} />
+        <Route path="careers" element={lazyElement(CareersPage)} />
+        <Route path="blog" element={lazyElement(BlogPage)} />
+        <Route path="blog/:slug" element={lazyElement(BlogPage)} />
+        <Route path="clients" element={lazyElement(ClientsPage)} />
+        <Route path="certifications" element={lazyElement(CertificationsPage)} />
+        <Route path="certifications/:id" element={lazyElement(CertificationsPage)} />
+        <Route path="privacy" element={lazyElement(PrivacyPolicyPage)} />
+        <Route path="terms" element={lazyElement(TermsOfServicePage)} />
       </Route>
 
       {/* Admin Routes */}
-      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route path="/admin/login" element={lazyElement(AdminLogin)} />
       <Route
         path="/admin"
         element={
           <ProtectedRoute>
-            <AdminLayout />
+            <Suspense fallback={null}>
+              <AdminLayout />
+            </Suspense>
           </ProtectedRoute>
         }
       >
-        <Route index element={<Dashboard />} />
-        <Route path="settings" element={<SettingsPage />} />
-        <Route path="content" element={<ContentEditorPage />} />
-        <Route path="heroes" element={<HeroManagerPage />} />
-        <Route path="admins" element={<AdminUsersPage />} />
+        <Route index element={lazyElement(Dashboard)} />
+        <Route path="settings" element={lazyElement(SettingsPage)} />
+        <Route path="content" element={lazyElement(ContentEditorPage)} />
+        <Route path="heroes" element={lazyElement(HeroManagerPage)} />
+        <Route path="admins" element={lazyElement(AdminUsersPage)} />
         <Route
           path="inquiries"
           element={
-            <CRUDPage
-              title="Inquiries"
-              tableName="contact_inquiries"
-              columns={inquiriesColumns}
-              displayFields={inquiriesDisplayFields}
-              defaultValues={{ status: 'new', priority: 'normal' }}
-            />
+            <Suspense fallback={null}>
+              <CRUDPage
+                title="Inquiries"
+                tableName="contact_inquiries"
+                columns={inquiriesColumns}
+                displayFields={inquiriesDisplayFields}
+                defaultValues={{ status: 'new', priority: 'normal' }}
+              />
+            </Suspense>
           }
         />
         {adminPages.map((page) => (
@@ -346,13 +359,15 @@ function AppRoutes() {
             key={page.path}
             path={page.path}
             element={
-              <CRUDPage
-                title={page.title}
-                tableName={page.tableName}
-                columns={page.columns}
-                displayFields={page.displayFields}
-                defaultValues={page.defaultValues}
-              />
+              <Suspense fallback={null}>
+                <CRUDPage
+                  title={page.title}
+                  tableName={page.tableName}
+                  columns={page.columns}
+                  displayFields={page.displayFields}
+                  defaultValues={page.defaultValues}
+                />
+              </Suspense>
             }
           />
         ))}
