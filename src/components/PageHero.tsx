@@ -181,8 +181,11 @@ function SingleHeroView({
 /* ─── Carousel View ─── */
 function CarouselHeroView({
   slides,
+  baseHero,
   primaryColor,
   txtColor,
+  overlayColor,
+  baseOpacity,
   interval,
   animSpeed,
 }: {
