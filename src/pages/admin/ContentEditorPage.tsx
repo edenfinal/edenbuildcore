@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Save, Search, ChevronDown, ChevronRight, CheckCircle, AlertCircle, FileText, Type, AlignLeft, Palette, Bold, Italic, Underline, Strikethrough, AlignCenter, AlignRight, List, ListOrdered, Link as LinkIcon, Image, Undo, Redo, Code, Eye, EyeOff, Trash2, Copy, Sparkles, LayoutGrid as Layout, Heading, Hash, Quote, Minus, Table, Columns2 as Columns, Maximize2, Minimize2, RefreshCw, Check, X, Pencil, ChevronLeft, ChevronRight as ChevronRightIcon, Type as TypeIcon, Baseline, CaseSensitive, Paintbrush, Wand2 } from 'lucide-react';
 import { useAllPageContent } from '../../hooks/useData';
@@ -76,6 +76,15 @@ const SECTION_LABELS: Record<string, string> = {
   private: 'Private Clients',
 };
 
+const GLOBALLY_HIDDEN_SECTIONS = new Set([
+  'hero',
+  'vision_mission',
+]);
+
+const PAGE_HIDDEN_SECTIONS: Record<string, Set<string>> = {
+  about: new Set(['founder']),
+};
+
 const FONT_OPTIONS = [
   { label: 'Inter', value: "'Inter', sans-serif" },
   { label: 'Playfair Display', value: "'Playfair Display', serif" },
@@ -137,6 +146,12 @@ function groupByPage(items: PageContent[]): Record<string, Record<string, PageCo
     result[item.page_id][item.section_key].push(item);
   });
   return result;
+}
+
+function isContentEditorVisible(item: PageContent): boolean {
+  if (GLOBALLY_HIDDEN_SECTIONS.has(item.section_key)) return false;
+  if (PAGE_HIDDEN_SECTIONS[item.page_id]?.has(item.section_key)) return false;
+  return true;
 }
 
 /* ─── RichTextToolbar ─── */
@@ -632,16 +647,21 @@ export default function ContentEditorPage() {
   const [viewMode, setViewMode] = useState<Record<string, 'edit' | 'preview'>>({});
 
   const contentRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const visibleContent = useMemo(() => content.filter(isContentEditorVisible), [content]);
 
   useEffect(() => {
     const vals: Record<string, string> = {};
-    content.forEach((item) => {
+    visibleContent.forEach((item) => {
       vals[item.id] = item.content_value;
     });
     setEditValues(vals);
-  }, [content]);
+    setSelectedIds((prev) => {
+      const visibleIds = new Set(visibleContent.map((item) => item.id));
+      return new Set(Array.from(prev).filter((id) => visibleIds.has(id)));
+    });
+  }, [visibleContent]);
 
-  const grouped = groupByPage(content);
+  const grouped = groupByPage(visibleContent);
 
   const togglePage = (page: string) => {
     setExpandedPages((prev) => {
@@ -703,7 +723,7 @@ export default function ContentEditorPage() {
   const handleBulkReset = () => {
     const next = { ...editValues };
     selectedIds.forEach((id) => {
-      const item = content.find((c) => c.id === id);
+      const item = visibleContent.find((c) => c.id === id);
       if (item) next[id] = item.content_value;
     });
     setEditValues(next);
@@ -797,7 +817,7 @@ export default function ContentEditorPage() {
   };
 
   const getChangedCount = () => {
-    return content.filter((item) => editValues[item.id] !== undefined && editValues[item.id] !== item.content_value).length;
+    return visibleContent.filter((item) => editValues[item.id] !== undefined && editValues[item.id] !== item.content_value).length;
   };
 
   if (loading) {
@@ -869,10 +889,10 @@ export default function ContentEditorPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <StatCard label="Total Fields" value={content.length} icon={Hash} />
+        <StatCard label="Total Fields" value={visibleContent.length} icon={Hash} />
         <StatCard label="Pages" value={Object.keys(grouped).length} icon={Layout} />
-        <StatCard label="Sections" value={new Set(content.map((c) => c.section_key)).size} icon={Columns} />
-        <StatCard label="Long Text" value={content.filter((c) => c.content_type === 'textarea').length} icon={AlignLeft} />
+        <StatCard label="Sections" value={new Set(visibleContent.map((c) => c.section_key)).size} icon={Columns} />
+        <StatCard label="Long Text" value={visibleContent.filter((c) => c.content_type === 'textarea').length} icon={AlignLeft} />
         <StatCard label="Unsaved" value={getChangedCount()} icon={Sparkles} color={getChangedCount() > 0 ? 'text-[#c49028]' : 'text-gray-400'} />
       </div>
 
@@ -1150,7 +1170,7 @@ export default function ContentEditorPage() {
       </div>
 
       {/* Empty State */}
-      {content.length === 0 && (
+      {visibleContent.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16">
           <FileText className="w-12 h-12 text-gray-600 mb-3" />
           <p className="text-gray-400 font-medium">No content found</p>
