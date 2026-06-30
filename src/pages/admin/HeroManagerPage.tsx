@@ -17,6 +17,7 @@ const PAGE_LABELS: Record<string, string> = {
   blog: 'Blog Page',
   clients: 'Clients Page',
   certifications: 'Certifications Page',
+  'our-team': 'Our Team Page',
 };
 
 const HEIGHT_OPTIONS = [

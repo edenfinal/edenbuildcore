@@ -44,58 +44,7 @@ export default function OurTeamPage() {
 
   return (
     <>
-      {/* Hero */}
-      <section className="relative min-h-[420px] flex items-end bg-[#030810] overflow-hidden pt-20">
-        {/* Background pattern */}
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0c1a2e] via-[#030810] to-[#030810]" />
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-[#c49028]/5 blur-[120px]" />
-          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-[#c49028]/3 blur-[100px]" />
-          {/* Grid lines */}
-          <div className="absolute inset-0 opacity-5"
-            style={{ backgroundImage: 'linear-gradient(#c49028 1px, transparent 1px), linear-gradient(90deg, #c49028 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-6 pb-16 pt-8 w-full">
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="max-w-3xl">
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#c49028]/10 border border-[#c49028]/20 text-[#c49028] rounded-full text-sm font-medium tracking-wider uppercase mb-6">
-              <Users className="w-4 h-4" />
-              {c('hero', 'badge', 'Our People')}
-            </span>
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-heading font-bold text-white mb-6 leading-tight">
-              <span className="text-[#c49028]">{c('hero', 'title_line1', 'Meet the')}</span>
-              <br />
-              {c('hero', 'title_line2', 'Team Behind Excellence')}
-            </h1>
-            <p className="text-gray-400 text-lg md:text-xl max-w-2xl leading-relaxed">
-              {c('hero', 'description', 'Dedicated professionals who bring skill, passion, and commitment to every project we undertake.')}
-            </p>
-          </motion.div>
-
-          {/* Stats strip */}
-          {activeTeam.length > 0 && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-              className="mt-12 flex flex-wrap gap-8">
-              <div>
-                <div className="text-4xl font-heading font-bold text-white">{activeTeam.length}</div>
-                <div className="text-gray-500 text-sm mt-1">Team Members</div>
-              </div>
-              {departments.length > 0 && (
-                <div>
-                  <div className="text-4xl font-heading font-bold text-white">{departments.length}</div>
-                  <div className="text-gray-500 text-sm mt-1">Departments</div>
-                </div>
-              )}
-              {featured.length > 0 && (
-                <div>
-                  <div className="text-4xl font-heading font-bold text-[#c49028]">{activeTeam.filter(m => m.is_featured).length}</div>
-                  <div className="text-gray-500 text-sm mt-1">Leadership</div>
-                </div>
-              )}
-            </motion.div>
-          )}
-        </div>
-      </section>
+      <PageHero pageId="our-team" />
 
       {/* Department Filter */}
       {hasDepts && (
