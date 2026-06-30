@@ -78,8 +78,9 @@ function SectionTitle({ subtitle, title, description, light = false }: { subtitl
 function StatsSection({ stats, c }: { stats: Statistic[]; c: (section: string, key: string, fallback: string) => string }) {
   const { counters } = useAutoCounters();
 
-  // Stat 1 = Years Experience (ALWAYS auto-calculated from company_start_year in site_settings)
-  // Stats 2/3/4 = from statistics table (admin-editable via Statistics CRUD page)
+  // Stats are admin-editable via the Statistics CRUD page.
+  // Years can still fall back to company_start_year if the statistics row is missing.
+  const expStat = stats.find(s => s.stat_key === 'years_experience');
   const projStat = stats.find(s => s.stat_key === 'projects_completed');
   const clientStat = stats.find(s => s.stat_key === 'happy_clients');
   const teamStat = stats.find(s => s.stat_key === 'team_members');
@@ -87,10 +88,10 @@ function StatsSection({ stats, c }: { stats: Statistic[]; c: (section: string, k
   const statItems = [
     {
       key: 'stat_1',
-      value: String(counters.experience || 0),
-      prefix: '',
-      suffix: '+',
-      desc: c('stats', 'stat_1_description', 'Years of Excellence'),
+      value: expStat?.stat_value || String(counters.experience || 0),
+      prefix: expStat?.stat_prefix || '',
+      suffix: expStat?.stat_suffix || '+',
+      desc: expStat?.description || c('stats', 'stat_1_description', 'Years of Excellence'),
     },
     {
       key: 'stat_2',
