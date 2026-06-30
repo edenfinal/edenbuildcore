@@ -249,21 +249,24 @@ function HeroSlidesManager() {
   const [form, setForm] = useState<Partial<HeroSlide>>({});
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [saveError, setSlideSaveError] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
   const allSlides = [...slides].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
 
   const openNew = () => {
     setEditingSlide(null);
-    setForm({ is_active: true, order_index: allSlides.length, overlay_opacity: 50, text_alignment: 'center' });
+    setSlideSaveError('');
+    setForm({ is_active: true, order_index: allSlides.length, overlay_opacity: 0.5, text_alignment: 'center' });
     setShowForm(true);
   };
   const openEdit = (s: HeroSlide) => {
     setEditingSlide(s);
-    setForm({ ...s });
+    setSlideSaveError('');
+    setForm({ ...s, overlay_opacity: s.overlay_opacity > 1 ? s.overlay_opacity / 100 : s.overlay_opacity });
     setShowForm(true);
   };
-  const closeForm = () => { setShowForm(false); setEditingSlide(null); setForm({}); };
+  const closeForm = () => { setShowForm(false); setEditingSlide(null); setForm({}); setSlideSaveError(''); };
 
   const handleImageUpload = async (file: File) => {
     setUploading(true);
@@ -273,15 +276,45 @@ function HeroSlidesManager() {
   };
 
   const handleSave = async () => {
-    setSaving(true);
-    if (editingSlide) {
-      await supabase.from('hero_slides').update({ ...form, updated_at: new Date().toISOString() }).eq('id', editingSlide.id);
-    } else {
-      await supabase.from('hero_slides').insert(form);
+    if (!form.title?.trim()) {
+      setSlideSaveError('Title is required.');
+      return;
     }
-    await refetch();
-    closeForm();
-    setSaving(false);
+
+    setSaving(true);
+    setSlideSaveError('');
+
+    const payload = {
+      title: form.title.trim(),
+      subtitle: form.subtitle || null,
+      description: form.description || null,
+      background_image_url: form.background_image_url || null,
+      button_text: form.button_text || null,
+      button_link: form.button_link || null,
+      button2_text: form.button2_text || null,
+      button2_link: form.button2_link || null,
+      line_two: form.line_two || null,
+      overlay_opacity: Math.min(0.9, Math.max(0, Number(form.overlay_opacity ?? 0.5))),
+      text_alignment: form.text_alignment || 'center',
+      order_index: Number(form.order_index ?? allSlides.length),
+      is_active: form.is_active ?? true,
+      updated_at: new Date().toISOString(),
+    };
+
+    try {
+      const { error } = editingSlide
+        ? await supabase.from('hero_slides').update(payload).eq('id', editingSlide.id)
+        : await supabase.from('hero_slides').insert(payload);
+
+      if (error) throw error;
+      await refetch();
+      closeForm();
+    } catch (e: any) {
+      console.error('Hero slide save error:', e);
+      setSlideSaveError(e?.message || 'Failed to save slide. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -417,9 +450,9 @@ function HeroSlidesManager() {
 
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">Overlay Opacity: {form.overlay_opacity ?? 50}%</label>
-                    <input type="range" min="0" max="90" step="5" value={form.overlay_opacity ?? 50}
-                      onChange={e => setForm(f => ({...f, overlay_opacity: parseInt(e.target.value)}))} className="w-full accent-[#c49028]" />
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Overlay Opacity: {Math.round((form.overlay_opacity ?? 0.5) * 100)}%</label>
+                    <input type="range" min="0" max="0.9" step="0.05" value={form.overlay_opacity ?? 0.5}
+                      onChange={e => setForm(f => ({...f, overlay_opacity: parseFloat(e.target.value)}))} className="w-full accent-[#c49028]" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-400 mb-2">Display Order</label>
@@ -436,9 +469,15 @@ function HeroSlidesManager() {
                 </label>
               </div>
 
-              <div className="sticky bottom-0 bg-[#0c1a2e] border-t border-[#c49028]/10 px-6 py-4 flex gap-3 justify-end">
+              <div className="sticky bottom-0 bg-[#0c1a2e] border-t border-[#c49028]/10 px-6 py-4 flex flex-wrap gap-3 justify-end">
+                {saveError && (
+                  <div className="mr-auto flex items-center gap-2 text-red-400 text-sm">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    <span>{saveError}</span>
+                  </div>
+                )}
                 <button onClick={closeForm} className="px-5 py-2 border border-[#c49028]/20 text-gray-400 rounded-xl hover:text-white transition-all text-sm">Cancel</button>
-                <button onClick={handleSave} disabled={saving} className="px-6 py-2 bg-gradient-to-r from-[#a67820] to-[#c49028] text-[#030810] font-bold rounded-xl hover:shadow-lg transition-all text-sm disabled:opacity-50 flex items-center gap-2">
+                <button onClick={handleSave} disabled={saving || uploading} className="px-6 py-2 bg-gradient-to-r from-[#a67820] to-[#c49028] text-[#030810] font-bold rounded-xl hover:shadow-lg transition-all text-sm disabled:opacity-50 flex items-center gap-2">
                   {saving ? <><div className="w-4 h-4 border-2 border-[#030810] border-t-transparent rounded-full animate-spin" /> Saving...</> : <><Save className="w-4 h-4" /> Save Slide</>}
                 </button>
               </div>
