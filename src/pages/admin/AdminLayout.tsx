@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Building2, Layers, Briefcase, Image, FileText, Users,
-  Award, Settings, LogOut, Menu, X, ChevronRight, MessageSquare, BarChart3,
+  Award, Settings, LogOut, Menu, X, ChevronRight, MessageSquare,
   Newspaper, Mail, Shield, Home, ExternalLink, Bell, Search, Moon, Sun,
   Activity, HardHat, UsersRound, FolderKanban, Megaphone, Check, CheckCheck,
   Trash2, ArrowRight
@@ -26,7 +26,6 @@ const menuSections = [
     title: 'Overview',
     items: [
       { name: 'Dashboard', path: '/admin', icon: LayoutDashboard, badge: null },
-      { name: 'Statistics', path: '/admin/statistics', icon: BarChart3, badge: null },
       { name: 'Inquiries', path: '/admin/inquiries', icon: Mail, badge: 'new' },
     ]
   },

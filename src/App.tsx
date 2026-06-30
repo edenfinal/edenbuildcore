@@ -291,27 +291,6 @@ const adminPages = [
     ],
     defaultValues: { is_active: true, is_featured: false, openings: 1 },
   },
-  {
-    path: 'statistics',
-    title: 'Statistics',
-    tableName: 'statistics',
-    columns: [
-      { key: 'stat_key', label: 'Key', type: 'text', required: true },
-      { key: 'stat_value', label: 'Value', type: 'text' },
-      { key: 'stat_prefix', label: 'Prefix', type: 'text' },
-      { key: 'stat_suffix', label: 'Suffix', type: 'text' },
-      { key: 'description', label: 'Description', type: 'textarea' },
-      { key: 'is_active', label: 'Active', type: 'boolean' },
-      { key: 'order_index', label: 'Order', type: 'number' },
-    ],
-    displayFields: [
-      { key: 'stat_key', label: 'Key' },
-      { key: 'stat_value', label: 'Value' },
-      { key: 'description', label: 'Description' },
-      { key: 'is_active', label: 'Active' },
-    ],
-    defaultValues: { is_active: true, order_index: 0 },
-  },
 ];
 
 // Inquiries Page
