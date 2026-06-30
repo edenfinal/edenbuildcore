@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { usePageHero } from '../hooks/useData';
 import { useSiteSettings } from '../hooks/useData';
@@ -213,8 +213,6 @@ function CarouselHeroView({
   }, [slides.length, interval]);
 
   const goTo = (idx: number) => setCurrent(idx);
-  const prev = () => setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
-  const next = () => setCurrent((prev) => (prev + 1) % slides.length);
 
   const slide = slides[current];
   if (!slide) return null;
@@ -266,7 +264,7 @@ function CarouselHeroView({
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: animSpeed / 1000 }}
             className="w-full"
           >
             <SingleHeroView hero={slideHero} primaryColor={primaryColor} txtColor={txtColor} />
@@ -274,29 +272,13 @@ function CarouselHeroView({
         </AnimatePresence>
 
         {slides.length > 1 && (
-          <>
-            <button
-              onClick={prev}
-              className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-[#030810]/50 border border-[#c49028]/20 flex items-center justify-center text-white hover:bg-[#c49028]/20 transition-all z-20"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <button
-              onClick={next}
-              className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-[#030810]/50 border border-[#c49028]/20 flex items-center justify-center text-white hover:bg-[#c49028]/20 transition-all z-20"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </>
-        )}
-
-        {slides.length > 1 && (
-          <div className="flex justify-center gap-2 mt-8">
+          <div className="absolute bottom-10 left-1/2 z-20 flex -translate-x-1/2 items-center justify-center gap-3">
             {slides.map((_, i) => (
               <button
                 key={i}
                 onClick={() => goTo(i)}
-                className={`h-2.5 rounded-full transition-all ${i === current ? 'bg-[#c49028] w-8' : 'w-2.5 bg-white/30 hover:bg-white/50'}`}
+                aria-label={`Go to hero slide ${i + 1}`}
+                className={`h-2.5 rounded-full transition-all duration-300 ${i === current ? 'bg-[#c49028] w-9' : 'w-2.5 bg-white/40 hover:bg-white/70'}`}
               />
             ))}
           </div>
@@ -335,8 +317,8 @@ export default function PageHero({
   const txtColor = hero.text_color || '#ffffff';
   const overlayColor = hero.overlay_color || '#030810';
   const isCarousel = hero.is_carousel ?? false;
-  const slideInterval = hero.slide_interval ?? 6000;
-  const animSpeed = hero.animation_speed ?? 1000;
+  const slideInterval = Math.max(1000, hero.slide_interval ?? 6000);
+  const animSpeed = Math.max(200, hero.animation_speed ?? 1000);
 
   const heightClass = {
     small: 'min-h-[30vh] md:min-h-[35vh]',
