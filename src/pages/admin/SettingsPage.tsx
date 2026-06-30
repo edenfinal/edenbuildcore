@@ -572,9 +572,13 @@ export default function SettingsPage() {
 
     const success = await updateSettings(payload);
     if (success) {
-      for (const [index, stat] of COUNTER_STATS.entries()) {
-        const existing = counterStats[stat.key];
-        const updates: Record<string, any> = {
+      const counterRows = COUNTER_STATS.map((stat, index) => {
+        const existing = counterStats[stat.key] || {};
+        return {
+          stat_key: stat.key,
+          stat_value: stat.auto
+            ? String(existing.stat_value || '0')
+            : String(formData[stat.valueField] || '0'),
           description: formData[stat.labelField] || existing?.description || '',
           stat_suffix: existing?.stat_suffix || '+',
           stat_prefix: existing?.stat_prefix || '',
@@ -582,24 +586,23 @@ export default function SettingsPage() {
           order_index: existing?.order_index ?? index + 1,
           updated_at: new Date().toISOString(),
         };
+      });
 
-        if (!stat.auto) {
-          updates.stat_value = String(formData[stat.valueField] || '0');
-        }
+      const { error: statError } = await supabase
+        .from('statistics')
+        .upsert(counterRows, { onConflict: 'stat_key' });
 
-        const query = supabase.from('statistics');
-        const { error: statError } = existing?.id
-          ? await query.update(updates).eq('id', existing.id)
-          : await query.insert({ ...updates, stat_key: stat.key, stat_value: stat.auto ? '0' : String(formData[stat.valueField] || '0') });
-
-        if (statError) {
-          console.error('Counter stat save error:', statError);
-          setError('Failed to save counter settings. Please try again.');
-          setSaving(false);
-          return;
-        }
+      if (statError) {
+        console.error('Counter stat save error:', statError);
+        setError('Failed to save counter settings. Please try again.');
+        setSaving(false);
+        return;
       }
-      setCounterStats(await fetchCounterStats());
+
+      setCounterStats(counterRows.reduce((acc: Record<string, any>, row) => {
+        acc[row.stat_key] = row;
+        return acc;
+      }, {}));
     }
     setSaving(false);
 
