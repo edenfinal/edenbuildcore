@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { usePageHero } from '../hooks/useData';
-import { useSiteSettings } from '../hooks/useData';
+import { useSettings } from '../contexts/SettingsContext';
 import { supabase } from '../lib/supabase';
 import type { HeroSlide, PageHero as PageHeroType } from '../lib/supabase';
 
@@ -296,7 +296,7 @@ export default function PageHero({
   breadcrumbItems = [],
 }: PageHeroProps) {
   const { hero, loading } = usePageHero(pageId);
-  const { settings } = useSiteSettings();
+  const { settings } = useSettings();
   const { slides: carouselSlides, loading: carouselLoading } = useCarouselSlides(pageId, hero?.is_carousel ?? false);
 
   const primaryColor = settings?.primary_color || '#c49028';

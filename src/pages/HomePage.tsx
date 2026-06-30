@@ -6,8 +6,9 @@ import {
   ArrowRight, Star, Quote, Shield, Target, Eye, Globe, MapPin,
   Phone, Mail, Clock, CheckCircle, TrendingUp
 } from 'lucide-react';
-import { useSiteSettings, useServices, useProjects, useClients, useTestimonials, useCertifications, usePageContent, useAutoCounters } from '../hooks/useData';
+import { useServices, useProjects, useClients, useTestimonials, useCertifications, usePageContent, useAutoCounters } from '../hooks/useData';
 import PageHero from '../components/PageHero';
+import { useSettings } from '../contexts/SettingsContext';
 import type { Project, Client, Testimonial, Service, Certification } from '../lib/supabase';
 
 // Animated Counter Component
@@ -154,8 +155,9 @@ function StatsSection() {
 
 // About Preview Section
 function AboutPreview({ c }: { c: (section: string, key: string, fallback: string) => string }) {
-  const { settings } = useSiteSettings();
+  const { settings, loading: settingsLoading } = useSettings();
   const { counters } = useAutoCounters();
+  const aboutImageUrl = settingsLoading ? '' : settings?.secondary_logo_url;
 
   return (
     <section className="relative py-16 sm:py-20 md:py-24 bg-navy-950 overflow-hidden">
@@ -174,9 +176,9 @@ function AboutPreview({ c }: { c: (section: string, key: string, fallback: strin
             viewport={{ once: true }}
             className="relative order-1"
           >
-            {settings?.secondary_logo_url ? (
+            {aboutImageUrl ? (
               <div className="relative aspect-[4/3] rounded-xl sm:rounded-2xl overflow-hidden">
-                <img src={settings.secondary_logo_url} alt="Company" className="w-full h-full object-cover" />
+                <img src={aboutImageUrl} alt="Company" className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-transparent to-transparent" />
               </div>
             ) : (
@@ -220,7 +222,7 @@ function AboutPreview({ c }: { c: (section: string, key: string, fallback: strin
                 c('about_preview', 'feature_2', 'Safety First'),
                 c('about_preview', 'feature_3', 'On-Time Delivery'),
                 c('about_preview', 'feature_4', 'Expert Team')
-              ].map((feature) => (
+              ].filter(Boolean).map((feature) => (
                 <div key={feature} className="flex items-center gap-1.5 sm:gap-2 text-gray-300 text-sm sm:text-base">
                   <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-gold-500 flex-shrink-0" />
                   <span>{feature}</span>
@@ -384,12 +386,8 @@ function FeaturedProjects({ projects, c }: { projects: Project[]; c: (section: s
 
 // Clients Section
 function ClientsSection({ clients, c }: { clients: Client[]; c: (section: string, key: string, fallback: string) => string }) {
-  const displayClients = clients.length > 0 ? clients : [
-    { id: '1', name: 'Government Sector', logo_url: '' },
-    { id: '2', name: 'Private Sector', logo_url: '' },
-    { id: '3', name: 'Corporate Clients', logo_url: '' },
-    { id: '4', name: 'International Partners', logo_url: '' },
-  ];
+  const displayClients = clients.filter((client) => client.is_active);
+  if (displayClients.length === 0) return null;
 
   return (
     <section className="py-12 sm:py-16 md:py-20 bg-navy-950 border-t border-b border-gold-500/10">
@@ -443,22 +441,8 @@ function ClientsSection({ clients, c }: { clients: Client[]; c: (section: string
 
 // Testimonials Section
 function TestimonialsSection({ testimonials, c }: { testimonials: Testimonial[]; c: (section: string, key: string, fallback: string) => string }) {
-  const displayTestimonials = testimonials.length > 0 ? testimonials.slice(0, 3) : [
-    {
-      id: '1',
-      client_name: 'Ahmed Khan',
-      client_designation: 'CEO',
-      client_company: 'Pak Infrastructure Ltd',
-      client_image_url: '',
-      content: 'Eden Buildcore exceeded our expectations with their professional approach and timely delivery. Their attention to detail and quality craftsmanship is unmatched.',
-      rating: 5,
-      is_featured: true,
-      is_active: true,
-      order_index: 0,
-      created_at: '',
-      updated_at: ''
-    }
-  ];
+  const displayTestimonials = testimonials.filter((testimonial) => testimonial.is_active).slice(0, 3);
+  if (displayTestimonials.length === 0) return null;
 
   return (
     <section className="py-12 sm:py-16 md:py-24 bg-gradient-to-b from-navy-900 to-navy-950">
@@ -510,6 +494,8 @@ function TestimonialsSection({ testimonials, c }: { testimonials: Testimonial[];
 
 // Certifications Preview
 function CertificationsPreview({ certifications, c }: { certifications: Certification[]; c: (section: string, key: string, fallback: string) => string }) {
+  if (certifications.length === 0) return null;
+
   return (
     <section className="py-20 bg-navy-950">
       <div className="max-w-7xl mx-auto px-6">
@@ -519,12 +505,7 @@ function CertificationsPreview({ certifications, c }: { certifications: Certific
         </div>
 
         <div className="flex flex-wrap justify-center gap-8">
-          {(certifications.length > 0 ? certifications : [
-            { id: '1', title: 'ISO 9001:2015', category: 'Quality Management' },
-            { id: '2', title: 'ISO 14001:2015', category: 'Environmental' },
-            { id: '3', title: 'PEC Registered', category: 'Engineering Council' },
-            { id: '4', title: 'SECP', category: 'Corporate Registration' },
-          ]).map((cert, index) => (
+          {certifications.map((cert, index) => (
             <motion.div
               key={cert.id}
               initial={{ opacity: 0, scale: 0.9 }}
@@ -605,7 +586,8 @@ function VisionMissionSection({ c }: { c: (section: string, key: string, fallbac
 
 // CTA Section
 function CTASection({ c }: { c: (section: string, key: string, fallback: string) => string }) {
-  const { settings } = useSiteSettings();
+  const { settings } = useSettings();
+  const secondaryButtonLink = c('cta', 'secondary_button_link', settings?.phone ? `tel:${settings.phone}` : '/contact');
 
   return (
     <section className="relative py-24 overflow-hidden">
@@ -641,7 +623,7 @@ function CTASection({ c }: { c: (section: string, key: string, fallback: string)
               <ArrowRight className="w-5 h-5" />
             </Link>
             <a
-              href={c('cta', 'secondary_button_link', `tel:${settings?.phone || '+92 51 2726997'}`)}
+              href={secondaryButtonLink}
               className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-transparent border-2 border-gold-500 text-gold-400 font-bold rounded-xl hover:bg-gold-500/10 transition-all"
             >
               <Phone className="w-5 h-5" />

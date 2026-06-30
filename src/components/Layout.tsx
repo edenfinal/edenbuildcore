@@ -4,17 +4,19 @@ import Navbar from './Navbar';
 import Footer from './Footer';
 import ThemeProvider from './ThemeProvider';
 import { initializeDefaultAdmin } from '../hooks/useAuth';
-import { useSiteSettings } from '../hooks/useData';
+import { useSettings } from '../contexts/SettingsContext';
 
 export default function Layout() {
   const location = useLocation();
-  const { settings } = useSiteSettings();
+  const { settings, loading: settingsLoading } = useSettings();
 
   useEffect(() => {
     initializeDefaultAdmin();
   }, []);
 
   useEffect(() => {
+    if (settingsLoading) return;
+
     const siteName = settings?.site_name || 'Eden Buildcore (Pvt.) Ltd.';
     const metaTitle = settings?.meta_title || siteName;
     const metaDescription = settings?.meta_description || 'Leading Construction & Engineering Company delivering excellence in civil construction, infrastructure development, and engineering solutions.';
@@ -53,7 +55,7 @@ export default function Layout() {
       const faviconTag = document.querySelector('link[rel="icon"]');
       if (faviconTag) faviconTag.setAttribute('href', settings.favicon_url);
     }
-  }, [settings, location.pathname]);
+  }, [settings, settingsLoading, location.pathname]);
 
   return (
     <ThemeProvider>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, ChevronDown, Phone, Mail, ArrowRight } from 'lucide-react';
-import { useSiteSettings } from '../hooks/useData';
+import { useSettings } from '../contexts/SettingsContext';
 
 const navLinks = [
   { name: 'Home', path: '/' },
@@ -24,28 +24,12 @@ const navLinks = [
   { name: 'Contact', path: '/contact' },
 ];
 
-function LogoMark({ className = '' }: { className?: string }) {
-  return (
-    <img
-      src="/EDEN_BUILDCORE.png"
-      alt="Eden Buildcore Logo"
-      className={className}
-      onError={(e) => {
-        const target = e.currentTarget;
-        target.style.display = 'none';
-        const fallback = target.nextSibling as HTMLElement;
-        if (fallback) fallback.style.display = 'flex';
-      }}
-    />
-  );
-}
-
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const location = useLocation();
-  const { settings } = useSiteSettings();
+  const { settings, loading: settingsLoading } = useSettings();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 60);
@@ -59,8 +43,9 @@ export default function Navbar() {
   }, [location]);
 
   // Get site name for dynamic display
-  const siteName = settings?.site_name || 'Eden Buildcore';
+  const siteName = settingsLoading ? '' : settings?.site_name || '';
   const siteNameParts = siteName.replace(/\s*\([^)]*\)\s*\.?/g, '').trim().split(' ');
+  const logoUrl = settingsLoading ? '' : settings?.logo_url || '';
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
@@ -118,25 +103,27 @@ export default function Navbar() {
           <Link to="/" className="flex items-center gap-2 sm:gap-3 group flex-shrink-0">
             <div className="relative flex items-center gap-2">
               {/* Primary Logo */}
-              <img
-                src={settings?.logo_url || "/EDEN_BUILDCORE.png"}
-                alt={siteName}
-                style={{
-                  height: `${settings?.logo_size || 64}px`,
-                  objectFit: (settings?.logo_scale as any) || 'contain',
-                }}
-                className="w-auto drop-shadow-sm transition-all"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  const next = e.currentTarget.parentElement?.querySelector('.logo-fallback') as HTMLElement;
-                  if (next) next.style.display = 'flex';
-                }}
-              />
+              {logoUrl && (
+                <img
+                  src={logoUrl}
+                  alt={siteName}
+                  style={{
+                    height: `${settings?.logo_size || 64}px`,
+                    objectFit: (settings?.logo_scale as any) || 'contain',
+                  }}
+                  className="w-auto drop-shadow-sm transition-all"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    const next = e.currentTarget.parentElement?.querySelector('.logo-fallback') as HTMLElement;
+                    if (next) next.style.display = 'flex';
+                  }}
+                />
+              )}
               
               {/* Fallback text when no logo images load */}
-              <div className="logo-fallback hidden flex-col justify-center">
-                <span className="text-lg sm:text-xl md:text-2xl font-heading font-bold text-white tracking-widest leading-none">{siteNameParts[0] || 'EDEN'}</span>
-                <span className="text-[8px] sm:text-[10px] font-medium text-[#c49028] tracking-[0.2em] sm:tracking-[0.3em] uppercase">{siteNameParts[1] || 'BUILDCORE'}</span>
+              <div className={`logo-fallback ${logoUrl ? 'hidden' : 'flex'} flex-col justify-center`}>
+                <span className="text-lg sm:text-xl md:text-2xl font-heading font-bold text-white tracking-widest leading-none">{siteNameParts[0] || ''}</span>
+                <span className="text-[8px] sm:text-[10px] font-medium text-[#c49028] tracking-[0.2em] sm:tracking-[0.3em] uppercase">{siteNameParts.slice(1).join(' ')}</span>
               </div>
             </div>
           </Link>

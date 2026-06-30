@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Phone, Mail, Clock, Send, MessageSquare, CheckCircle, AlertCircle } from 'lucide-react';
-import { useSiteSettings, submitContactForm, usePageContent } from '../hooks/useData';
+import { submitContactForm, usePageContent } from '../hooks/useData';
 import PageHero from '../components/PageHero';
+import { useSettings } from '../contexts/SettingsContext';
 
 export default function ContactPage() {
-  const { settings } = useSiteSettings();
+  const { settings } = useSettings();
   const pageContent = usePageContent('contact');
   const c = (section: string, key: string, fallback: string) => pageContent.get(section, key, fallback);
 
@@ -289,18 +290,19 @@ export default function ContactPage() {
                 </a>
               )}
 
-              {/* Map */}
-              <div className="aspect-video rounded-2xl overflow-hidden border border-gold-500/10">
-                <iframe
-                  src={settings?.google_maps_embed || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3402.56!2d74.3587!3d31.5204!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3919043e89d4e3e5%3A0x5c1e4d4e4e4e4e4e!2sLahore%2C%20Punjab%2C%20Pakistan!5e0!3m2!1sen!2s!4v1!5m2!1sen!2s"}
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
-              </div>
+              {settings?.google_maps_embed && (
+                <div className="aspect-video rounded-2xl overflow-hidden border border-gold-500/10">
+                  <iframe
+                    src={settings.google_maps_embed}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                </div>
+              )}
             </motion.div>
           </div>
         </div>

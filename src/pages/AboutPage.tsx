@@ -3,13 +3,14 @@ import {
   Target, Eye, Shield, Award, Users,
   Globe, TrendingUp, Heart, Lightbulb, Leaf, Quote
 } from 'lucide-react';
-import { useTeamMembers, usePageContent, useSiteSettings, useAutoCounters } from '../hooks/useData';
+import { useTeamMembers, usePageContent, useAutoCounters } from '../hooks/useData';
 import PageHero from '../components/PageHero';
+import { useSettings } from '../contexts/SettingsContext';
 
 const valueIcons = [Shield, Award, Lightbulb, Heart, Leaf, Users];
 
 function FounderSection({ c }: { c: (s: string, k: string, fb?: string) => string }) {
-  const { settings } = useSiteSettings();
+  const { settings } = useSettings();
 
   const founderName = settings?.founder_name || c('founder', 'name');
   const founderDesignation = settings?.founder_designation || c('founder', 'designation');
@@ -109,7 +110,7 @@ export default function AboutPage() {
   const pageContent = usePageContent('about');
   const c = (section: string, key: string, fallback = '') => pageContent.get(section, key, fallback);
   const { counters } = useAutoCounters();
-  const { settings } = useSiteSettings();
+  const { settings } = useSettings();
 
   // Timeline — fully editable via Content Editor (reads from page_content about.timeline.*)
   const timelineItems = [1, 2, 3, 4, 5, 6].map(i => ({

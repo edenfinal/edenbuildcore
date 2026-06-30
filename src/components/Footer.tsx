@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, Clock, Facebook, Linkedin, Twitter, Instagram, Youtube, ArrowUp, ArrowRight } from 'lucide-react';
-import { useSiteSettings, useServices } from '../hooks/useData';
+import { useServices } from '../hooks/useData';
 import { useSettings } from '../contexts/SettingsContext';
 
 const quickLinks = [
@@ -15,7 +15,7 @@ const quickLinks = [
 ];
 
 export default function Footer() {
-  const { settings } = useSiteSettings();
+  const { settings, loading: settingsLoading } = useSettings();
   const { data: services } = useServices();
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -28,8 +28,9 @@ export default function Footer() {
     { name: 'YouTube', icon: Youtube, url: settings?.social_links?.youtube as string },
   ].filter(s => s.url);
 
-  const siteName = settings?.site_name || 'Eden Buildcore';
+  const siteName = settingsLoading ? '' : settings?.site_name || '';
   const siteNameParts = siteName.replace(/\s*\([^)]*\)\s*\.?/g, '').trim().split(' ');
+  const logoUrl = settingsLoading ? '' : settings?.logo_url || '';
 
   return (
     <footer className="relative bg-[#020609]">
@@ -42,23 +43,25 @@ export default function Footer() {
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-1 text-center sm:text-left">
             <Link to="/" className="inline-block mb-4 sm:mb-6">
-              <img
-                src={settings?.logo_url || "/EDEN_BUILDCORE.png"}
-                alt={siteName}
-                style={{
-                  height: `${parseInt(settings?.logo_size || '64') + 16}px`,
-                  objectFit: (settings?.logo_scale as any) || 'contain',
-                }}
-                className="w-auto mx-auto sm:mx-0"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  const next = e.currentTarget.nextElementSibling as HTMLElement;
-                  if (next) next.style.display = 'block';
-                }}
-              />
-              <div style={{ display: 'none' }} className="flex flex-col">
-                <span className="text-xl sm:text-2xl font-heading font-bold text-white">{siteNameParts[0] || 'EDEN'}</span>
-                <span className="text-[10px] sm:text-xs text-[#c49028] tracking-widest">{siteNameParts[1] || 'BUILDCORE'}</span>
+              {logoUrl && (
+                <img
+                  src={logoUrl}
+                  alt={siteName}
+                  style={{
+                    height: `${parseInt(settings?.logo_size || '64') + 16}px`,
+                    objectFit: (settings?.logo_scale as any) || 'contain',
+                  }}
+                  className="w-auto mx-auto sm:mx-0"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    const next = e.currentTarget.nextElementSibling as HTMLElement;
+                    if (next) next.style.display = 'block';
+                  }}
+                />
+              )}
+              <div style={{ display: logoUrl ? 'none' : 'flex' }} className="flex-col">
+                <span className="text-xl sm:text-2xl font-heading font-bold text-white">{siteNameParts[0] || ''}</span>
+                <span className="text-[10px] sm:text-xs text-[#c49028] tracking-widest">{siteNameParts.slice(1).join(' ')}</span>
               </div>
             </Link>
             <p className="text-[#909090] text-xs sm:text-sm leading-relaxed mb-4 sm:mb-6">
@@ -110,14 +113,7 @@ export default function Footer() {
               Our Services
             </h4>
             <ul className="space-y-2 sm:space-y-2.5">
-              {(services.length > 0 ? services : [
-                { id: '1', title: 'Civil Construction', slug: 'civil' },
-                { id: '2', title: 'Infrastructure Development', slug: 'infrastructure' },
-                { id: '3', title: 'MEP Works', slug: 'mep' },
-                { id: '4', title: 'Solar Projects', slug: 'solar' },
-                { id: '5', title: 'Renovation', slug: 'renovation' },
-                { id: '6', title: 'Engineering Consultancy', slug: 'consultancy' },
-              ]).slice(0, 6).map((service) => (
+              {services.slice(0, 6).map((service) => (
                 <li key={service.id}>
                   <Link
                     to={`/services`}

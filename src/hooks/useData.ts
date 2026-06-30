@@ -169,8 +169,10 @@ export function usePageContent(pageId: string) {
     fetchContent();
   }, [pageId]);
 
-  // Returns DB value if it exists and is non-empty, otherwise returns fallback
+  // Avoid showing old coded fallback text while Supabase content is still loading.
   const get = (section: string, key: string, fallback: string = ''): string => {
+    if (loading) return '';
+
     const dbKey = `${section}.${key}`;
     if (dbKey in content) {
       return content[dbKey] || fallback;
