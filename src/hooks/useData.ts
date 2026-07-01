@@ -719,7 +719,7 @@ export async function submitContactForm(formData: {
           success: true,
           emailSent: false,
           error: details?.error
-            ? `Your inquiry was saved, but email notification failed: ${details.error}`
+            ? `Your inquiry was saved, but email notification failed: ${details.error}${details.details ? ` (${details.details})` : ''}`
             : 'Your inquiry was saved, but email notification failed. Our team can still see it in the admin panel.'
         };
       }

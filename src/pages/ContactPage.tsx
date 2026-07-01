@@ -9,6 +9,7 @@ export default function ContactPage() {
   const { settings } = useSettings();
   const pageContent = usePageContent('contact');
   const c = (section: string, key: string, fallback: string) => pageContent.get(section, key, fallback);
+  const cf = (section: string, key: string, fallback: string) => c(section, key, fallback) || fallback;
 
   const [formData, setFormData] = useState({
     name: '',
@@ -159,17 +160,17 @@ export default function ContactPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-400 mb-2">{c('form', 'label_inquiry_type', 'Inquiry Type')}</label>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">{cf('form', 'label_inquiry_type', 'Inquiry Type')}</label>
                       <select
                         name="inquiry_type"
                         value={formData.inquiry_type}
                         onChange={handleChange}
                         className="w-full px-4 py-3 bg-navy-700/50 border border-gold-500/20 rounded-xl text-white focus:outline-none focus:border-gold-500/50 transition-colors"
                       >
-                        <option value="general">{c('form', 'inquiry_general', 'General Inquiry')}</option>
-                        <option value="project">{c('form', 'inquiry_project', 'Project Inquiry')}</option>
-                        <option value="partnership">{c('form', 'inquiry_partnership', 'Partnership')}</option>
-                        <option value="career">{c('form', 'inquiry_career', 'Career Inquiry')}</option>
+                        <option value="general">{cf('form', 'inquiry_general', 'General Inquiry')}</option>
+                        <option value="project">{cf('form', 'inquiry_project', 'Project Inquiry')}</option>
+                        <option value="partnership">{cf('form', 'inquiry_partnership', 'Partnership')}</option>
+                        <option value="career">{cf('form', 'inquiry_career', 'Career Inquiry')}</option>
                       </select>
                     </div>
 

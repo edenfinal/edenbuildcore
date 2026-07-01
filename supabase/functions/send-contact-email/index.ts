@@ -66,7 +66,7 @@ async function sendEmail(options: {
     user: string;
     pass: string;
   };
-}): Promise<boolean> {
+}): Promise<{ success: boolean; error?: string }> {
   const { to, from, subject, text, html, smtp } = options;
 
   const encodeLine = (str: string) => str.split('\n').join('\r\n');
@@ -177,10 +177,13 @@ async function sendEmail(options: {
     await tlsWriteCmd('QUIT');
     tlsConn.close();
 
-    return true;
+    return { success: true };
   } catch (e) {
     console.error('SMTP error:', e);
-    return false;
+    return {
+      success: false,
+      error: e instanceof Error ? e.message : 'SMTP connection or authentication failed',
+    };
   }
 }
 
@@ -333,7 +336,7 @@ Deno.serve(async (req: Request) => {
       </div>
     `;
 
-    const success = await sendEmail({
+    const emailResult = await sendEmail({
       to: adminEmail,
       from: SMTP_USER,
       subject: emailSubject,
@@ -347,9 +350,12 @@ Deno.serve(async (req: Request) => {
       },
     });
 
-    if (!success) {
+    if (!emailResult.success) {
       return new Response(
-        JSON.stringify({ error: "Failed to send email" }),
+        JSON.stringify({
+          error: "Failed to send email. Check SMTP settings in Supabase Edge Function secrets.",
+          details: emailResult.error,
+        }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
