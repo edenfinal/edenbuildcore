@@ -33,6 +33,8 @@ Edge Functions may use:
 - `SMTP_PASS`
 - `TO_EMAIL`
 
+SMTP secrets must be set in Supabase Edge Function secrets, not only in the frontend `.env` file. Use port `465` for implicit TLS or `587` for STARTTLS.
+
 ## Hosting
 
 - Use HTTPS/SSL only.

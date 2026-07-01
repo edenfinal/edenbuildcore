@@ -69,6 +69,13 @@ async function sendEmail(options: {
 }): Promise<{ success: boolean; error?: string }> {
   const { to, from, subject, text, html, smtp } = options;
 
+  const toBase64 = (value: string) => {
+    const bytes = new TextEncoder().encode(value);
+    let binary = "";
+    bytes.forEach((byte) => binary += String.fromCharCode(byte));
+    return btoa(binary);
+  };
+
   const encodeLine = (str: string) => str.split('\n').join('\r\n');
 
   const boundary = `----=_Part_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -76,7 +83,7 @@ async function sendEmail(options: {
   const rawEmail = encodeLine([
     `From: ${from}`,
     `To: ${to}`,
-    `Subject: =?utf-8?B?${btoa(subject)}?=`,
+    `Subject: =?utf-8?B?${toBase64(subject)}?=`,
     `Reply-To: ${from}`,
     "MIME-Version: 1.0",
     `Content-Type: multipart/alternative; boundary="${boundary}"`,
@@ -85,100 +92,84 @@ async function sendEmail(options: {
     "Content-Type: text/plain; charset=utf-8",
     "Content-Transfer-Encoding: base64",
     "",
-    btoa(text),
+    toBase64(text),
     "",
     `--${boundary}`,
     "Content-Type: text/html; charset=utf-8",
     "Content-Transfer-Encoding: base64",
     "",
-    btoa(html),
+    toBase64(html),
     "",
     `--${boundary}--`,
   ].join('\r\n'));
 
-  const conn = await Deno.connect({
-    hostname: smtp.host,
-    port: smtp.port,
-  });
-
-  const decoder = new TextDecoder();
-  const encoder = new TextEncoder();
-
-  const readLine = async (): Promise<string> => {
-    const buf = new Uint8Array(1024);
-    let result = '';
-    while (true) {
-      const n = await conn.read(buf);
-      if (n === null) break;
-      result += decoder.decode(buf.slice(0, n));
-      if (result.includes('\r\n')) break;
-    }
-    return result;
-  };
-
-  const writeCmd = async (cmd: string): Promise<string> => {
-    await conn.write(encoder.encode(cmd + '\r\n'));
-    return await readLine();
-  };
-
+  let conn: Deno.Conn | Deno.TlsConn | null = null;
   try {
-    await readLine();
+    const decoder = new TextDecoder();
+    const encoder = new TextEncoder();
 
-    if (!(await writeCmd('EHLO localhost')).startsWith('2')) {
-      throw new Error('EHLO failed');
-    }
-
-    if (!(await writeCmd('STARTTLS')).startsWith('2')) {
-      throw new Error('STARTTLS failed');
-    }
-
-    conn.close();
-
-    const tlsConn = await Deno.connectTls({
-      hostname: smtp.host,
-      port: smtp.port,
-    });
-
-    const tlsDecoder = new TextDecoder();
-    const tlsEncoder = new TextEncoder();
-
-    const tlsReadLine = async (): Promise<string> => {
+    const readResponse = async (activeConn: Deno.Conn | Deno.TlsConn): Promise<string> => {
       const buf = new Uint8Array(4096);
       let result = '';
       while (true) {
-        const n = await tlsConn.read(buf);
+        const n = await activeConn.read(buf);
         if (n === null) break;
-        result += tlsDecoder.decode(buf.slice(0, n));
-        if (result.includes('\r\n')) break;
+        result += decoder.decode(buf.slice(0, n));
+        const lines = result.split('\r\n').filter(Boolean);
+        const last = lines[lines.length - 1] || '';
+        if (/^\d{3}\s/.test(last)) break;
       }
       return result;
     };
 
-    const tlsWriteCmd = async (cmd: string): Promise<string> => {
-      await tlsConn.write(tlsEncoder.encode(cmd + '\r\n'));
-      return await tlsReadLine();
+    const assertCode = (response: string, codes: string[], label: string) => {
+      if (!codes.some((code) => response.startsWith(code))) {
+        throw new Error(`${label} failed: ${response.trim() || 'no response'}`);
+      }
     };
 
-    await tlsReadLine();
+    const writeCmd = async (activeConn: Deno.Conn | Deno.TlsConn, cmd: string, codes: string[], label: string) => {
+      await activeConn.write(encoder.encode(cmd + '\r\n'));
+      const response = await readResponse(activeConn);
+      assertCode(response, codes, label);
+      return response;
+    };
 
-    if (!await tlsWriteCmd('EHLO localhost')) {}
+    const useImplicitTls = smtp.port === 465;
+    conn = useImplicitTls
+      ? await Deno.connectTls({ hostname: smtp.host, port: smtp.port })
+      : await Deno.connect({ hostname: smtp.host, port: smtp.port });
 
-    await tlsWriteCmd('AUTH LOGIN');
-    await tlsWriteCmd(btoa(smtp.user));
-    await tlsWriteCmd(btoa(smtp.pass));
+    assertCode(await readResponse(conn), ['220'], 'SMTP greeting');
+    await writeCmd(conn, 'EHLO edenbuildcore.com', ['250'], 'EHLO');
 
-    await tlsWriteCmd(`MAIL FROM:<${from}>`);
-    await tlsWriteCmd(`RCPT TO:<${to}>`);
-    await tlsWriteCmd('DATA');
+    if (!useImplicitTls) {
+      await writeCmd(conn, 'STARTTLS', ['220'], 'STARTTLS');
+      conn = await Deno.startTls(conn, { hostname: smtp.host });
+      await writeCmd(conn, 'EHLO edenbuildcore.com', ['250'], 'EHLO after STARTTLS');
+    }
 
-    await tlsConn.write(tlsEncoder.encode(rawEmail + '\r\n.\r\n'));
-    await tlsReadLine();
+    await writeCmd(conn, 'AUTH LOGIN', ['334'], 'AUTH LOGIN');
+    await writeCmd(conn, toBase64(smtp.user), ['334'], 'SMTP username');
+    await writeCmd(conn, toBase64(smtp.pass), ['235'], 'SMTP password');
 
-    await tlsWriteCmd('QUIT');
-    tlsConn.close();
+    await writeCmd(conn, `MAIL FROM:<${from}>`, ['250'], 'MAIL FROM');
+    await writeCmd(conn, `RCPT TO:<${to}>`, ['250', '251'], 'RCPT TO');
+    await writeCmd(conn, 'DATA', ['354'], 'DATA');
+
+    await conn.write(encoder.encode(rawEmail + '\r\n.\r\n'));
+    assertCode(await readResponse(conn), ['250'], 'Message send');
+
+    await writeCmd(conn, 'QUIT', ['221'], 'QUIT');
+    conn.close();
 
     return { success: true };
   } catch (e) {
+    try {
+      conn?.close();
+    } catch {
+      // ignore close errors
+    }
     console.error('SMTP error:', e);
     return {
       success: false,
