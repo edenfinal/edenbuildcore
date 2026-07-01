@@ -169,15 +169,15 @@ export function usePageContent(pageId: string) {
     fetchContent();
   }, [pageId]);
 
-  // Avoid showing old coded fallback text while Supabase content is still loading.
+  // Supabase content is the source of truth; fallback is only an emergency backup on fetch error.
   const get = (section: string, key: string, fallback: string = ''): string => {
     if (loading) return '';
 
     const dbKey = `${section}.${key}`;
     if (dbKey in content) {
-      return content[dbKey] || fallback;
+      return content[dbKey] || '';
     }
-    return fallback;
+    return error ? fallback : '';
   };
 
   const updateContent = async (section: string, key: string, value: string): Promise<boolean> => {

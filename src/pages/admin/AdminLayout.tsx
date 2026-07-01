@@ -309,21 +309,21 @@ export default function AdminLayout() {
             ))}
           </nav>
 
-          {/* Quick Stats */}
+          {/* Session Status */}
           <div className="px-4 mb-4">
             <div className="bg-[#030810]/60 border border-[#c49028]/10 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Activity className="w-4 h-4 text-[#c49028]" />
-                <span className="text-xs font-bold text-[#a0a0a0] uppercase tracking-wider">System Health</span>
+                <span className="text-xs font-bold text-[#a0a0a0] uppercase tracking-wider">Session Status</span>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <p className="text-lg font-bold text-white">99.9%</p>
-                  <p className="text-[10px] text-[#606060]">Uptime</p>
+                  <p className="text-lg font-bold text-white capitalize">{admin?.role || 'viewer'}</p>
+                  <p className="text-[10px] text-[#606060]">Role</p>
                 </div>
                 <div>
-                  <p className="text-lg font-bold text-green-400">Active</p>
-                  <p className="text-[10px] text-[#606060]">Database</p>
+                  <p className="text-lg font-bold text-green-400">{admin ? 'Active' : 'Locked'}</p>
+                  <p className="text-[10px] text-[#606060]">Session</p>
                 </div>
               </div>
             </div>

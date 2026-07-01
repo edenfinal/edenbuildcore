@@ -35,7 +35,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const sessionData = sessionStorage.getItem(ADMIN_SESSION_KEY);
       if (sessionData) {
-        const { adminId } = JSON.parse(sessionData);
+        const { adminId, token } = JSON.parse(sessionData);
+        if (token) {
+          const edgeSession = await validateEdgeSession(token);
+          if (edgeSession.handled) {
+            if (edgeSession.success && edgeSession.admin) {
+              setAdmin(edgeSession.admin);
+            } else {
+              sessionStorage.removeItem(ADMIN_SESSION_KEY);
+            }
+            return;
+          }
+        }
+
+        if (!adminId) {
+          sessionStorage.removeItem(ADMIN_SESSION_KEY);
+          return;
+        }
+
         const { data, error } = await supabase
           .from('admin_users')
           .select('*')
@@ -60,12 +77,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const edgeLogin = await loginWithEdgeFunction(email, password);
       if (edgeLogin.handled) {
-        if (!edgeLogin.success || !edgeLogin.admin) {
+        if (!edgeLogin.success || !edgeLogin.admin || !edgeLogin.token) {
           return { success: false, error: edgeLogin.error || 'Invalid credentials' };
         }
 
         setAdmin(edgeLogin.admin);
-        sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({ adminId: edgeLogin.admin.id }));
+        sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({ adminId: edgeLogin.admin.id, token: edgeLogin.token }));
         return { success: true };
       }
 
@@ -117,7 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginWithEdgeFunction = async (
     email: string,
     password: string
-  ): Promise<{ handled: boolean; success: boolean; admin?: AdminUser; error?: string }> => {
+  ): Promise<{ handled: boolean; success: boolean; admin?: AdminUser; token?: string; error?: string }> => {
     const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     if (!anonKey || !supabaseUrl) {
@@ -144,14 +161,65 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { handled: true, success: false, error: result.error || 'Invalid credentials' };
       }
 
-      return { handled: true, success: true, admin: result.admin as AdminUser };
+      return { handled: true, success: true, admin: result.admin as AdminUser, token: result.token as string };
     } catch (e) {
       console.warn('Admin login edge function unavailable, falling back to direct login:', e);
       return { handled: false, success: false };
     }
   };
 
+  const validateEdgeSession = async (
+    token: string
+  ): Promise<{ handled: boolean; success: boolean; admin?: AdminUser; error?: string }> => {
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    if (!anonKey || !supabaseUrl) {
+      return { handled: false, success: false };
+    }
+
+    try {
+      const response = await fetch(`${supabaseUrl}/functions/v1/admin-session`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${anonKey}`,
+          'apikey': anonKey,
+          'X-Admin-Session': token,
+        },
+      });
+
+      if (response.status === 404) {
+        return { handled: false, success: false };
+      }
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        return { handled: true, success: false, error: result.error || 'Session expired' };
+      }
+
+      return { handled: true, success: true, admin: result.admin as AdminUser };
+    } catch (e) {
+      console.warn('Admin session edge function unavailable, falling back to direct session:', e);
+      return { handled: false, success: false };
+    }
+  };
+
   const logout = async () => {
+    const sessionData = sessionStorage.getItem(ADMIN_SESSION_KEY);
+    const token = sessionData ? JSON.parse(sessionData).token : null;
+    if (token) {
+      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      if (anonKey && supabaseUrl) {
+        fetch(`${supabaseUrl}/functions/v1/admin-logout`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${anonKey}`,
+            'apikey': anonKey,
+            'X-Admin-Session': token,
+          },
+        }).catch(() => undefined);
+      }
+    }
     setAdmin(null);
     sessionStorage.removeItem(ADMIN_SESSION_KEY);
   };

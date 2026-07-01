@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import {
   Building2, Layers, Users, MessageSquare, Mail, Newspaper,
   TrendingUp, Eye, Clock, ArrowRight, Briefcase, Award,
-  ArrowUpRight, CheckCircle, AlertCircle, Activity, BarChart3,
+  CheckCircle, AlertCircle, Activity, BarChart3,
   Globe, Image, Star, Plus, RefreshCw
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
@@ -23,75 +23,6 @@ interface RecentInquiry {
 interface RecentActivity {
   type: string; message: string; time: string; icon: React.ElementType; color: string;
 }
-
-// Mini sparkline chart using SVG
-function Sparkline({ data, color = '#c49028', height = 36 }: { data: number[]; color?: string; height?: number }) {
-  if (!data || data.length === 0) return null;
-  const max = Math.max(...data);
-  const min = Math.min(...data);
-  const range = max - min || 1;
-  const w = 80;
-  const pts = data.map((v, i) => {
-    const x = (i / (data.length - 1)) * w;
-    const y = height - ((v - min) / range) * (height - 4) - 2;
-    return `${x},${y}`;
-  });
-  return (
-    <svg width={w} height={height} className="opacity-80">
-      <defs>
-        <linearGradient id={`sg-${color.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.4" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <polygon
-        points={`0,${height} ${pts.join(' ')} ${w},${height}`}
-        fill={`url(#sg-${color.replace('#', '')})`}
-      />
-      <polyline
-        points={pts.join(' ')}
-        fill="none"
-        stroke={color}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <circle
-        cx={parseFloat(pts[pts.length - 1].split(',')[0])}
-        cy={parseFloat(pts[pts.length - 1].split(',')[1])}
-        r="3"
-        fill={color}
-      />
-    </svg>
-  );
-}
-
-// Radial progress ring
-function RadialProgress({ value, max, color = '#c49028', size = 80 }: { value: number; max: number; color?: string; size?: number }) {
-  const pct = max > 0 ? (value / max) * 100 : 0;
-  const r = (size - 10) / 2;
-  const circ = 2 * Math.PI * r;
-  const dash = (pct / 100) * circ;
-  return (
-    <svg width={size} height={size} className="-rotate-90">
-      <circle cx={size / 2} cy={size / 2} r={r} stroke="#1e2d3d" strokeWidth="8" fill="none" />
-      <circle
-        cx={size / 2} cy={size / 2} r={r}
-        stroke={color} strokeWidth="8" fill="none"
-        strokeDasharray={`${dash} ${circ}`}
-        strokeLinecap="round"
-        style={{ transition: 'stroke-dasharray 1s ease' }}
-      />
-    </svg>
-  );
-}
-
-const SPARKLINE_DATA: Record<string, number[]> = {
-  projects: [2, 4, 3, 5, 4, 6, 7, 5, 8, 6, 9, 10],
-  inquiries: [5, 8, 6, 10, 12, 9, 14, 11, 16, 13, 18, 20],
-  clients: [1, 2, 2, 3, 4, 4, 5, 5, 6, 6, 7, 8],
-  posts: [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6],
-};
 
 const PRIORITY_COLORS: Record<string, string> = {
   urgent: 'bg-red-500/20 text-red-400 border-red-500/30',
@@ -115,6 +46,7 @@ export default function AdminDashboard() {
   const [recentInquiries, setRecentInquiries] = useState<RecentInquiry[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(new Date());
+  const dataStatus = loading ? 'Checking' : 'Synced';
 
   useEffect(() => { fetchDashboardData(); }, []);
 
@@ -166,10 +98,10 @@ export default function AdminDashboard() {
   };
 
   const kpiCards = [
-    { label: 'Total Projects', value: stats.projects, trend: '+18%', icon: Building2, color: '#3b82f6', sparkKey: 'projects', link: '/admin/projects', desc: 'Active & completed' },
-    { label: 'Contact Inquiries', value: stats.inquiries, trend: '+32%', icon: Mail, color: '#c49028', sparkKey: 'inquiries', link: '/admin/inquiries', desc: `${stats.newInquiries} new` },
-    { label: 'Total Clients', value: stats.clients, trend: '+12%', icon: Users, color: '#10b981', sparkKey: 'clients', link: '/admin/clients', desc: 'Government & private' },
-    { label: 'Blog Articles', value: stats.posts, trend: '+5%', icon: Newspaper, color: '#8b5cf6', sparkKey: 'posts', link: '/admin/blog', desc: 'Published posts' },
+    { label: 'Total Projects', value: stats.projects, icon: Building2, color: '#3b82f6', link: '/admin/projects', desc: 'From Supabase projects' },
+    { label: 'Contact Inquiries', value: stats.inquiries, icon: Mail, color: '#c49028', link: '/admin/inquiries', desc: `${stats.newInquiries} new` },
+    { label: 'Total Clients', value: stats.clients, icon: Users, color: '#10b981', link: '/admin/clients', desc: 'From Supabase clients' },
+    { label: 'Blog Articles', value: stats.posts, icon: Newspaper, color: '#8b5cf6', link: '/admin/blog', desc: 'From Supabase posts' },
   ];
 
   const contentSummary = [
@@ -214,7 +146,7 @@ export default function AdminDashboard() {
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-xs text-emerald-400 font-medium">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Website Live
+            Data {dataStatus}
           </span>
           <button
             onClick={fetchDashboardData}
@@ -250,13 +182,7 @@ export default function AdminDashboard() {
                   <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${card.color}18` }}>
                     <card.icon size={20} style={{ color: card.color }} />
                   </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <span className="text-xs font-semibold text-emerald-400 flex items-center gap-0.5">
-                      <ArrowUpRight size={12} />
-                      {card.trend}
-                    </span>
-                    <Sparkline data={SPARKLINE_DATA[card.sparkKey] || []} color={card.color} />
-                  </div>
+                  <span className="text-xs font-medium text-[#6b7280]">Live count</span>
                 </div>
                 <div className="text-3xl font-heading font-bold text-white mb-1 tracking-tight">
                   {loading ? <span className="text-[#2a3a4a]">—</span> : card.value}
@@ -339,8 +265,8 @@ export default function AdminDashboard() {
             <div className="flex items-center gap-3 p-3 bg-[#c49028]/5 rounded-xl border border-[#c49028]/10">
               <CheckCircle size={18} className="text-[#c49028]" />
               <div>
-                <p className="text-[#c49028] text-sm font-semibold">Site Health: Good</p>
-                <p className="text-[#6b7280] text-xs">All systems operational</p>
+                <p className="text-[#c49028] text-sm font-semibold">CMS Data: {dataStatus}</p>
+                <p className="text-[#6b7280] text-xs">Counts loaded from Supabase tables</p>
               </div>
             </div>
           </div>
@@ -433,10 +359,10 @@ export default function AdminDashboard() {
           <div className="mt-5 pt-5 border-t border-[#1e2d3d] space-y-2.5">
             <h3 className="text-[#6b7280] text-xs font-semibold uppercase tracking-widest mb-3">System Status</h3>
             {[
-              { label: 'Database', status: 'Operational', color: '#10b981' },
-              { label: 'Storage', status: 'Operational', color: '#10b981' },
-              { label: 'Auth Service', status: 'Active', color: '#10b981' },
-              { label: 'API', status: 'Running', color: '#10b981' },
+              { label: 'Database', status: dataStatus, color: loading ? '#f59e0b' : '#10b981' },
+              { label: 'Storage', status: 'Edge Upload', color: '#10b981' },
+              { label: 'Auth Service', status: 'Session Token', color: '#10b981' },
+              { label: 'Email', status: 'Function Based', color: '#10b981' },
             ].map((sys) => (
               <div key={sys.label} className="flex items-center justify-between">
                 <span className="text-[#9ca3af] text-sm">{sys.label}</span>
@@ -453,9 +379,9 @@ export default function AdminDashboard() {
       {/* Website Overview */}
       <div className="grid md:grid-cols-4 gap-4">
         {[
-          { icon: TrendingUp, label: 'Website Status', value: 'Live & Active', sub: 'All pages working', color: '#10b981', bg: '#10b98118' },
+          { icon: TrendingUp, label: 'CMS Data Status', value: dataStatus, sub: 'Supabase counts loaded', color: loading ? '#f59e0b' : '#10b981', bg: loading ? '#f59e0b18' : '#10b98118' },
           { icon: CheckCircle, label: 'Content Status', value: 'Published', sub: 'Content live', color: '#3b82f6', bg: '#3b82f618' },
-          { icon: Clock, label: 'Last Updated', value: 'Today', sub: new Date().toLocaleDateString(), color: '#c49028', bg: '#c4902818' },
+          { icon: Clock, label: 'Last Updated', value: lastRefresh.toLocaleTimeString(), sub: lastRefresh.toLocaleDateString(), color: '#c49028', bg: '#c4902818' },
           { icon: AlertCircle, label: 'Pending Actions', value: `${stats.newInquiries}`, sub: 'New inquiries awaiting', color: stats.newInquiries > 0 ? '#f59e0b' : '#6b7280', bg: stats.newInquiries > 0 ? '#f59e0b18' : '#6b728018' },
         ].map((item, i) => (
           <motion.div

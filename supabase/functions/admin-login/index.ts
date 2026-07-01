@@ -16,6 +16,20 @@ async function hashPassword(password: string): Promise<string> {
   return `${PASSWORD_HASH_PREFIX}${hashArray.map((byte) => byte.toString(16).padStart(2, "0")).join("")}`;
 }
 
+async function hashSessionToken(token: string): Promise<string> {
+  const data = new TextEncoder().encode(`eden_admin_session_v1:${token}`);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function createSessionToken(): string {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  const randomPart = Array.from(bytes).map((byte) => byte.toString(16).padStart(2, "0")).join("");
+  return `${crypto.randomUUID()}.${randomPart}`;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
@@ -80,9 +94,30 @@ Deno.serve(async (req: Request) => {
       .update({ last_login: new Date().toISOString() })
       .eq("id", admin.id);
 
+    const sessionToken = createSessionToken();
+    const sessionHash = await hashSessionToken(sessionToken);
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 12).toISOString();
+
+    const { error: sessionError } = await supabase
+      .from("admin_sessions")
+      .insert({
+        admin_id: admin.id,
+        token_hash: sessionHash,
+        expires_at: expiresAt,
+        last_seen_at: new Date().toISOString(),
+      });
+
+    if (sessionError) {
+      console.error("Failed to create admin session:", sessionError);
+      return new Response(JSON.stringify({ error: "Unable to create admin session" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { password_hash: _passwordHash, ...safeAdmin } = admin;
 
-    return new Response(JSON.stringify({ admin: safeAdmin }), {
+    return new Response(JSON.stringify({ admin: safeAdmin, token: sessionToken, expires_at: expiresAt }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
