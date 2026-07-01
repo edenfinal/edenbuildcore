@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from '../lib/supabase';
 import type { AdminUser } from '../lib/supabase';
 
 interface AuthContextType {
@@ -22,7 +21,6 @@ export async function hashAdminPassword(password: string): Promise<string> {
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return `${PASSWORD_HASH_PREFIX}${hashArray.map((byte) => byte.toString(16).padStart(2, '0')).join('')}`;
 }
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [admin, setAdmin] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,22 +46,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        if (!adminId) {
+        if (!adminId || !token) {
           sessionStorage.removeItem(ADMIN_SESSION_KEY);
           return;
-        }
-
-        const { data, error } = await supabase
-          .from('admin_users')
-          .select('*')
-          .eq('id', adminId)
-          .eq('is_active', true)
-          .single();
-
-        if (!error && data) {
-          setAdmin(data as AdminUser);
-        } else {
-          sessionStorage.removeItem(ADMIN_SESSION_KEY);
         }
       }
     } catch (e) {
@@ -86,45 +71,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: true };
       }
 
-      const { data, error } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('email', email)
-        .eq('is_active', true)
-        .single();
-
-      if (error || !data) {
-        return { success: false, error: 'Invalid credentials' };
-      }
-
-      const adminUser = data as AdminUser;
-      const { password_hash } = adminUser as unknown as { password_hash: string };
-
-      if (password_hash === 'admin123') {
-        return {
-          success: false,
-          error: 'Default admin password is disabled. Reset this admin password in Supabase before signing in.'
-        };
-      }
-
-      const hashedPassword = await hashAdminPassword(password);
-      const legacyExactMatch = !password_hash.startsWith(PASSWORD_HASH_PREFIX) && password_hash === password;
-      const validPassword = password_hash === hashedPassword || legacyExactMatch;
-
-      if (!validPassword) {
-        return { success: false, error: 'Invalid credentials' };
-      }
-
-      // Update last login
-      await supabase
-        .from('admin_users')
-        .update({ last_login: new Date().toISOString() })
-        .eq('id', adminUser.id);
-
-      setAdmin(adminUser);
-      sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({ adminId: adminUser.id }));
-
-      return { success: true };
+      return {
+        success: false,
+        error: 'Secure admin login requires the Supabase admin-login Edge Function to be deployed.'
+      };
     } catch (e) {
       console.error('Login error:', e);
       return { success: false, error: 'An error occurred' };
@@ -163,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       return { handled: true, success: true, admin: result.admin as AdminUser, token: result.token as string };
     } catch (e) {
-      console.warn('Admin login edge function unavailable, falling back to direct login:', e);
+      console.warn('Admin login edge function unavailable:', e);
       return { handled: false, success: false };
     }
   };
@@ -198,7 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       return { handled: true, success: true, admin: result.admin as AdminUser };
     } catch (e) {
-      console.warn('Admin session edge function unavailable, falling back to direct session:', e);
+      console.warn('Admin session edge function unavailable:', e);
       return { handled: false, success: false };
     }
   };

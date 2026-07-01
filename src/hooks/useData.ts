@@ -656,11 +656,37 @@ export async function submitContactForm(formData: {
   inquiry_type?: string;
 }): Promise<{ success: boolean; emailSent: boolean; error?: string }> {
   try {
+    const cleaned = {
+      ...formData,
+      name: formData.name.trim(),
+      email: formData.email.trim(),
+      phone: formData.phone?.trim(),
+      company: formData.company?.trim(),
+      subject: formData.subject?.trim(),
+      message: formData.message.trim(),
+      inquiry_type: formData.inquiry_type || 'general',
+    };
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!cleaned.name || !emailPattern.test(cleaned.email) || !cleaned.message) {
+      return { success: false, emailSent: false, error: 'Please enter a valid name, email, and message.' };
+    }
+    if (cleaned.name.length > 120 || cleaned.email.length > 254 || cleaned.message.length > 5000 || (cleaned.subject || '').length > 180) {
+      return { success: false, emailSent: false, error: 'Please shorten your form details and try again.' };
+    }
+
+    const throttleKey = 'eden_contact_submit_times';
+    const recentSubmits = JSON.parse(sessionStorage.getItem(throttleKey) || '[]') as number[];
+    const oneHourAgo = Date.now() - 60 * 60 * 1000;
+    const activeSubmits = recentSubmits.filter((time) => time > oneHourAgo);
+    if (activeSubmits.length >= 5) {
+      return { success: false, emailSent: false, error: 'Too many submissions. Please wait and try again later.' };
+    }
+    sessionStorage.setItem(throttleKey, JSON.stringify([...activeSubmits, Date.now()]));
+
     const { error } = await supabase
       .from('contact_inquiries')
       .insert({
-        ...formData,
-        inquiry_type: formData.inquiry_type || 'general',
+        ...cleaned,
         status: 'new',
         priority: 'normal'
       });
@@ -682,7 +708,7 @@ export async function submitContactForm(formData: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${anonKey}`,
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(cleaned),
         }
       );
 
@@ -723,10 +749,29 @@ export async function submitJobApplication(formData: {
   portfolio_url?: string;
   linkedin_url?: string;
 }) {
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const cleaned = {
+    ...formData,
+    full_name: formData.full_name.trim(),
+    email: formData.email.trim(),
+    phone: formData.phone?.trim(),
+    cover_letter: formData.cover_letter?.trim(),
+    resume_url: formData.resume_url?.trim(),
+    portfolio_url: formData.portfolio_url?.trim(),
+    linkedin_url: formData.linkedin_url?.trim(),
+  };
+
+  if (!cleaned.job_id || !cleaned.full_name || !emailPattern.test(cleaned.email)) {
+    return false;
+  }
+  if (cleaned.full_name.length > 120 || cleaned.email.length > 254 || (cleaned.cover_letter || '').length > 5000) {
+    return false;
+  }
+
   const { error } = await supabase
     .from('job_applications')
     .insert({
-      ...formData,
+      ...cleaned,
       status: 'pending'
     });
 

@@ -30,6 +30,30 @@ function createSessionToken(): string {
   return `${crypto.randomUUID()}.${randomPart}`;
 }
 
+function getClientIp(req: Request): string {
+  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("cf-connecting-ip") ||
+    "unknown";
+}
+
+async function checkRateLimit(
+  supabase: ReturnType<typeof createClient>,
+  key: string,
+  limit: number,
+  windowSeconds: number,
+): Promise<boolean> {
+  const windowStart = new Date(Date.now() - windowSeconds * 1000).toISOString();
+  const { count } = await supabase
+    .from("rate_limits")
+    .select("id", { count: "exact", head: true })
+    .eq("rate_key", key)
+    .gte("created_at", windowStart);
+
+  if ((count || 0) >= limit) return false;
+  await supabase.from("rate_limits").insert({ rate_key: key });
+  return true;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
@@ -56,9 +80,18 @@ Deno.serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ""
     );
 
+    const ip = getClientIp(req);
+    const rateOk = await checkRateLimit(supabase, `admin-login:${ip}:${String(email).toLowerCase()}`, 5, 15 * 60);
+    if (!rateOk) {
+      return new Response(JSON.stringify({ error: "Too many login attempts. Please wait and try again." }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { data: admin, error } = await supabase
       .from("admin_users")
-      .select("id, email, name, role, avatar_url, is_active, last_login, created_at, updated_at, password_hash")
+      .select("id, email, name, role, avatar_url, is_active, last_login, created_at, updated_at, password_hash, auth_user_id")
       .eq("email", email)
       .eq("is_active", true)
       .maybeSingle();
@@ -77,12 +110,26 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const hashedPassword = await hashPassword(password);
-    const legacyExactMatch =
-      !String(admin.password_hash || "").startsWith(PASSWORD_HASH_PREFIX) &&
-      admin.password_hash === password;
+    let validPassword = false;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
 
-    if (admin.password_hash !== hashedPassword && !legacyExactMatch) {
+    if (anonKey && supabaseUrl) {
+      const authClient = createClient(supabaseUrl, anonKey);
+      const { data: authData, error: authError } = await authClient.auth.signInWithPassword({ email, password });
+      if (!authError && authData.user) {
+        const authMatches = !admin.auth_user_id || admin.auth_user_id === authData.user.id;
+        validPassword = authMatches;
+        if (authMatches && !admin.auth_user_id) {
+          await supabase.from("admin_users").update({ auth_user_id: authData.user.id }).eq("id", admin.id);
+        }
+      }
+    }
+
+    const hashedPassword = await hashPassword(password);
+    validPassword = validPassword || admin.password_hash === hashedPassword;
+
+    if (!validPassword) {
       return new Response(JSON.stringify({ error: "Invalid credentials" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

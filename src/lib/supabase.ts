@@ -32,6 +32,7 @@ export async function uploadImage(
     const formData = new FormData();
     formData.append('file', file);
     formData.append('folder', folder);
+    const sessionToken = JSON.parse(sessionStorage.getItem('eden_buildcore_admin_session') || '{}')?.token;
 
     const response = await fetch(
       `${supabaseUrl}/functions/v1/upload-image`,
@@ -40,6 +41,7 @@ export async function uploadImage(
         headers: {
           'Authorization': `Bearer ${supabaseAnonKey}`,
           'apikey': supabaseAnonKey || '',
+          ...(sessionToken ? { 'X-Admin-Session': sessionToken } : {}),
         },
         body: formData,
       }
