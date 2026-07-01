@@ -63,6 +63,7 @@ async function sendEmail(options: {
   smtp: {
     host: string;
     port: number;
+    secure: boolean;
     user: string;
     pass: string;
   };
@@ -135,7 +136,7 @@ async function sendEmail(options: {
       return response;
     };
 
-    const useImplicitTls = smtp.port === 465;
+    const useImplicitTls = smtp.secure || smtp.port === 465;
     conn = useImplicitTls
       ? await Deno.connectTls({ hostname: smtp.host, port: smtp.port })
       : await Deno.connect({ hostname: smtp.host, port: smtp.port });
@@ -210,9 +211,11 @@ Deno.serve(async (req: Request) => {
 
     const SMTP_HOST = Deno.env.get("SMTP_HOST");
     const SMTP_PORT = parseInt(Deno.env.get("SMTP_PORT") || "587");
+    const SMTP_SECURE = (Deno.env.get("SMTP_SECURE") || "").toLowerCase() === "true";
     const SMTP_USER = Deno.env.get("SMTP_USER");
     const SMTP_PASS = Deno.env.get("SMTP_PASS");
-    const TO_EMAIL = Deno.env.get("TO_EMAIL") || SMTP_USER;
+    const SMTP_FROM = Deno.env.get("SMTP_FROM") || SMTP_USER;
+    const TO_EMAIL = Deno.env.get("TO_EMAIL") || Deno.env.get("CONTACT_RECEIVER_EMAIL") || SMTP_USER;
 
     if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
       console.error("SMTP credentials not configured");
@@ -329,13 +332,14 @@ Deno.serve(async (req: Request) => {
 
     const emailResult = await sendEmail({
       to: adminEmail,
-      from: SMTP_USER,
+      from: SMTP_FROM || SMTP_USER,
       subject: emailSubject,
       text: textBody,
       html: htmlBody,
       smtp: {
         host: SMTP_HOST,
         port: SMTP_PORT,
+        secure: SMTP_SECURE,
         user: SMTP_USER,
         pass: SMTP_PASS,
       },
