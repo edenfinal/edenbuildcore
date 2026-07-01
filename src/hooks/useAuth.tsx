@@ -163,21 +163,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
     }
 
-    if (!passwordHash.startsWith(PASSWORD_HASH_PREFIX)) {
+    const hashedPassword = await hashAdminPassword(password);
+    const canMigrateLegacyLocalPassword = passwordHash === password && password !== 'admin123';
+
+    if (!passwordHash.startsWith(PASSWORD_HASH_PREFIX) && !canMigrateLegacyLocalPassword) {
       return {
         success: false,
         error: 'This admin password must be reset to the secure hashed format.'
       };
     }
 
-    const hashedPassword = await hashAdminPassword(password);
-    if (passwordHash !== hashedPassword) {
+    if (passwordHash !== hashedPassword && !canMigrateLegacyLocalPassword) {
       return { success: false, error: 'Invalid credentials' };
     }
 
     await supabase
       .from('admin_users')
-      .update({ last_login: new Date().toISOString() })
+      .update({
+        last_login: new Date().toISOString(),
+        ...(canMigrateLegacyLocalPassword ? { password_hash: hashedPassword } : {}),
+      })
       .eq('id', adminUser.id);
 
     setAdmin(adminUser);
