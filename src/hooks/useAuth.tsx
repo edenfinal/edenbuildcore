@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '../lib/supabase';
 import type { AdminUser } from '../lib/supabase';
 
 interface AuthContextType {
@@ -13,6 +14,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const ADMIN_SESSION_KEY = 'eden_buildcore_admin_session';
 const PASSWORD_HASH_PREFIX = 'sha256:';
+
+function canUseLocalAdminFallback() {
+  return import.meta.env.DEV || ['localhost', '127.0.0.1'].includes(window.location.hostname);
+}
 
 export async function hashAdminPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -33,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const sessionData = sessionStorage.getItem(ADMIN_SESSION_KEY);
       if (sessionData) {
-        const { adminId, token } = JSON.parse(sessionData);
+        const { adminId, token, localFallback } = JSON.parse(sessionData);
         if (token) {
           const edgeSession = await validateEdgeSession(token);
           if (edgeSession.handled) {
@@ -42,6 +47,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             } else {
               sessionStorage.removeItem(ADMIN_SESSION_KEY);
             }
+            return;
+          }
+        }
+
+        if (adminId && localFallback && canUseLocalAdminFallback()) {
+          const { data, error } = await supabase
+            .from('admin_users')
+            .select('id, email, name, role, avatar_url, is_active, last_login, created_at, updated_at')
+            .eq('id', adminId)
+            .eq('is_active', true)
+            .single();
+
+          if (!error && data) {
+            setAdmin(data as AdminUser);
             return;
           }
         }
@@ -69,6 +88,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setAdmin(edgeLogin.admin);
         sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({ adminId: edgeLogin.admin.id, token: edgeLogin.token }));
         return { success: true };
+      }
+
+      if (canUseLocalAdminFallback()) {
+        return await loginWithLocalFallback(email, password);
       }
 
       return {
@@ -116,6 +139,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.warn('Admin login edge function unavailable:', e);
       return { handled: false, success: false };
     }
+  };
+
+  const loginWithLocalFallback = async (email: string, password: string) => {
+    const { data, error } = await supabase
+      .from('admin_users')
+      .select('*')
+      .eq('email', email)
+      .eq('is_active', true)
+      .single();
+
+    if (error || !data) {
+      return { success: false, error: 'Invalid credentials' };
+    }
+
+    const adminUser = data as AdminUser;
+    const passwordHash = (data as { password_hash?: string }).password_hash || '';
+
+    if (passwordHash === 'admin123') {
+      return {
+        success: false,
+        error: 'Default admin password is disabled. Reset this admin password in Supabase before signing in.'
+      };
+    }
+
+    if (!passwordHash.startsWith(PASSWORD_HASH_PREFIX)) {
+      return {
+        success: false,
+        error: 'This admin password must be reset to the secure hashed format.'
+      };
+    }
+
+    const hashedPassword = await hashAdminPassword(password);
+    if (passwordHash !== hashedPassword) {
+      return { success: false, error: 'Invalid credentials' };
+    }
+
+    await supabase
+      .from('admin_users')
+      .update({ last_login: new Date().toISOString() })
+      .eq('id', adminUser.id);
+
+    setAdmin(adminUser);
+    sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({ adminId: adminUser.id, localFallback: true }));
+    return { success: true };
   };
 
   const validateEdgeSession = async (
