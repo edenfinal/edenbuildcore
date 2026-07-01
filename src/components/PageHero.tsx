@@ -28,13 +28,23 @@ function useCarouselSlides(pageId: string, enabled: boolean) {
     }
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      let response = await supabase
         .from('hero_slides')
         .select('*')
+        .eq('page_id', pageId)
         .eq('is_active', true)
         .order('order_index');
-      if (error) throw error;
-      setSlides(data || []);
+
+      if (response.error && /page_id/i.test(response.error.message)) {
+        response = await supabase
+          .from('hero_slides')
+          .select('*')
+          .eq('is_active', true)
+          .order('order_index');
+      }
+
+      if (response.error) throw response.error;
+      setSlides(response.data || []);
     } catch (e) {
       console.error('Carousel slides error:', e);
     } finally {

@@ -17,6 +17,10 @@ export async function uploadImage(
   file: File,
   folder: string = 'misc'
 ): Promise<{ url: string | null; error: string | null }> {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return { url: null, error: 'Supabase upload is not configured. Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.' };
+  }
+
   if (!file.type.startsWith('image/')) {
     return { url: null, error: 'Only image files are allowed' };
   }
@@ -133,6 +137,7 @@ export interface SiteSettings {
 
 export interface HeroSlide {
   id: string;
+  page_id?: string | null;
   title: string;
   subtitle: string | null;
   description: string | null;

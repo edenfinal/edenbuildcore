@@ -246,7 +246,7 @@ export function useAllPageContent() {
 }
 
 // Hero Slides Hook
-export function useHeroSlides() {
+export function useHeroSlides(pageId: string = 'home') {
   const [data, setData] = useState<HeroSlide[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -254,20 +254,29 @@ export function useHeroSlides() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const { data: result, error } = await supabase
+      let response = await supabase
         .from('hero_slides')
         .select('*')
+        .eq('page_id', pageId)
         .eq('is_active', true)
         .order('order_index');
 
-      if (error) throw error;
-      setData(result);
+      if (response.error && /page_id/i.test(response.error.message)) {
+        response = await supabase
+          .from('hero_slides')
+          .select('*')
+          .eq('is_active', true)
+          .order('order_index');
+      }
+
+      if (response.error) throw response.error;
+      setData(response.data || []);
     } catch (e) {
       setError(e instanceof Error ? e : new Error('An error occurred'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [pageId]);
 
   useEffect(() => {
     fetchData();
@@ -678,11 +687,14 @@ export async function submitContactForm(formData: {
       );
 
       if (!response.ok) {
-        console.error('Email notification failed');
+        const details = await response.json().catch(() => null);
+        console.error('Email notification failed:', details || response.statusText);
         return {
           success: true,
           emailSent: false,
-          error: 'Your inquiry was saved, but email notification failed. Our team can still see it in the admin panel.'
+          error: details?.error
+            ? `Your inquiry was saved, but email notification failed: ${details.error}`
+            : 'Your inquiry was saved, but email notification failed. Our team can still see it in the admin panel.'
         };
       }
 

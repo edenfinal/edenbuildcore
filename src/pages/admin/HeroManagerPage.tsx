@@ -286,6 +286,7 @@ function HeroSlidesManager() {
     setSlideSaveError('');
 
     const payload = {
+      page_id: 'home',
       title: form.title.trim(),
       subtitle: form.subtitle || null,
       description: form.description || null,
@@ -303,11 +304,18 @@ function HeroSlidesManager() {
     };
 
     try {
-      const { error } = editingSlide
+      let result = editingSlide
         ? await supabase.from('hero_slides').update(payload).eq('id', editingSlide.id)
         : await supabase.from('hero_slides').insert(payload);
 
-      if (error) throw error;
+      if (result.error && /page_id/i.test(result.error.message)) {
+        const { page_id: _pageId, ...legacyPayload } = payload;
+        result = editingSlide
+          ? await supabase.from('hero_slides').update(legacyPayload).eq('id', editingSlide.id)
+          : await supabase.from('hero_slides').insert(legacyPayload);
+      }
+
+      if (result.error) throw result.error;
       await refetch();
       closeForm();
     } catch (e: any) {

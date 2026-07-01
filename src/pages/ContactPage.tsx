@@ -19,7 +19,7 @@ export default function ContactPage() {
     message: '',
     inquiry_type: 'general'
   });
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'warning' | 'error'>('idle');
   const [submitMessage, setSubmitMessage] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,7 +28,7 @@ export default function ContactPage() {
     setSubmitMessage('');
 
     const result = await submitContactForm(formData);
-    setStatus(result.success ? 'success' : 'error');
+    setStatus(result.success ? (result.emailSent ? 'success' : 'warning') : 'error');
     setSubmitMessage(result.error || '');
 
     if (result.success) {
@@ -76,14 +76,26 @@ export default function ContactPage() {
                   </div>
                 </div>
 
-                {status === 'success' ? (
+                {status === 'success' || status === 'warning' ? (
                   <div className="text-center py-8">
-                    <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
-                      <CheckCircle className="w-8 h-8 text-green-500" />
+                    <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${status === 'warning' ? 'bg-amber-500/20' : 'bg-green-500/20'}`}>
+                      {status === 'warning' ? (
+                        <AlertCircle className="w-8 h-8 text-amber-400" />
+                      ) : (
+                        <CheckCircle className="w-8 h-8 text-green-500" />
+                      )}
                     </div>
-                    <h3 className="text-xl font-semibold text-white mb-2">{c('form', 'success_title', 'Message Sent!')}</h3>
-                    <p className="text-gray-400 mb-6">
-                      {submitMessage || c('form', 'success_message', 'We\'ll get back to you soon.')}
+                    <h3 className="text-xl font-semibold text-white mb-2">
+                      {status === 'warning'
+                        ? c('form', 'warning_title', 'Inquiry Saved')
+                        : c('form', 'success_title', 'Message Sent!')}
+                    </h3>
+                    <p className={`${status === 'warning' ? 'text-amber-200' : 'text-gray-400'} mb-6`}>
+                      {submitMessage || (
+                        status === 'warning'
+                          ? c('form', 'warning_message', 'Your inquiry was saved, but email notification needs attention.')
+                          : c('form', 'success_message', 'We\'ll get back to you soon.')
+                      )}
                     </p>
                     <button
                       onClick={() => setStatus('idle')}
