@@ -30,8 +30,16 @@ const ContentEditorPage = lazy(() => import('./pages/admin/ContentEditorPage'));
 const HeroManagerPage = lazy(() => import('./pages/admin/HeroManagerPage'));
 const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'));
 
+type AdminRole = 'super_admin' | 'admin' | 'editor' | 'viewer';
+
 // Protected Route Component
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function ProtectedRoute({
+  children,
+  roles,
+}: {
+  children: React.ReactNode;
+  roles?: AdminRole[];
+}) {
   const { admin, loading } = useAuth();
 
   if (loading) {
@@ -44,6 +52,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!admin) {
     return <Navigate to="/admin/login" replace />;
+  }
+
+  if (roles && !roles.includes(admin.role as AdminRole)) {
+    return <Navigate to="/admin" replace />;
   }
 
   return <>{children}</>;
@@ -346,10 +358,22 @@ function AppRoutes() {
         }
       >
         <Route index element={lazyElement(Dashboard)} />
-        <Route path="settings" element={lazyElement(SettingsPage)} />
-        <Route path="content" element={lazyElement(ContentEditorPage)} />
-        <Route path="heroes" element={lazyElement(HeroManagerPage)} />
-        <Route path="admins" element={lazyElement(AdminUsersPage)} />
+        <Route
+          path="settings"
+          element={<ProtectedRoute roles={['super_admin', 'admin']}>{lazyElement(SettingsPage)}</ProtectedRoute>}
+        />
+        <Route
+          path="content"
+          element={<ProtectedRoute roles={['super_admin', 'admin', 'editor']}>{lazyElement(ContentEditorPage)}</ProtectedRoute>}
+        />
+        <Route
+          path="heroes"
+          element={<ProtectedRoute roles={['super_admin', 'admin', 'editor']}>{lazyElement(HeroManagerPage)}</ProtectedRoute>}
+        />
+        <Route
+          path="admins"
+          element={<ProtectedRoute roles={['super_admin']}>{lazyElement(AdminUsersPage)}</ProtectedRoute>}
+        />
         <Route
           path="inquiries"
           element={

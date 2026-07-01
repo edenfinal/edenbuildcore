@@ -6,6 +6,7 @@ import {
   Layers, RefreshCw, Download, Upload, Copy, Archive, CheckCircle2
 } from 'lucide-react';
 import { supabase, uploadImage } from '../../lib/supabase';
+import { useAuth } from '../../hooks/useAuth';
 
 interface ColumnDef {
   key: string;
@@ -24,6 +25,7 @@ interface CRUDPageProps {
 }
 
 export default function CRUDPage({ title, tableName, columns, defaultValues = {}, displayFields }: CRUDPageProps) {
+  const { admin } = useAuth();
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -43,6 +45,9 @@ export default function CRUDPage({ title, tableName, columns, defaultValues = {}
   const [successMessage, setSuccessMessage] = useState('');
   // For project-select type fields
   const [projectOptions, setProjectOptions] = useState<{ id: string; title: string }[]>([]);
+  const role = admin?.role || 'viewer';
+  const canWrite = ['super_admin', 'admin', 'editor'].includes(role);
+  const canDelete = ['super_admin', 'admin'].includes(role);
 
   useEffect(() => {
     fetchData();
@@ -76,6 +81,10 @@ export default function CRUDPage({ title, tableName, columns, defaultValues = {}
   };
 
   const openForm = (item?: any) => {
+    if (!canWrite) {
+      setError('Your role has read-only access.');
+      return;
+    }
     if (item) {
       setEditingItem(item);
       setFormData(item);
@@ -89,6 +98,10 @@ export default function CRUDPage({ title, tableName, columns, defaultValues = {}
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canWrite) {
+      setError('Your role does not allow saving changes.');
+      return;
+    }
     setSaving(true);
     setError('');
 
@@ -117,6 +130,10 @@ export default function CRUDPage({ title, tableName, columns, defaultValues = {}
   };
 
   const handleDelete = async (id: string) => {
+    if (!canDelete) {
+      setError('Your role does not allow deleting items.');
+      return;
+    }
     if (!confirm('Are you sure you want to delete this item?')) return;
 
     try {
@@ -133,6 +150,10 @@ export default function CRUDPage({ title, tableName, columns, defaultValues = {}
   };
 
   const handleBulkDelete = async () => {
+    if (!canDelete) {
+      setError('Your role does not allow deleting items.');
+      return;
+    }
     if (!confirm(`Delete ${selectedItems.size} items?`)) return;
 
     try {
@@ -151,6 +172,10 @@ export default function CRUDPage({ title, tableName, columns, defaultValues = {}
   };
 
   const handleBulkStatus = async (field: string, value: boolean) => {
+    if (!canWrite) {
+      setError('Your role does not allow updating items.');
+      return;
+    }
     try {
       const { error } = await supabase
         .from(tableName)
@@ -167,6 +192,10 @@ export default function CRUDPage({ title, tableName, columns, defaultValues = {}
   };
 
   const handleToggle = async (item: any, field: string, value: boolean) => {
+    if (!canWrite) {
+      setError('Your role has read-only access.');
+      return;
+    }
     try {
       const { error } = await supabase
         .from(tableName)
@@ -180,6 +209,10 @@ export default function CRUDPage({ title, tableName, columns, defaultValues = {}
   };
 
   const handleReorder = async (newData: any[]) => {
+    if (!canWrite) {
+      setError('Your role does not allow reordering items.');
+      return;
+    }
     setData(newData);
     const updates = newData.map((item, index) => ({
       id: item.id,
@@ -262,15 +295,24 @@ export default function CRUDPage({ title, tableName, columns, defaultValues = {}
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
-          <button
-            onClick={() => openForm()}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#a67820] to-[#c49028] text-[#030810] font-bold rounded-xl hover:from-[#c49028] hover:to-[#e8b84a] transition-all shadow-[0_4px_15px_rgba(196,144,40,0.2)]"
-          >
-            <Plus className="w-4 h-4" />
-            Add New
-          </button>
+          {canWrite && (
+            <button
+              onClick={() => openForm()}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#a67820] to-[#c49028] text-[#030810] font-bold rounded-xl hover:from-[#c49028] hover:to-[#e8b84a] transition-all shadow-[0_4px_15px_rgba(196,144,40,0.2)]"
+            >
+              <Plus className="w-4 h-4" />
+              Add New
+            </button>
+          )}
         </div>
       </div>
+
+      {!canWrite && (
+        <div className="flex items-center gap-2 px-4 py-3 bg-[#0c1a2e] border border-[#c49028]/15 rounded-xl text-[#c8c8c8]">
+          <Eye className="w-4 h-4 text-[#c49028]" />
+          <span className="text-sm">Read-only access: your role can view this data but cannot change it.</span>
+        </div>
+      )}
 
       {/* Filters & Search */}
       <div className="flex flex-col sm:flex-row gap-4">
@@ -303,7 +345,7 @@ export default function CRUDPage({ title, tableName, columns, defaultValues = {}
           </div>
 
           {/* Reorder Toggle */}
-          {tableName !== 'inquiries' && (
+          {tableName !== 'inquiries' && canWrite && (
             <button
               onClick={() => setReorderMode(!reorderMode)}
               className={`p-2.5 border rounded-xl transition-all ${reorderMode ? 'bg-[#c49028]/10 border-[#c49028]/30 text-[#c49028]' : 'bg-[#0c1a2e] border-[#c49028]/10 text-[#606060] hover:text-white hover:border-[#c49028]/30'}`}
@@ -391,13 +433,15 @@ export default function CRUDPage({ title, tableName, columns, defaultValues = {}
                 </button>
               </>
             )}
-            <button
-              onClick={handleBulkDelete}
-              className="px-3 py-1.5 text-sm text-red-400 hover:bg-red-400/10 rounded-lg transition-colors flex items-center gap-2"
-            >
-              <Trash2 className="w-4 h-4" />
-              Delete
-            </button>
+            {canDelete && (
+              <button
+                onClick={handleBulkDelete}
+                className="px-3 py-1.5 text-sm text-red-400 hover:bg-red-400/10 rounded-lg transition-colors flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </button>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -541,20 +585,24 @@ export default function CRUDPage({ title, tableName, columns, defaultValues = {}
                       ))}
                       <td className="px-6 py-4">
                         <div className="flex justify-end gap-1">
-                          <button
-                            onClick={() => openForm(item)}
-                            className="p-2 text-[#606060] hover:text-[#c49028] hover:bg-[#c49028]/10 rounded-lg transition-all"
-                            title="Edit"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(item.id)}
-                            className="p-2 text-[#606060] hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {canWrite && (
+                            <button
+                              onClick={() => openForm(item)}
+                              className="p-2 text-[#606060] hover:text-[#c49028] hover:bg-[#c49028]/10 rounded-lg transition-all"
+                              title="Edit"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                          )}
+                          {canDelete && (
+                            <button
+                              onClick={() => handleDelete(item.id)}
+                              className="p-2 text-[#606060] hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </motion.tr>
@@ -616,18 +664,22 @@ export default function CRUDPage({ title, tableName, columns, defaultValues = {}
                     </button>
                   )}
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => openForm(item)}
-                      className="p-1.5 text-[#606060] hover:text-[#c49028] hover:bg-[#c49028]/10 rounded-lg transition-all"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="p-1.5 text-[#606060] hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    {canWrite && (
+                      <button
+                        onClick={() => openForm(item)}
+                        className="p-1.5 text-[#606060] hover:text-[#c49028] hover:bg-[#c49028]/10 rounded-lg transition-all"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        className="p-1.5 text-[#606060] hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

@@ -96,7 +96,7 @@ export default function AdminLogin() {
           </form>
 
           <p className="text-center text-gray-500 text-sm mt-6">
-            Default: admin@edenbuildcore.com / admin123
+            Use your assigned admin account credentials.
           </p>
         </div>
       </motion.div>

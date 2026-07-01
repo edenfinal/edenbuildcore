@@ -13,6 +13,15 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const ADMIN_SESSION_KEY = 'eden_buildcore_admin_session';
+const PASSWORD_HASH_PREFIX = 'sha256:';
+
+export async function hashAdminPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(`eden_admin_v1:${password}`);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return `${PASSWORD_HASH_PREFIX}${hashArray.map((byte) => byte.toString(16).padStart(2, '0')).join('')}`;
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [admin, setAdmin] = useState<AdminUser | null>(null);
@@ -49,6 +58,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
+      const edgeLogin = await loginWithEdgeFunction(email, password);
+      if (edgeLogin.handled) {
+        if (!edgeLogin.success || !edgeLogin.admin) {
+          return { success: false, error: edgeLogin.error || 'Invalid credentials' };
+        }
+
+        setAdmin(edgeLogin.admin);
+        sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({ adminId: edgeLogin.admin.id }));
+        return { success: true };
+      }
+
       const { data, error } = await supabase
         .from('admin_users')
         .select('*')
@@ -60,15 +80,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: 'Invalid credentials' };
       }
 
-      // Simple password verification (in production, use proper bcrypt)
-      // For demo, we'll use a simple comparison
       const adminUser = data as AdminUser;
       const { password_hash } = adminUser as unknown as { password_hash: string };
 
-      // For initialization, accept admin123 as default password
-      const validPassword = password === 'admin123' ||
-        password_hash === password ||
-        passwordHashMatches(password, password_hash);
+      if (password_hash === 'admin123') {
+        return {
+          success: false,
+          error: 'Default admin password is disabled. Reset this admin password in Supabase before signing in.'
+        };
+      }
+
+      const hashedPassword = await hashAdminPassword(password);
+      const legacyExactMatch = !password_hash.startsWith(PASSWORD_HASH_PREFIX) && password_hash === password;
+      const validPassword = password_hash === hashedPassword || legacyExactMatch;
 
       if (!validPassword) {
         return { success: false, error: 'Invalid credentials' };
@@ -90,9 +114,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const passwordHashMatches = (password: string, hash: string): boolean => {
-    // Simple check for demo purposes
-    return hash.includes(password) || password === hash;
+  const loginWithEdgeFunction = async (
+    email: string,
+    password: string
+  ): Promise<{ handled: boolean; success: boolean; admin?: AdminUser; error?: string }> => {
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    if (!anonKey || !supabaseUrl) {
+      return { handled: false, success: false };
+    }
+
+    try {
+      const response = await fetch(`${supabaseUrl}/functions/v1/admin-login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${anonKey}`,
+          'apikey': anonKey,
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.status === 404) {
+        return { handled: false, success: false };
+      }
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        return { handled: true, success: false, error: result.error || 'Invalid credentials' };
+      }
+
+      return { handled: true, success: true, admin: result.admin as AdminUser };
+    } catch (e) {
+      console.warn('Admin login edge function unavailable, falling back to direct login:', e);
+      return { handled: false, success: false };
+    }
   };
 
   const logout = async () => {
@@ -121,20 +177,6 @@ export function useAuth() {
 
 // Create default admin on first load
 export async function initializeDefaultAdmin() {
-  const { data: existingAdmins } = await supabase
-    .from('admin_users')
-    .select('*')
-    .limit(1);
-
-  if (!existingAdmins || existingAdmins.length === 0) {
-    await supabase
-      .from('admin_users')
-      .insert({
-        email: 'admin@edenbuildcore.com',
-        password_hash: 'admin123',
-        full_name: 'System Administrator',
-        role: 'super_admin',
-        is_active: true
-      });
-  }
+  // Default admin creation with a hardcoded password is intentionally disabled.
+  // Create the first admin in Supabase with a hashed password from Admin Users.
 }

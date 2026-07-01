@@ -21,45 +21,47 @@ interface Notification {
   data?: any;
 }
 
+type AdminRole = 'super_admin' | 'admin' | 'editor' | 'viewer';
+
 const menuSections = [
   {
     title: 'Overview',
     items: [
-      { name: 'Dashboard', path: '/admin', icon: LayoutDashboard, badge: null },
-      { name: 'Inquiries', path: '/admin/inquiries', icon: Mail, badge: 'new' },
+      { name: 'Dashboard', path: '/admin', icon: LayoutDashboard, badge: null, roles: ['super_admin', 'admin', 'editor', 'viewer'] },
+      { name: 'Inquiries', path: '/admin/inquiries', icon: Mail, badge: 'new', roles: ['super_admin', 'admin', 'editor', 'viewer'] },
     ]
   },
   {
     title: 'Content Management',
     items: [
-      { name: 'Projects', path: '/admin/projects', icon: Building2 },
-      { name: 'Services', path: '/admin/services', icon: Layers },
-      { name: 'Gallery', path: '/admin/gallery', icon: FolderKanban },
-      { name: 'Blog Posts', path: '/admin/blog', icon: Newspaper },
-      { name: 'Careers', path: '/admin/careers', icon: Briefcase },
+      { name: 'Projects', path: '/admin/projects', icon: Building2, roles: ['super_admin', 'admin', 'editor', 'viewer'] },
+      { name: 'Services', path: '/admin/services', icon: Layers, roles: ['super_admin', 'admin', 'editor', 'viewer'] },
+      { name: 'Gallery', path: '/admin/gallery', icon: FolderKanban, roles: ['super_admin', 'admin', 'editor', 'viewer'] },
+      { name: 'Blog Posts', path: '/admin/blog', icon: Newspaper, roles: ['super_admin', 'admin', 'editor', 'viewer'] },
+      { name: 'Careers', path: '/admin/careers', icon: Briefcase, roles: ['super_admin', 'admin', 'editor', 'viewer'] },
     ]
   },
   {
     title: 'Company Profile',
     items: [
-      { name: 'Team Members', path: '/admin/team', icon: UsersRound },
-      { name: 'Clients', path: '/admin/clients', icon: Users },
-      { name: 'Testimonials', path: '/admin/testimonials', icon: MessageSquare },
-      { name: 'Certifications', path: '/admin/certifications', icon: Award },
+      { name: 'Team Members', path: '/admin/team', icon: UsersRound, roles: ['super_admin', 'admin', 'editor', 'viewer'] },
+      { name: 'Clients', path: '/admin/clients', icon: Users, roles: ['super_admin', 'admin', 'editor', 'viewer'] },
+      { name: 'Testimonials', path: '/admin/testimonials', icon: MessageSquare, roles: ['super_admin', 'admin', 'editor', 'viewer'] },
+      { name: 'Certifications', path: '/admin/certifications', icon: Award, roles: ['super_admin', 'admin', 'editor', 'viewer'] },
     ]
   },
   {
     title: 'Content',
     items: [
-      { name: 'Hero Manager', path: '/admin/heroes', icon: Image },
-      { name: 'Content Editor', path: '/admin/content', icon: FileText },
+      { name: 'Hero Manager', path: '/admin/heroes', icon: Image, roles: ['super_admin', 'admin', 'editor'] },
+      { name: 'Content Editor', path: '/admin/content', icon: FileText, roles: ['super_admin', 'admin', 'editor'] },
     ]
   },
   {
     title: 'System',
     items: [
-      { name: 'Site Settings', path: '/admin/settings', icon: Settings },
-      { name: 'Admin Users', path: '/admin/admins', icon: Shield },
+      { name: 'Site Settings', path: '/admin/settings', icon: Settings, roles: ['super_admin', 'admin'] },
+      { name: 'Admin Users', path: '/admin/admins', icon: Shield, roles: ['super_admin'] },
     ]
   }
 ];
@@ -75,6 +77,7 @@ export default function AdminLayout() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [newInquiriesCount, setNewInquiriesCount] = useState(0);
+  const currentRole = (admin?.role || 'viewer') as AdminRole;
 
   const handleLogout = async () => {
     await logout();
@@ -204,10 +207,14 @@ export default function AdminLayout() {
     ? menuSections.map(section => ({
         ...section,
         items: section.items.filter(item =>
+          item.roles.includes(currentRole) &&
           item.name.toLowerCase().includes(searchQuery.toLowerCase())
         )
       })).filter(section => section.items.length > 0)
-    : menuSections;
+    : menuSections.map(section => ({
+        ...section,
+        items: section.items.filter(item => item.roles.includes(currentRole))
+      })).filter(section => section.items.length > 0);
 
   return (
     <div className="min-h-screen bg-[#020609]">
@@ -386,7 +393,7 @@ export default function AdminLayout() {
 
               {/* Mobile Navigation */}
               <nav className="p-4">
-                {menuSections.map((section) => (
+                {filteredSections.map((section) => (
                   <div key={section.title} className="mb-6">
                     <h3 className="px-4 mb-2 text-[10px] font-bold text-[#606060] uppercase tracking-widest">
                       {section.title}

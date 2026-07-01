@@ -20,15 +20,18 @@ export default function ContactPage() {
     inquiry_type: 'general'
   });
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [submitMessage, setSubmitMessage] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('loading');
+    setSubmitMessage('');
 
-    const success = await submitContactForm(formData);
-    setStatus(success ? 'success' : 'error');
+    const result = await submitContactForm(formData);
+    setStatus(result.success ? 'success' : 'error');
+    setSubmitMessage(result.error || '');
 
-    if (success) {
+    if (result.success) {
       setFormData({
         name: '',
         email: '',
@@ -79,7 +82,9 @@ export default function ContactPage() {
                       <CheckCircle className="w-8 h-8 text-green-500" />
                     </div>
                     <h3 className="text-xl font-semibold text-white mb-2">{c('form', 'success_title', 'Message Sent!')}</h3>
-                    <p className="text-gray-400 mb-6">{c('form', 'success_message', 'We\'ll get back to you soon.')}</p>
+                    <p className="text-gray-400 mb-6">
+                      {submitMessage || c('form', 'success_message', 'We\'ll get back to you soon.')}
+                    </p>
                     <button
                       onClick={() => setStatus('idle')}
                       className="text-gold-500 hover:text-gold-400 font-medium"
@@ -184,7 +189,7 @@ export default function ContactPage() {
                     {status === 'error' && (
                       <div className="flex items-center gap-2 text-red-400 text-sm">
                         <AlertCircle className="w-4 h-4" />
-                        {c('form', 'error_message', 'Failed to send message. Please try again.')}
+                        {submitMessage || c('form', 'error_message', 'Failed to send message. Please try again.')}
                       </div>
                     )}
 

@@ -645,7 +645,7 @@ export async function submitContactForm(formData: {
   subject?: string;
   message: string;
   inquiry_type?: string;
-}) {
+}): Promise<{ success: boolean; emailSent: boolean; error?: string }> {
   try {
     const { error } = await supabase
       .from('contact_inquiries')
@@ -658,7 +658,7 @@ export async function submitContactForm(formData: {
 
     if (error) {
       console.error('Database error:', error);
-      return false;
+      return { success: false, emailSent: false, error: 'Failed to save your inquiry. Please try again.' };
     }
 
     const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -679,13 +679,24 @@ export async function submitContactForm(formData: {
 
       if (!response.ok) {
         console.error('Email notification failed');
+        return {
+          success: true,
+          emailSent: false,
+          error: 'Your inquiry was saved, but email notification failed. Our team can still see it in the admin panel.'
+        };
       }
+
+      return { success: true, emailSent: true };
     }
 
-    return true;
+    return {
+      success: true,
+      emailSent: false,
+      error: 'Your inquiry was saved, but email notification is not configured.'
+    };
   } catch (err) {
     console.error('Submit form error:', err);
-    return false;
+    return { success: false, emailSent: false, error: 'Failed to submit your inquiry. Please try again.' };
   }
 }
 

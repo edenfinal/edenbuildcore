@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Plus, CreditCard as Edit2, Trash2, Search, X, CheckCircle, AlertCircle, User, Mail, Lock, Eye, EyeOff, RefreshCw, Users, UserCheck, UserX, MoreVertical, Save, KeyRound } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import type { AdminUser } from '../../lib/supabase';
-import { useAuth } from '../../hooks/useAuth';
+import { hashAdminPassword, useAuth } from '../../hooks/useAuth';
 
 type AdminRole = 'super_admin' | 'admin' | 'editor' | 'viewer';
 
@@ -137,13 +137,14 @@ export default function AdminUsersPage() {
 
     try {
       if (modalMode === 'create') {
+        const passwordHash = await hashAdminPassword(formData.password);
         const { error } = await supabase
           .from('admin_users')
           .insert({
             email: formData.email,
             name: formData.name || null,
             role: formData.role,
-            password_hash: formData.password,
+            password_hash: passwordHash,
             is_active: formData.is_active,
           });
 
@@ -166,7 +167,7 @@ export default function AdminUsersPage() {
         };
 
         if (formData.password) {
-          updateData.password_hash = formData.password;
+          updateData.password_hash = await hashAdminPassword(formData.password);
         }
 
         const { error } = await supabase
@@ -248,7 +249,7 @@ export default function AdminUsersPage() {
     );
   });
 
-  const canManageAdmins = currentAdmin?.role === 'super_admin' || currentAdmin?.role === 'admin';
+  const canManageAdmins = currentAdmin?.role === 'super_admin';
 
   if (loading) {
     return (
