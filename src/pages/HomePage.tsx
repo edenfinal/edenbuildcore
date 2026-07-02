@@ -540,44 +540,57 @@ function CertificationsPreview({ certifications, c }: { certifications: Certific
 }
 
 // Vision Mission Section
-function VisionMissionSection({ c }: { c: (section: string, key: string, fallback: string) => string }) {
+function VisionMissionSection({ c }: { c: (section: string, key: string, fallback?: string) => string }) {
+  const visionTitle = c('vision', 'title');
+  const visionDescription = c('vision', 'description');
+  const missionTitle = c('mission', 'title');
+  const missionDescription = c('mission', 'description');
+
+  if (!visionDescription && !missionDescription) {
+    return null;
+  }
+
   return (
     <section className="py-12 sm:py-16 md:py-24 bg-gradient-to-r from-navy-900 via-navy-800 to-navy-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="grid md:grid-cols-2 gap-6 sm:gap-8 md:gap-12">
           {/* Vision */}
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="relative bg-navy-950/50 backdrop-blur-sm border border-gold-500/20 rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-8 lg:p-10"
-          >
-            <div className="absolute top-0 left-6 sm:left-8 w-12 sm:w-16 h-1 bg-gold-500 rounded-full -translate-y-px" />
-            <div className="w-12 h-12 sm:w-14 md:w-16 h-12 sm:h-14 md:h-16 rounded-xl sm:rounded-2xl bg-gold-500/10 flex items-center justify-center mb-4 sm:mb-6">
-              <Eye className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-gold-500" />
-            </div>
-            <h3 className="text-xl sm:text-2xl font-heading font-bold text-white mb-3 sm:mb-4">{c('vision_mission', 'vision_title', 'Our Vision')}</h3>
-            <p className="text-gray-400 text-sm sm:text-base leading-relaxed">
-              {c('vision_mission', 'vision_description', 'To be the leading construction and engineering company in the region, setting new standards of excellence, innovation, and sustainable development. We envision a future where every structure we build becomes a landmark of quality and reliability.')}
-            </p>
-          </motion.div>
+          {visionDescription && (
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="relative bg-navy-950/50 backdrop-blur-sm border border-gold-500/20 rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-8 lg:p-10"
+            >
+              <div className="absolute top-0 left-6 sm:left-8 w-12 sm:w-16 h-1 bg-gold-500 rounded-full -translate-y-px" />
+              <div className="w-12 h-12 sm:w-14 md:w-16 h-12 sm:h-14 md:h-16 rounded-xl sm:rounded-2xl bg-gold-500/10 flex items-center justify-center mb-4 sm:mb-6">
+                <Eye className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-gold-500" />
+              </div>
+              <h3 className="text-xl sm:text-2xl font-heading font-bold text-white mb-3 sm:mb-4">{visionTitle}</h3>
+              <p className="text-gray-400 text-sm sm:text-base leading-relaxed">
+                {visionDescription}
+              </p>
+            </motion.div>
+          )}
 
           {/* Mission */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="relative bg-navy-950/50 backdrop-blur-sm border border-gold-500/20 rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-8 lg:p-10"
-          >
-            <div className="absolute top-0 left-6 sm:left-8 w-12 sm:w-16 h-1 bg-gold-500 rounded-full -translate-y-px" />
-            <div className="w-12 h-12 sm:w-14 md:w-16 h-12 sm:h-14 md:h-16 rounded-xl sm:rounded-2xl bg-gold-500/10 flex items-center justify-center mb-4 sm:mb-6">
-              <Target className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-gold-500" />
-            </div>
-            <h3 className="text-xl sm:text-2xl font-heading font-bold text-white mb-3 sm:mb-4">{c('vision_mission', 'mission_title', 'Our Mission')}</h3>
-            <p className="text-gray-400 text-sm sm:text-base leading-relaxed">
-              {c('vision_mission', 'mission_description', 'To deliver exceptional construction solutions that exceed client expectations through innovation, quality craftsmanship, and unwavering commitment to safety. We strive to build lasting relationships based on trust, integrity, and mutual respect.')}
-            </p>
-          </motion.div>
+          {missionDescription && (
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="relative bg-navy-950/50 backdrop-blur-sm border border-gold-500/20 rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-8 lg:p-10"
+            >
+              <div className="absolute top-0 left-6 sm:left-8 w-12 sm:w-16 h-1 bg-gold-500 rounded-full -translate-y-px" />
+              <div className="w-12 h-12 sm:w-14 md:w-16 h-12 sm:h-14 md:h-16 rounded-xl sm:rounded-2xl bg-gold-500/10 flex items-center justify-center mb-4 sm:mb-6">
+                <Target className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-gold-500" />
+              </div>
+              <h3 className="text-xl sm:text-2xl font-heading font-bold text-white mb-3 sm:mb-4">{missionTitle}</h3>
+              <p className="text-gray-400 text-sm sm:text-base leading-relaxed">
+                {missionDescription}
+              </p>
+            </motion.div>
+          )}
         </div>
       </div>
     </section>
@@ -644,7 +657,9 @@ export default function HomePage() {
   const { data: testimonials } = useTestimonials();
   const { data: certifications } = useCertifications();
   const pageContent = usePageContent('home');
+  const aboutContent = usePageContent('about');
   const c = (section: string, key: string, fallback: string) => pageContent.get(section, key, fallback);
+  const aboutC = (section: string, key: string, fallback = '') => aboutContent.get(section, key, fallback);
 
   return (
     <>
@@ -656,7 +671,7 @@ export default function HomePage() {
       <ClientsSection clients={clients} c={c} />
       <TestimonialsSection testimonials={testimonials} c={c} />
       <CertificationsPreview certifications={certifications} c={c} />
-      <VisionMissionSection c={c} />
+      <VisionMissionSection c={aboutC} />
       <CTASection c={c} />
     </>
   );
