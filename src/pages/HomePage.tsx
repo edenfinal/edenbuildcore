@@ -158,6 +158,7 @@ function AboutPreview({ c }: { c: (section: string, key: string, fallback: strin
   const { settings, loading: settingsLoading } = useSettings();
   const { counters } = useAutoCounters();
   const aboutImageUrl = settingsLoading ? '' : settings?.secondary_logo_url;
+  const aboutLink = c('about_preview', 'link_url', '') || '/about';
 
   return (
     <section className="relative py-16 sm:py-20 md:py-24 bg-navy-950 overflow-hidden">
@@ -231,8 +232,8 @@ function AboutPreview({ c }: { c: (section: string, key: string, fallback: strin
             </div>
 
             <Link
-              to="/about"
-              className="inline-flex items-center gap-2 text-gold-400 hover:text-gold-300 font-medium text-sm sm:text-base transition-colors group"
+              to={aboutLink}
+              className="relative z-10 inline-flex items-center gap-2 text-gold-400 hover:text-gold-300 font-medium text-sm sm:text-base transition-colors group"
             >
               {c('about_preview', 'link_text', 'Learn More About Us')}
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
